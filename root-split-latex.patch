@@ -1,0 +1,34 @@
+diff -ur root-5.26.00a.orig/roofit/roostats/src/HybridResult.cxx root-5.26.00a/roofit/roostats/src/HybridResult.cxx
+--- root-5.26.00a.orig/roofit/roostats/src/HybridResult.cxx	2010-01-19 12:43:10.000000000 +0100
++++ root-5.26.00a/roofit/roostats/src/HybridResult.cxx	2010-02-02 05:47:22.937047752 +0100
+@@ -175,8 +175,7 @@
+   // Returns an estimate of the error on CLb assuming a binomial error on
+   // CLb:
+   // BEGIN_LATEX
+-  // #sigma_{CL_{b}} &=& #sqrt{CL_{b} #left( 1 - CL_{b} #right) /
+-  //   n_{toys}} 
++  // #sigma_{CL_{b}} &=& #sqrt{CL_{b} #left( 1 - CL_{b} #right) / n_{toys}}
+   // END_LATEX
+   unsigned const int n = fTestStat_b.size();
+   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
+@@ -189,8 +188,7 @@
+   // Returns an estimate of the error on CLsplusb assuming a binomial
+   // error on CLsplusb:
+   // BEGIN_LATEX
+-  // #sigma_{CL_{s+b}} &=& #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) /
+-  //   n_{toys}} 
++  // #sigma_{CL_{s+b}} &=& #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) / n_{toys}}
+   // END_LATEX
+   unsigned const int n = fTestStat_sb.size();
+   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
+@@ -203,9 +201,7 @@
+   // Returns an estimate of the error on CLs through combination of the
+   // errors on CLb and CLsplusb:
+   // BEGIN_LATEX
+-  // #sigma_{CL_s} &=& CL_s
+-  //   #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 +
+-  //     #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
++  // #sigma_{CL_s} &=& CL_s #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
+   // END_LATEX
+   unsigned const int n_b = fTestStat_b.size();
+   unsigned const int n_sb = fTestStat_sb.size();

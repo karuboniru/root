@@ -1,0 +1,553 @@
+diff -ur root-5.26.00.orig/core/base/src/TApplication.cxx root-5.26.00/core/base/src/TApplication.cxx
+--- root-5.26.00.orig/core/base/src/TApplication.cxx	2009-12-14 20:17:59.000000000 +0100
++++ root-5.26.00/core/base/src/TApplication.cxx	2010-01-12 16:42:30.247556669 +0100
+@@ -231,20 +231,9 @@
+    // Try to load TrueType font renderer. Only try to load if not in batch
+    // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
+    // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
+-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+-#ifdef TTFFONTDIR
+-                                       TTFFONTDIR);
+-#else
+-                                       "$(ROOTSYS)/fonts");
+-#endif
+-   char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+-   // Check for use of DFSG - fonts
+-   if (!ttfont)
+-      ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+-
+ #if !defined(R__WIN32)
+    if (!gROOT->IsBatch() && !strcmp(gVirtualX->GetName(), "X11") &&
+-       ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
++       gEnv->GetValue("Root.UseTTFonts", 1)) {
+       if (gClassTable->GetDict("TGX11TTF")) {
+          // in principle we should not have linked anything against libGX11TTF
+          // but with ACLiC this can happen, initialize TGX11TTF by hand
+@@ -257,7 +246,6 @@
+       }
+    }
+ #endif
+-   delete [] ttfont;
+ 
+    // Create WM dependent application environment
+    if (fAppImp)
+diff -ur root-5.26.00.orig/graf2d/graf/Module.mk root-5.26.00/graf2d/graf/Module.mk
+--- root-5.26.00.orig/graf2d/graf/Module.mk	2009-12-14 20:18:27.000000000 +0100
++++ root-5.26.00/graf2d/graf/Module.mk	2010-01-12 16:42:30.248319334 +0100
+@@ -45,7 +45,7 @@
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+ 		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
+ 		   "$(GRAFO) $(GRAFDO)" \
+-		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA)"
++		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA) -lfontconfig"
+ 
+ $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
+ 		@echo "Generating dictionary $@..."
+diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/TTF.cxx
+--- root-5.26.00.orig/graf2d/graf/src/TTF.cxx	2009-12-14 20:18:27.000000000 +0100
++++ root-5.26.00/graf2d/graf/src/TTF.cxx	2010-01-12 16:42:30.265068705 +0100
+@@ -26,6 +26,7 @@
+ #include "TMath.h"
+ #include "TError.h"
+ 
++#include <fontconfig/fontconfig.h>
+ 
+ // to scale fonts to the same size as the old TT version
+ const Float_t kScale = 0.93376068;
+@@ -111,10 +112,13 @@
+          charmap  = fgFace[fgCurFontIdx]->charmaps[i];
+          platform = charmap->platform_id;
+          encoding = charmap->encoding_id;
+-         if ((platform == 3 && encoding == 1) ||
++         if ((platform == 3 && encoding == 1 &&
++              strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")) ||
+              (platform == 0 && encoding == 0) ||
+              (platform == 1 && encoding == 0 &&
+               !strcmp(fgFontName[fgCurFontIdx], "wingding.ttf")) ||
++             (platform == 7 && encoding == 2 &&
++              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")) ||
+              (platform == 1 && encoding == 0 &&
+               !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")))
+          {
+@@ -336,19 +340,86 @@
+       return 0;
+    }
+ 
+-   // try to load font (font must be in Root.TTFontPath resource)
+-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+-# ifdef TTFFONTDIR
+-                                       TTFFONTDIR
+-# else
+-                                       "$(ROOTSYS)/fonts"
+-# endif
+-                                      );
+-
+-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
+-
+-   if (!ttfont) {
+-      Error("TTF::SetTextFont", "font file %s not found in path", fontname);
++   FcPattern *pat, *match;
++   FcResult result;
++   char *ttfont;
++   int ttindex;
++
++   pat = FcPatternCreate ();
++
++   if (strcmp(basename, /* 13 */ "times.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 1 */ "timesi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 2 */ "timesbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 3 */ "timesbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 4 */ "arial.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 5 */ "ariali.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 6 and 0 */ "arialbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 7 */ "arialbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 8 */ "cour.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 9 */ "couri.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 10 */ "courbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 11 */ "courbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(basename, /* 12 */ "symbol.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(basename, /* 14 */ "wingding.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else {
++      Error("TTF::SetTextFont", "font %s not known to ROOT", basename);
++      FcPatternDestroy (pat);
+       if (fgFontCount) {
+          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
+          fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
+@@ -358,11 +429,18 @@
+       }
+    }
+ 
++   FcConfigSubstitute (NULL, pat, FcMatchPattern);
++   FcDefaultSubstitute (pat);
++   match = FcFontMatch (NULL, pat, &result);
++   FcPatternGetString (match, FC_FILE, 0, (FcChar8**)&ttfont);
++   FcPatternGetInteger (match, FC_INDEX, 0, &ttindex);
++
+    FT_Face  tface = 0;
+ 
+-   if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
++   if (FT_New_Face(fgLibrary, ttfont, ttindex, &tface)) {
+       Error("TTF::SetTextFont", "error loading font %s", ttfont);
+-      delete [] ttfont;
++      FcPatternDestroy (match);
++      FcPatternDestroy (pat);
+       if (tface) FT_Done_Face(tface);
+       if (fgFontCount) {
+          Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
+@@ -373,7 +451,8 @@
+       }
+    }
+ 
+-   delete [] ttfont;
++   FcPatternDestroy (match);
++   FcPatternDestroy (pat);
+ 
+    fgFontName[fgFontCount] = StrDup(basename);
+    fgCurFontIdx            = fgFontCount;
+@@ -428,35 +507,10 @@
+       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
+    };
+ 
+-   static int fontset = -1;
+-   int        thisset = fontset;
+-
+    int fontid = fontnumber / 10;
+    if (fontid < 0 || fontid > 14) fontid = 0;
+ 
+-   if (thisset == -1) {
+-      // try to load font (font must be in Root.TTFontPath resource)
+-      // to see which fontset we have available
+-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+-#ifdef TTFFONTDIR
+-                                          TTFFONTDIR
+-#else
+-                                          "$(ROOTSYS)/fonts"
+-#endif
+-                                         );
+-      char *ttfont = gSystem->Which(ttpath, fonttable[fontid][0], kReadPermission);
+-      if (ttfont) {
+-         delete [] ttfont;
+-         thisset = 0;
+-      } else {
+-         // try backup free font
+-         thisset = 1;
+-      }
+-   }
+-   int ret = SetTextFont(fonttable[fontid][thisset]);
+-   // Do not define font set is we're loading the symbol.ttf - it's
+-   // the same in both cases.
+-   if (ret == 0 && fontid != 12) fontset = thisset;
++   SetTextFont(fonttable[fontid][0]);
+ }
+ 
+ //______________________________________________________________________________
+diff -ur root-5.26.00.orig/graf3d/gl/Module.mk root-5.26.00/graf3d/gl/Module.mk
+--- root-5.26.00.orig/graf3d/gl/Module.mk	2009-12-14 20:18:13.000000000 +0100
++++ root-5.26.00/graf3d/gl/Module.mk	2010-01-12 16:42:30.265068705 +0100
+@@ -68,7 +68,7 @@
+ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GLEWLIB)
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+ 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
+-		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
++		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
+ 
+ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
+ 		@echo "Generating dictionary $@..."
+diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/gl/src/TGLFontManager.cxx
+--- root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx	2009-12-14 20:18:13.000000000 +0100
++++ root-5.26.00/graf3d/gl/src/TGLFontManager.cxx	2010-01-12 16:55:59.130070188 +0100
+@@ -35,6 +35,8 @@
+ # include "FTGLBitmapFont.h"
+ #endif
+ 
++#include <fontconfig/fontconfig.h>
++
+ //______________________________________________________________________________
+ // TGLFont
+ //
+@@ -389,14 +391,92 @@
+    FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
+    if (it == fFontMap.end())
+    {
+-      TString ttpath;
+-# ifdef TTFFONTDIR
+-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TTFFONTDIR );
+-# else
+-      ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
+-# endif
+       TObjString* name = (TObjString*)fgFontFileArray[fileID];
+-      TString file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
++      const char *fontname = name->GetString().Data();
++
++      FcPattern *pat, *match;
++      FcResult result;
++      char *file;
++      int ttindex;
++
++      pat = FcPatternCreate ();
++
++      if (strcmp(fontname, /* 13 */ "times") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 1 */ "timesi") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 2 */ "timesbd") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 3 */ "timesbi") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 4 */ "arial") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 5 */ "ariali") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 6 and 0 */ "arialbd") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 7 */ "arialbi") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 8 */ "cour") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 9 */ "couri") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 10 */ "courbd") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 11 */ "courbi") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++      }
++      else if (strcmp(fontname, /* 12 */ "symbol") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++      else if (strcmp(fontname, /* 14 */ "wingding") == 0) {
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++      }
++
++      FcConfigSubstitute (NULL, pat, FcMatchPattern);
++      FcDefaultSubstitute (pat);
++      match = FcFontMatch (NULL, pat, &result);
++      FcPatternGetString (match, FC_FILE, 0, (FcChar8**)&file);
++      FcPatternGetInteger (match, FC_INDEX, 0, &ttindex);
+ 
+       FTFont* ftfont = 0;
+       switch (mode)
+@@ -425,6 +505,8 @@
+             return;
+             break;
+       }
++      FcPatternDestroy (match);
++      FcPatternDestroy (pat);
+       ftfont->FaceSize(size);
+       const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
+       out.CopyAttributes(mf);
+diff -ur root-5.26.00.orig/graf3d/gl/src/TGLText.cxx root-5.26.00/graf3d/gl/src/TGLText.cxx
+--- root-5.26.00.orig/graf3d/gl/src/TGLText.cxx	2009-12-14 20:18:13.000000000 +0100
++++ root-5.26.00/graf3d/gl/src/TGLText.cxx	2010-01-12 16:42:30.266069599 +0100
+@@ -34,6 +34,8 @@
+ # include "FTGLBitmapFont.h"
+ #endif
+ 
++#include <fontconfig/fontconfig.h>
++
+ #define FTGL_BITMAP  0
+ #define FTGL_PIXMAP  1
+ #define FTGL_OUTLINE 2
+@@ -190,16 +192,89 @@
+    if (fontid == 13) fontname = "times.ttf";
+    if (fontid == 14) fontname = "wingding.ttf";
+ 
+-   // try to load font (font must be in Root.TTFontPath resource)
+-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+-# ifdef TTFFONTDIR
+-                                        TTFFONTDIR
+-# else
+-                                        "$(ROOTSYS)/fonts"
+-# endif
+-                                        );
++   FcPattern *pat, *match;
++   FcResult result;
++   char *ttfont;
++   int ttindex;
++
++   pat = FcPatternCreate ();
++
++   if (strcmp(fontname, /* 13 */ "times.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 1 */ "timesi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 2 */ "timesbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 3 */ "timesbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 4 */ "arial.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 5 */ "ariali.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 6 and 0 */ "arialbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 7 */ "arialbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 8 */ "cour.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 9 */ "couri.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 10 */ "courbd.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 11 */ "courbi.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++   }
++   else if (strcmp(fontname, /* 12 */ "symbol.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
++   else if (strcmp(fontname, /* 14 */ "wingding.ttf") == 0) {
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++   }
+ 
+-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
++   FcConfigSubstitute (NULL, pat, FcMatchPattern);
++   FcDefaultSubstitute (pat);
++   match = FcFontMatch (NULL, pat, &result);
++   FcPatternGetString (match, FC_FILE, 0, (FcChar8**)&ttfont);
++   FcPatternGetInteger (match, FC_INDEX, 0, &ttindex);
+ 
+    if (fGLTextFont) delete fGLTextFont;
+ 
+@@ -209,5 +284,6 @@
+ 
+    if (!fGLTextFont->FaceSize(1))
+       Error("SetGLTextFont","Cannot set FTGL::FaceSize"),
+-   delete [] ttfont;
++   FcPatternDestroy (match);
++   FcPatternDestroy (pat);
+ }
+diff -ur root-5.26.00.orig/gui/gui/src/TGApplication.cxx root-5.26.00/gui/gui/src/TGApplication.cxx
+--- root-5.26.00.orig/gui/gui/src/TGApplication.cxx	2009-12-14 20:18:16.000000000 +0100
++++ root-5.26.00/gui/gui/src/TGApplication.cxx	2010-01-12 16:42:30.266069599 +0100
+@@ -83,24 +83,11 @@
+    gROOT->SetBatch(kFALSE);
+ 
+    if (strcmp(appClassName, "proofserv")) {
+-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+-#ifdef TTFFONTDIR
+-                                          TTFFONTDIR);
+-#else
+-                                          "$(ROOTSYS)/fonts");
+-#endif
+-
+-      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
+-      // Added by cholm for use of DFSG - fonts - based on fix by Kevin
+-      if (!ttfont)
+-         ttfont = gSystem->Which(ttpath, "FreeSansBold.ttf", kReadPermission);
+-      if (ttfont && gEnv->GetValue("Root.UseTTFonts", 1)) {
++      if (gEnv->GetValue("Root.UseTTFonts", 1)) {
+          TPluginHandler *h;
+          if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
+             h->LoadPlugin();
+       }
+-
+-      delete [] ttfont;
+    }
+ 
+    // Create the canvas colors early so they are allocated before
+diff -ur root-5.26.00.orig/gui/gui/src/TGSpeedo.cxx root-5.26.00/gui/gui/src/TGSpeedo.cxx
+--- root-5.26.00.orig/gui/gui/src/TGSpeedo.cxx	2009-12-14 20:18:16.000000000 +0100
++++ root-5.26.00/gui/gui/src/TGSpeedo.cxx	2010-01-12 16:58:26.233069701 +0100
+@@ -117,8 +117,7 @@
+ 
+    TString sc;
+    Float_t step, mark[5];
+-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-   TString ar = fp + "/arialbd.ttf";
++   TString ar = "arialbd.ttf";
+    Int_t i, nexe, offset;
+ 
+    const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
+@@ -519,8 +518,7 @@
+       if (fImage2 && fImage2->IsValid())
+          delete fImage2;
+       fImage2 = (TImage*)fImage->Clone("fImage2");
+-      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-      TString ar = fp + "/arialbd.ttf";
++      TString ar = "arialbd.ttf";
+       // format counter value
+       Int_t nexe = 0;
+       Int_t ww = fCounter;
+@@ -599,8 +597,7 @@
+       if (fImage2 && fImage2->IsValid())
+          delete fImage2;
+       fImage2 = (TImage*)fImage->Clone("fImage2");
+-      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-      TString ar = fp + "/arialbd.ttf";
++      TString ar = "arialbd.ttf";
+       // format counter value
+       Int_t nexe = 0;
+       Int_t ww = fCounter;

@@ -1,0 +1,17 @@
+diff -ur root-5.26.00.orig/core/base/src/TColor.cxx root-5.26.00/core/base/src/TColor.cxx
+--- root-5.26.00.orig/core/base/src/TColor.cxx	2009-12-14 20:17:59.000000000 +0100
++++ root-5.26.00/core/base/src/TColor.cxx	2010-01-13 10:45:45.189319077 +0100
+@@ -230,11 +230,7 @@
+ <p>
+ As only one palette is active, one need to use <tt>TExec</tt> to be able to 
+ display plots using differents palettes on the same pad.
+-The following macro illustrate this feature.
+-End_Html
+-Begin_Macro(source)
+-../../../tutorials/graphs/multipalette.C
+-End_Macro */
++End_Html */
+ 
+ 
+ //______________________________________________________________________________
+Endast i root-5.26.00/core/base/src: TColor.cxx~
