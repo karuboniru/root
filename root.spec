@@ -13,7 +13,7 @@
 Name:		root
 Version:	5.26.00c
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -155,8 +155,16 @@ License:	LGPLv2+ and GPLv2+ and BSD
 Requires:	%{name}-cint = %{version}-%{release}
 
 %description doc
-This package contains the tutorial scripts and test suit for the ROOT
-system as well as the automatically generated ROOT class documentation.
+This package contains the automatically generated ROOT class
+documentation.
+
+%package tutorial
+Summary:	ROOT tutorial scripts and test suite
+BuildArch:	noarch
+Requires:	%{name}-cint = %{version}-%{release}
+
+%description tutorial
+This package contains the tutorial scripts and test suite for ROOT.
 
 %package core
 Summary:	ROOT core libraries
@@ -1115,8 +1123,8 @@ rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/INSTALL
 rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/README.ALIEN
 rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/README.MONALISA
 
-# Remove cintdll sources
-rm -rf ${RPM_BUILD_ROOT}%{_libdir}/%{name}/cint/cint/lib
+# Remove cintdll sources - keep the prec_stl directory
+rm -rf ${RPM_BUILD_ROOT}%{_libdir}/%{name}/cint/cint/lib/{[^p],p[^r]}*
 
 # Only used on Windows
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/macros/fileopen.C
@@ -1481,6 +1489,9 @@ fi
 %files doc
 %defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}/html
+
+%files tutorial
+%defattr(-,root,root,-)
 %doc %{_defaultdocdir}/%{name}-%{version}/test
 %doc %{_defaultdocdir}/%{name}-%{version}/tutorials
 
@@ -1935,6 +1946,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Aug 02 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00c-4
+- Don't remove the prec_stl directory
+- Create a separate tutorial package for the tutorial and test suite
+
 * Thu Jul 29 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00c-3
 - Correct license tags for: cint, core and rootfit
 - Regenerate source tarball due to upstream retag (again)
