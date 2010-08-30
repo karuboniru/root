@@ -11,9 +11,9 @@
 %endif
 
 Name:		root
-Version:	5.26.00c
+Version:	5.26.00d
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -22,8 +22,8 @@ URL:		http://root.cern.ch/
 #		The upstream source is modified to exclude proprietary fonts:
 #		wget -N ftp://root.cern.ch/root/root_v%{version}.source.tar.gz
 #		tar -z -x -f root_v%{version}.source.tar.gz
+#		rm -rf root/fonts
 #		mv root root-%{version}
-#		rm -rf root-%{version}/fonts
 #		tar -z -c -f root-%{version}.tar.gz root-%{version}
 Source0:	%{name}-%{version}.tar.gz
 #		Script to extract the list of include files in a subpackage
@@ -51,13 +51,12 @@ Patch5:		%{name}-dpm-rfio.patch
 #		Missing explicit linking 
 #		(backported from root svn trunk)
 Patch6:		%{name}-missing-explicit-link.patch
-#		Remove things that fail during doc generation:
-Patch10:	%{name}-split-latex.patch
-Patch11:	%{name}-no-2dfit-example.patch
-Patch12:	%{name}-no-hbar-example.patch
-Patch13:	%{name}-no-earth-example.patch
-Patch14:	%{name}-no-candlechart-example.patch
-Patch15:	%{name}-no-multipalette-example.patch
+#		Can't split latex markup into multiple lines
+Patch7:		%{name}-split-latex.patch
+#		Fix broken macro
+Patch8:		%{name}-cern-filename.patch
+#		Workaround for broken Form() on ppc
+Patch9:		%{name}-cern-ppc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -91,6 +90,9 @@ BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
 BuildRequires:	qt-devel
+%if %{?fedora}%{!?fedora:0} >= 14
+BuildRequires:	qt-webkit-devel
+%endif
 BuildRequires:	ruby
 BuildRequires:	ruby-devel
 BuildRequires:	openssl-devel
@@ -848,12 +850,9 @@ package to use root with GNU Emacs.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
+%patch7 -p1
+%patch8 -p1
+%patch9 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -894,6 +893,9 @@ sed s/"plateau."/"plateau"/ -i test/stressFit.cxx
 # This one is a mixture of iso-8859-1 and macroman
 iconv -f macintosh -t utf-8 README/CREDITS | sed s/È/é/ > README/CREDITS.new
 mv README/CREDITS.new README/CREDITS
+
+# Typo in documentation
+sed s/SePalette/SetPalette/g -i hist/histpainter/src/THistPainter.cxx
 
 # Badly named file - not python - aborts python byte compilation
 mv tutorials/pyroot/fit1_py.py tutorials/pyroot/fit1_py.txt
@@ -937,6 +939,11 @@ sed '/CopyFileFromEtcDir("ROOT.css");/a\
    CopyFileFromEtcDir("info.png");\
    CopyFileFromEtcDir("root-banner.png");\
    CopyFileFromEtcDir("rootdrawing-logo.png");' -i html/src/THtml.cxx
+
+# Rename canvases to avoid name conflicts during doc generation
+sed s/c1/c1c/g -i tutorials/graphics/earth.C
+sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
+sed s/c1/c1simp/g -i tutorials/hsimple.C
 
 %build
 unset QTDIR
@@ -1095,6 +1102,7 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_sitearch}`/libRuby.so \
 # Remove some junk
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.plist
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.xinetd
+rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/cmsd.rc.d
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/olbd.rc.d
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/xrootd.rc.d
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/README
@@ -1946,6 +1954,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Aug 27 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-1
+- Update to 5.26.00d
+- Improved doc generation script
+
 * Mon Aug 02 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00c-4
 - Don't remove the prec_stl directory
 - Create a separate tutorial package for the tutorial and test suite
