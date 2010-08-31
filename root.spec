@@ -13,7 +13,7 @@
 Name:		root
 Version:	5.26.00d
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -57,6 +57,10 @@ Patch7:		%{name}-split-latex.patch
 Patch8:		%{name}-cern-filename.patch
 #		Workaround for broken Form() on ppc
 Patch9:		%{name}-cern-ppc.patch
+#		Adapt makefile to changes in make 3.82
+Patch10:	%{name}-make-3.82.patch
+#		Fix segfault in TMVA
+Patch11:	%{name}-tmva-segfault.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -853,6 +857,8 @@ package to use root with GNU Emacs.
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
+%patch11 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1171,6 +1177,8 @@ echo %{_libdir}/%{name} > \
 
 # Generate documentation
 echo Rint.Includes: 0 > .rootrc
+echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
+echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
@@ -1954,6 +1962,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Aug 30 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-2
+- Adapt makefile to changes in make 3.82
+
 * Fri Aug 27 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-1
 - Update to 5.26.00d
 - Improved doc generation script
