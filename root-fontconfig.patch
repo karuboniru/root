@@ -159,7 +159,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +   }
 +   else if (strcmp(basename, /* 14 */ "wingding.ttf") == 0) {
-+      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"wingdings");
 +      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +   }
@@ -348,7 +348,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +      }
 +      else if (strcmp(fontname, /* 14 */ "wingding") == 0) {
-+         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"wingdings");
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +      }
@@ -467,7 +467,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLText.cxx root-5.26.00/graf3d/gl/src/
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +   }
 +   else if (strcmp(fontname, /* 14 */ "wingding.ttf") == 0) {
-+      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"opensymbol");
++      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"wingdings");
 +      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +   }

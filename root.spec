@@ -13,7 +13,7 @@
 Name:		root
 Version:	5.26.00d
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -86,6 +86,7 @@ BuildRequires:	fftw-devel
 BuildRequires:	gsl-devel
 BuildRequires:	unuran-devel
 BuildRequires:	krb5-devel
+BuildRequires:	krb5-workstation
 BuildRequires:	openldap-devel
 BuildRequires:	mysql-devel
 BuildRequires:	unixODBC-devel
@@ -117,7 +118,6 @@ BuildRequires:	font(liberationserif)
 BuildRequires:	font(liberationmono)
 #		This contains a Symbol font that can be used by fontconfig
 BuildRequires:	urw-fonts
-BuildRequires:	font(opensymbol)
 Requires:	hicolor-icon-theme
 
 %description
@@ -178,13 +178,13 @@ Provides:	root-io = %{version}-%{release}
 Obsoletes:	root-io < 5.26.00c-2
 License:	LGPLv2+ and BSD
 Requires:	%{name}-icons = %{version}-%{release}
+Requires:	%{name}-graf-asimage = %{version}-%{release}
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(liberationsans)
 Requires:	font(liberationserif)
 Requires:	font(liberationmono)
 #		This contains a Symbol font that can be used by fontconfig
 Requires:	urw-fonts
-Requires:	font(opensymbol)
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -363,6 +363,7 @@ a low quality 3D viewer for ROOT defined geometries.
 
 %package gui
 Summary:	GUI library for ROOT
+Requires:	%{name}-graf-x11 = %{version}-%{release}
 
 %description gui
 This package contains a library for defining graphical user interfaces.
@@ -414,6 +415,7 @@ access legacy Hbook files (NTuples and Histograms from PAW).
 
 %package hist
 Summary:	Histogram library for ROOT
+Requires:	%{name}-hist-painter = %{version}-%{release}
 
 %description hist
 This package contains a library for histogramming in ROOT.
@@ -504,6 +506,7 @@ a generalized vector library.
 
 %package mathcore
 Summary:	Core mathematics library for ROOT
+Requires:	%{name}-minuit = %{version}-%{release}
 
 %description mathcore
 This package contains the MathCore library for ROOT.
@@ -675,6 +678,7 @@ authentication and authorization against Globus.
 
 %package net-krb5
 Summary:	Kerberos (version 5) extension for ROOT
+Requires:	krb5-workstation
 
 %description net-krb5
 This package contains the Kerberos (version 5) extension for ROOT, that
@@ -906,6 +910,9 @@ sed s/SePalette/SetPalette/g -i hist/histpainter/src/THistPainter.cxx
 # Badly named file - not python - aborts python byte compilation
 mv tutorials/pyroot/fit1_py.py tutorials/pyroot/fit1_py.txt
 sed s/fit1_py.py/fit1_py.txt/ -i tutorials/pyroot/fit1.py
+
+# Fix strange example
+sed s/ABCDFGF/ABCDEFGH/ -i core/base/doc/macros/fonts.C
 
 # Remove embedded sources in order to be sure they are not used
 #  * afterimage
@@ -1962,6 +1969,14 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Oct 02 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-3
+- Add Requires on root-graf-asimage to root-core
+- Add Requires on root-graf-x11 to root-graf-gui
+- Add Requires on root-hist-painter to root-hist
+- Add Requires on root-minuit to root-mathcore
+- Add Requires on krb5-workstation to root-net-krb5
+- Add BuildRequires on krb5-workstation
+
 * Mon Aug 30 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-2
 - Adapt makefile to changes in make 3.82
 
@@ -1974,7 +1989,7 @@ fi
 - Create a separate tutorial package for the tutorial and test suite
 
 * Thu Jul 29 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00c-3
-- Correct license tags for: cint, core and rootfit
+- Correct license tags for: cint, core and roofit
 - Regenerate source tarball due to upstream retag (again)
 
 * Fri Jul 16 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00c-2
