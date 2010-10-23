@@ -11,9 +11,9 @@
 %endif
 
 Name:		root
-Version:	5.26.00d
+Version:	5.26.00e
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -59,8 +59,8 @@ Patch8:		%{name}-cern-filename.patch
 Patch9:		%{name}-cern-ppc.patch
 #		Adapt makefile to changes in make 3.82
 Patch10:	%{name}-make-3.82.patch
-#		Fix segfault in TMVA
-Patch11:	%{name}-tmva-segfault.patch
+#		Fix doc markup
+Patch11:	%{name}-htmldoc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -222,6 +222,7 @@ with CINT with any class for which a Reflex dictionary is provided.
 %package proofd
 Summary:	Parallel ROOT Facility - distributed, parallel computing
 Requires:	%{name}-net-rpdutils = %{version}-%{release}
+Requires:	%{name}-proof = %{version}-%{release}
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
 Requires(post):		chkconfig
@@ -1969,6 +1970,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Oct 22 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-1
+- Update to 5.26.00e
+- Drop patch fixed upstream: root-tmva-segfault.patch
+- Add Requires on root-proof to root-proofd
+
 * Sat Oct 02 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-3
 - Add Requires on root-graf-asimage to root-core
 - Add Requires on root-graf-x11 to root-graf-gui

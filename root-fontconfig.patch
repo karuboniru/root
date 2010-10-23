@@ -261,7 +261,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
  //______________________________________________________________________________
  // TGLFont
  //
-@@ -389,14 +391,92 @@
+@@ -389,14 +391,91 @@
     FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
     if (it == fFontMap.end())
     {
@@ -271,9 +271,9 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
 -# else
 -      ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 -# endif
-       TObjString* name = (TObjString*)fgFontFileArray[fileID];
+-      TObjString* name = (TObjString*)fgFontFileArray[fileID];
 -      TString file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
-+      const char *fontname = name->GetString().Data();
++      const char *fontname = ((TObjString*)fgFontFileArray[fileID])->String().Data();
 +
 +      FcPattern *pat, *match;
 +      FcResult result;
@@ -361,7 +361,12 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
  
        FTFont* ftfont = 0;
        switch (mode)
-@@ -425,6 +505,8 @@
+@@ -422,9 +501,13 @@
+             break;
+          default:
+             Error("TGLFontManager::GetFont", "invalid FTGL type");
++            FcPatternDestroy (match);
++            FcPatternDestroy (pat);
              return;
              break;
        }
