@@ -13,7 +13,7 @@
 Name:		root
 Version:	5.26.00e
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -1191,6 +1191,8 @@ sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
+# Partial workaround for https://savannah.cern.ch/bugs/?70608
+touch htmldoc/INCLUDE_Index.html
 mv htmldoc ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/html
 
 # Create includelist files ...
@@ -1970,6 +1972,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Nov 01 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-2
+- Rebuild for updated unuran
+
 * Fri Oct 22 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-1
 - Update to 5.26.00e
 - Drop patch fixed upstream: root-tmva-segfault.patch
