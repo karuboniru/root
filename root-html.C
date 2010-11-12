@@ -1,4 +1,6 @@
 {
+  gEnv->SetValue("Root.DynamicPath", "@PWD@/lib");
+  gEnv->SetValue("Root.MacroPath", "@PWD@/macros");
   gEnv->SetValue("Root.PluginPath", "@PWD@/etc/plugins");
   gSystem->AddIncludePath("-I@PWD@/include");
   gSystem->AddIncludePath("-I@PWD@/cint/cint/include");

@@ -13,7 +13,7 @@
 Name:		root
 Version:	5.26.00e
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -61,6 +61,8 @@ Patch9:		%{name}-cern-ppc.patch
 Patch10:	%{name}-make-3.82.patch
 #		Fix doc markup
 Patch11:	%{name}-htmldoc.patch
+#		Fix crash in TGFontTypeComboBox destructor
+Patch12:	%{name}-fonttype-combobox-dtor.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -365,6 +367,7 @@ a low quality 3D viewer for ROOT defined geometries.
 %package gui
 Summary:	GUI library for ROOT
 Requires:	%{name}-graf-x11 = %{version}-%{release}
+Requires:	%{name}-gui-ged = %{version}-%{release}
 
 %description gui
 This package contains a library for defining graphical user interfaces.
@@ -864,6 +867,7 @@ package to use root with GNU Emacs.
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
+%patch12 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1972,6 +1976,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Nov 12 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-3
+- Fix crash in TGFontTypeComboBox destructor
+- Add Requires on root-gui-ged to root-gui
+
 * Mon Nov 01 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-2
 - Rebuild for updated unuran
 
@@ -1982,7 +1990,7 @@ fi
 
 * Sat Oct 02 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00d-3
 - Add Requires on root-graf-asimage to root-core
-- Add Requires on root-graf-x11 to root-graf-gui
+- Add Requires on root-graf-x11 to root-gui
 - Add Requires on root-hist-painter to root-hist
 - Add Requires on root-minuit to root-mathcore
 - Add Requires on krb5-workstation to root-net-krb5
