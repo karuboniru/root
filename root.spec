@@ -11,9 +11,9 @@
 %endif
 
 Name:		root
-Version:	5.26.00e
+Version:	5.28.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -42,27 +42,10 @@ Patch1:		%{name}-fontconfig.patch
 Patch2:		%{name}-afterimage.patch
 #		Use system unuran:
 Patch3:		%{name}-unuran.patch
-#		Fix library detection when linker scripts are used:
-#		(backported from root svn trunk)
-Patch4:		%{name}-linker-scripts.patch
-#		Allow building RFIO IO modules using DPM's RFIO implementation:
-#		(backported from root svn trunk)
-Patch5:		%{name}-dpm-rfio.patch
-#		Missing explicit linking 
-#		(backported from root svn trunk)
-Patch6:		%{name}-missing-explicit-link.patch
-#		Can't split latex markup into multiple lines
-Patch7:		%{name}-split-latex.patch
-#		Fix broken macro
-Patch8:		%{name}-cern-filename.patch
 #		Workaround for broken Form() on ppc
-Patch9:		%{name}-cern-ppc.patch
-#		Adapt makefile to changes in make 3.82
-Patch10:	%{name}-make-3.82.patch
+Patch4:		%{name}-cern-ppc.patch
 #		Fix doc markup
-Patch11:	%{name}-htmldoc.patch
-#		Fix crash in TGFontTypeComboBox destructor
-Patch12:	%{name}-fonttype-combobox-dtor.patch
+Patch5:		%{name}-htmldoc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -79,9 +62,16 @@ BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
 BuildRequires:	zlib-devel
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	libAfterImage-devel
+%else
+BuildRequires:	libjpeg-devel
+BuildRequires:	libpng-devel
+BuildRequires:	libtiff-devel
+%endif
 BuildRequires:	ncurses-devel
 BuildRequires:	avahi-compat-libdns_sd-devel
+BuildRequires:	avahi-devel
 BuildRequires:	xmlrpc-c-devel
 BuildRequires:	libxml2-devel
 BuildRequires:	fftw-devel
@@ -96,9 +86,11 @@ BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	qt-devel
 %if %{?fedora}%{!?fedora:0} >= 14
 BuildRequires:	qt-webkit-devel
+%endif
 %endif
 BuildRequires:	ruby
 BuildRequires:	ruby-devel
@@ -110,14 +102,21 @@ BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
 BuildRequires:	xrootd-devel
-BuildRequires:	dos2unix
+BuildRequires:	cfitsio-devel
 BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
 BuildRequires:	graphviz-devel
+%if "%{?rhel}" == "5"
+BuildRequires:	graphviz-gd
+%endif
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(liberationsans)
 BuildRequires:	font(liberationserif)
 BuildRequires:	font(liberationmono)
+%else
+BuildRequires:	liberation-fonts
+%endif
 #		This contains a Symbol font that can be used by fontconfig
 BuildRequires:	urw-fonts
 Requires:	hicolor-icon-theme
@@ -150,7 +149,10 @@ analysis systems.
 
 %package icons
 Summary:	ROOT icon collection
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildArch:	noarch
+%endif
 Requires:	%{name}-core = %{version}-%{release}
 
 %description icons
@@ -158,7 +160,10 @@ This package contains icons used by the ROOT GUI.
 
 %package doc
 Summary:	Documentation for the ROOT system
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildArch:	noarch
+%endif
 License:	LGPLv2+ and GPLv2+ and BSD
 Requires:	%{name}-cint = %{version}-%{release}
 
@@ -168,7 +173,10 @@ documentation.
 
 %package tutorial
 Summary:	ROOT tutorial scripts and test suite
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildArch:	noarch
+%endif
 Requires:	%{name}-cint = %{version}-%{release}
 
 %description tutorial
@@ -176,24 +184,28 @@ This package contains the tutorial scripts and test suite for ROOT.
 
 %package core
 Summary:	ROOT core libraries
-Provides:	root-io = %{version}-%{release}
-Obsoletes:	root-io < 5.26.00c-2
+Group:		Applications/Engineering
 License:	LGPLv2+ and BSD
 Requires:	%{name}-icons = %{version}-%{release}
 Requires:	%{name}-graf-asimage = %{version}-%{release}
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 Requires:	font(liberationsans)
 Requires:	font(liberationserif)
 Requires:	font(liberationmono)
+%else
+Requires:	liberation-fonts
+%endif
 #		This contains a Symbol font that can be used by fontconfig
 Requires:	urw-fonts
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
-libRint, libRIO and libThread.
+libRint and libThread.
 
 %package cint
 Summary:	CINT C++ interpreter
+Group:		Applications/Engineering
 Obsoletes:	%{name}-cint7 < 5.26.00c
 License:	MIT
 
@@ -202,6 +214,7 @@ This package contains the CINT C++ interpreter version 5.
 
 %package reflex
 Summary:	Reflex dictionary generator
+Group:		Applications/Engineering
 Requires:	gccxml
 
 %description reflex
@@ -213,6 +226,7 @@ This package contains the reflex dictionary generator for ROOT.
 #		./configure only allows --enable-cintex for ix86 and x86_64
 %package cintex
 Summary:	Reflex to CINT dictionary converter
+Group:		Applications/Engineering
 Requires:	%{name}-python = %{version}-%{release}
 
 %description cintex
@@ -223,6 +237,7 @@ with CINT with any class for which a Reflex dictionary is provided.
 
 %package proofd
 Summary:	Parallel ROOT Facility - distributed, parallel computing
+Group:		Applications/Engineering
 Requires:	%{name}-net-rpdutils = %{version}-%{release}
 Requires:	%{name}-proof = %{version}-%{release}
 Requires(preun):	chkconfig
@@ -240,6 +255,7 @@ transparent interface.
 
 %package rootd
 Summary:	ROOT remote file server
+Group:		Applications/Engineering
 Requires:	%{name}-net-rpdutils = %{version}-%{release}
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
@@ -254,6 +270,7 @@ transparent interface.
 
 %package python
 Summary:	Python extension for ROOT
+Group:		Applications/Engineering
 
 %description python
 This package contains the Python extension for ROOT. This package
@@ -261,6 +278,7 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package ruby
 Summary:	Ruby extension for ROOT
+Group:		Applications/Engineering
 Provides:	ruby(libRuby) = %{version}
 requires:	ruby(abi) = 1.8
 
@@ -269,14 +287,23 @@ This package contains the Ruby extension for ROOT. The interface
 goes both ways - that is, you can call ROOT functions from Ruby, and
 invoke the Ruby interpreter from ROOT.
 
+%package genetic
+Summary:	Genetic algorithms for ROOT
+Group:		Applications/Engineering
+
+%description genetic
+This package contains a genetic minimizer module for ROOT.
+
 %package geom
 Summary:	Geometry library for ROOT
+Group:		Applications/Engineering
 
 %description geom
 This package contains a library for defining geometries in ROOT.
 
 %package gdml
 Summary:	GDML import/export for ROOT geometries
+Group:		Applications/Engineering
 Requires:	%{name}-python = %{version}-%{release}
 
 %description gdml
@@ -284,45 +311,62 @@ This package contains an import/export module for ROOT geometries.
 
 %package graf
 Summary:	2D graphics library for ROOT
+Group:		Applications/Engineering
 
 %description graf
 This package contains the 2-dimensional graphics library for ROOT.
 
 %package graf-asimage
 Summary:	AfterImage graphics renderer for ROOT
+Group:		Applications/Engineering
 
 %description graf-asimage
 This package contains the AfterImage renderer for ROOT, which allows
 you to store output graphics in many formats, including JPEG, PNG and
 TIFF.
 
+%package graf-fitsio
+Summary:	ROOT interface for the Flexible Image Transport System (FITS)
+Group:		Applications/Engineering
+
+%description graf-fitsio
+This package contains a library for using the Flexible Image Transport
+System (FITS) data format in root.
+
 %package graf-gpad
 Summary:	Canvas and pad library for ROOT
+Group:		Applications/Engineering
 
 %description graf-gpad
 This package contains a library for canvas and pad manipulations.
 
 %package graf-gviz
 Summary:	Graphviz 2D library for ROOT
+Group:		Applications/Engineering
 
 %description graf-gviz
 This package contains the 2-dimensional graphviz library for ROOT.
 
 %package graf-postscript
 Summary:	Postscript/PDF renderer library for ROOT
+Group:		Applications/Engineering
 
 %description graf-postscript
 This package contains a library for ROOT, which allows rendering
 postscript and PDF output.
 
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %package graf-qt
 Summary:	Qt renderer for ROOT
+Group:		Applications/Engineering
 
 %description graf-qt
 This package contains the Qt renderer for ROOT.
+%endif
 
 %package graf-x11
 Summary:	X window system renderer for ROOT
+Group:		Applications/Engineering
 
 %description graf-x11
 This package contains the X11 renderer for ROOT, which allows using an
@@ -330,6 +374,7 @@ X display for showing graphics.
 
 %package graf3d
 Summary:	Basic 3D shapes library for ROOT
+Group:		Applications/Engineering
 
 %description graf3d
 This library contains the basic 3D shapes and classes for ROOT. For
@@ -337,12 +382,14 @@ a more full-blown geometry library, see the root-geom package.
 
 %package graf3d-eve
 Summary:	Event display library for ROOT
+Group:		Applications/Engineering
 
 %description graf3d-eve
 This package contains a library for defining event displays in ROOT.
 
 %package graf3d-gl
 Summary:	GL renderer for ROOT
+Group:		Applications/Engineering
 
 %description graf3d-gl
 This package contains the GL renderer for ROOT. This library provides
@@ -352,12 +399,14 @@ rendering of histograms, and similar. Included is also a high quality
 
 %package graf3d-gviz3d
 Summary:	Graphviz 3D library for ROOT
+Group:		Applications/Engineering
 
 %description graf3d-gviz3d
 This package contains the 3-dimensional graphviz library for ROOT.
 
 %package graf3d-x3d
 Summary:	X 3D renderer for ROOT
+Group:		Applications/Engineering
 
 %description graf3d-x3d
 This package contains the X 3D renderer for ROOT. This library provides
@@ -366,6 +415,7 @@ a low quality 3D viewer for ROOT defined geometries.
 
 %package gui
 Summary:	GUI library for ROOT
+Group:		Applications/Engineering
 Requires:	%{name}-graf-x11 = %{version}-%{release}
 Requires:	%{name}-gui-ged = %{version}-%{release}
 
@@ -374,6 +424,7 @@ This package contains a library for defining graphical user interfaces.
 
 %package gui-fitpanel
 Summary:	GUI element for fits in ROOT
+Group:		Applications/Engineering
 
 %description gui-fitpanel
 This package contains a library to show a pop-up dialog when fitting
@@ -381,6 +432,7 @@ various kinds of data.
 
 %package gui-ged
 Summary:	GUI element for editing various ROOT objects
+Group:		Applications/Engineering
 
 %description gui-ged
 This package contains a library to show a pop-up window for editing
@@ -388,19 +440,24 @@ various ROOT objects.
 
 %package guibuilder
 Summary:	GUI editor library for ROOT
+Group:		Applications/Engineering
 
 %description guibuilder
 This package contains a library for editing graphical user interfaces
 in ROOT.
 
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %package gui-qt
 Summary:	Qt GUI for ROOT
+Group:		Applications/Engineering
 
 %description gui-qt
 This package contains the Qt GUI for ROOT.
+%endif
 
 %package gui-recorder
 Summary:	Interface for recording and replaying events in ROOT
+Group:		Applications/Engineering
 
 %description gui-recorder
 This library provides interface for recording and replaying events in ROOT.
@@ -412,6 +469,7 @@ and can be replayed again anytime.
 
 %package hbook
 Summary:	Hbook library for ROOT
+Group:		Applications/Engineering
 
 %description hbook
 This package contains the Hbook library for ROOT, allowing you to
@@ -419,6 +477,7 @@ access legacy Hbook files (NTuples and Histograms from PAW).
 
 %package hist
 Summary:	Histogram library for ROOT
+Group:		Applications/Engineering
 Requires:	%{name}-hist-painter = %{version}-%{release}
 
 %description hist
@@ -426,44 +485,65 @@ This package contains a library for histogramming in ROOT.
 
 %package hist-painter
 Summary:	Histogram painter plugin for ROOT
+Group:		Applications/Engineering
 
 %description hist-painter
 This package contains a painter of histograms for ROOT.
 
 %package spectrum
 Summary:	Spectra analysis library for ROOT
+Group:		Applications/Engineering
 
 %description spectrum
 This package contains the Spectrum library for ROOT.
 
 %package spectrum-painter
 Summary:	Spectrum painter plugin for ROOT
+Group:		Applications/Engineering
 
 %description spectrum-painter
 This package contains a painter of spectra for ROOT.
 
+%package hist-factory
+Summary:	RooFit PDFs from ROOT histograms
+Group:		Applications/Engineering
+
+%description hist-factory
+Create RooFit probability density functions from ROOT histograms.
+
 %package html
 Summary:	HTML documentation generator for ROOT
+Group:		Applications/Engineering
 Requires:	graphviz
 
 %description html
 This package contains classes to automatically extract documentation
 from marked up sources.
 
+%package io
+Summary:	Input/output of ROOT objects
+Group:		Applications/Engineering
+
+%description io
+This package provides I/O routines for ROOT objects.
+
 %package io-dcache
 Summary:	dCache input/output library for ROOT
+Group:		Applications/Engineering
 
 %description io-dcache
 This package contains the dCache extension for ROOT.
 
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
+Group:		Applications/Engineering
 
 %description io-rfio
 This package contains the Remote File IO extension for ROOT.
 
 %package io-sql
 Summary:	SQL input/output library for ROOT
+Group:		Applications/Engineering
 
 %description io-sql
 This package contains the SQL extension for ROOT, that allows
@@ -472,12 +552,14 @@ TFile interface.
 
 %package io-xml
 Summary:	XML reader library for ROOT
+Group:		Applications/Engineering
 
 %description io-xml
 This package contains the XML reader library for ROOT.
 
 %package foam
 Summary:	A Compact Version of the Cellular Event Generator
+Group:		Applications/Engineering
 
 %description foam
 The general-purpose self-adapting Monte Carlo (MC) event
@@ -488,6 +570,7 @@ easier to use for the average user.
 
 %package fftw
 Summary:	FFTW library for ROOT
+Group:		Applications/Engineering
 License:	GPLv2+
 
 %description fftw
@@ -496,6 +579,7 @@ It uses the very fast fftw (version 3) library.
 
 %package fumili
 Summary:	Fumili library for ROOT
+Group:		Applications/Engineering
 
 %description fumili
 This package contains the fumili library for ROOT. This provides an
@@ -503,6 +587,7 @@ alternative fitting algorithm for ROOT.
 
 %package genvector
 Summary:	Generalized vector library for ROOT
+Group:		Applications/Engineering
 
 %description genvector
 This package contains the Genvector library for ROOT. This provides
@@ -510,6 +595,7 @@ a generalized vector library.
 
 %package mathcore
 Summary:	Core mathematics library for ROOT
+Group:		Applications/Engineering
 Requires:	%{name}-minuit = %{version}-%{release}
 
 %description mathcore
@@ -517,6 +603,7 @@ This package contains the MathCore library for ROOT.
 
 %package mathmore
 Summary:	GSL interface library for ROOT
+Group:		Applications/Engineering
 License:	GPLv2+
 
 %description mathmore
@@ -527,12 +614,14 @@ is licensed under GPLv2+ due to its use of GSL.
 
 %package matrix
 Summary:	Matrix library for ROOT
+Group:		Applications/Engineering
 
 %description matrix
 This package contains the Matrix library for ROOT.
 
 %package minuit
 Summary:	Minuit library for ROOT
+Group:		Applications/Engineering
 
 %description minuit
 This package contains the MINUIT library for ROOT. This provides a
@@ -540,6 +629,7 @@ fitting algorithm for ROOT.
 
 %package minuit2
 Summary:	Minuit version 2 library for ROOT
+Group:		Applications/Engineering
 
 %description minuit2
 This package contains the MINUIT version 2 library for ROOT. This
@@ -547,6 +637,7 @@ provides an fitting algorithm for ROOT.
 
 %package mlp
 Summary:	Multi-layer perceptron extension for ROOT
+Group:		Applications/Engineering
 
 %description mlp
 This package contains the mlp library for ROOT. This library provides
@@ -554,12 +645,14 @@ a multi-layer perceptron neural network package for ROOT.
 
 %package physics
 Summary:	Physics library for ROOT
+Group:		Applications/Engineering
 
 %description physics
 This package contains the physics library for ROOT.
 
 %package quadp
 Summary:	QuadP library for ROOT
+Group:		Applications/Engineering
 
 %description quadp
 This package contains the QuadP library for ROOT. This provides the a
@@ -569,12 +662,14 @@ subject to linear constraints.
 
 %package smatrix
 Summary:	Sparse matrix library for ROOT
+Group:		Applications/Engineering
 
 %description smatrix
 This package contains the Smatrix library for ROOT.
 
 %package splot
 Summary:	Splot library for ROOT
+Group:		Applications/Engineering
 
 %description splot
 A common method used in High Energy Physics to perform measurements
@@ -606,6 +701,7 @@ discriminating variables.
 
 %package unuran
 Summary:	Random number generator library
+Group:		Applications/Engineering
 License:	GPLv2+
 
 %description unuran
@@ -625,6 +721,7 @@ variates from the desired distribution.
 
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
+Group:		Applications/Engineering
 
 %description memstat
 This package contains the memory statistics tool for debugging memory
@@ -632,48 +729,56 @@ leaks and such.
 
 %package table
 Summary:	Table library for ROOT
+Group:		Applications/Engineering
 
 %description table
 This package contains the Table library for ROOT.
 
 %package montecarlo-eg
 Summary:	Event generator library for ROOT
+Group:		Applications/Engineering
 
 %description montecarlo-eg
 This package contains an event generator library for ROOT.
 
 %package montecarlo-vmc
 Summary:	Virtual Monte-Carlo (simulation) library for ROOT
+Group:		Applications/Engineering
 
 %description montecarlo-vmc
 This package contains the VMC library for ROOT.
 
 %package net
 Summary:	Net library for ROOT
+Group:		Applications/Engineering
 
 %description net
 This package contains the ROOT networking library.
 
 %package net-rpdutils
 Summary:	Authentication utilities used by rootd and proofd
+Group:		Applications/Engineering
 
 %description net-rpdutils
 This package contains authentication utilities used by rootd and proofd.
 
 %package net-bonjour
 Summary:	Bonjour extension for ROOT
+Group:		Applications/Engineering
 
 %description net-bonjour
 This package contains a bonjour extension for ROOT.
 
 %package net-auth
 Summary:	Authentication extension for ROOT
+Group:		Applications/Engineering
 
 %description net-auth
 This package contains the basic authentication algorithms used by ROOT.
 
 %package net-globus
 Summary:	Globus extension for ROOT
+Group:		Applications/Engineering
 Requires:	globus-proxy-utils
 
 %description net-globus
@@ -682,6 +787,7 @@ authentication and authorization against Globus.
 
 %package net-krb5
 Summary:	Kerberos (version 5) extension for ROOT
+Group:		Applications/Engineering
 Requires:	krb5-workstation
 
 %description net-krb5
@@ -690,6 +796,7 @@ allows authentication and authorization using Kerberos tokens.
 
 %package net-ldap
 Summary:	LDAP extension for ROOT
+Group:		Applications/Engineering
 
 %description net-ldap
 This package contains the LDAP extension for ROOT. This gives you
@@ -697,6 +804,7 @@ access to LDAP directories via ROOT.
 
 %package netx
 Summary:	NetX extension for ROOT
+Group:		Applications/Engineering
 
 %description netx
 This package contains the NetX extension for ROOT, i.e. a client for
@@ -704,13 +812,22 @@ the xrootd server.
 
 %package proof
 Summary:	PROOF extension for ROOT
+Group:		Applications/Engineering
 
 %description proof
 This package contains the proof extension for ROOT. This provides a
 client to use in a PROOF environment.
 
+%package proof-pq2
+Summary:	PROOF Quick Query (pq2)
+Group:		Applications/Engineering
+
+%description proof-pq2
+Shell-based interface to the PROOF dataset handling.
+
 %package proof-sessionviewer
 Summary:	GUI to browse an interactive PROOF session
+Group:		Applications/Engineering
 
 %description proof-sessionviewer
 This package contains a library for browsing an interactive PROOF
@@ -718,6 +835,7 @@ session in ROOT.
 
 %package clarens
 Summary:	Clarens extension for ROOT
+Group:		Applications/Engineering
 
 %description clarens
 This package contains the Clarens extension for ROOT, for use in a
@@ -729,6 +847,7 @@ computational resources provided by computing grids.
 
 %package peac
 Summary:	PEAC extension for ROOT - run-time libraries
+Group:		Applications/Engineering
 
 %description peac
 This package contains the PEAC (Proof Enabled Analysis Center)
@@ -741,6 +860,7 @@ services.
 
 %package xproof
 Summary:	XPROOF extension for ROOT
+Group:		Applications/Engineering
 
 %description xproof
 This package contains the xproof extension for ROOT. This provides a
@@ -748,6 +868,7 @@ client to be used in a PROOF environment.
 
 %package roofit
 Summary:	ROOT extension for modeling expected distributions
+Group:		Applications/Engineering
 License:	BSD
 
 %description roofit
@@ -765,6 +886,7 @@ suitable for adoption in different disciplines as well.
 
 %package sql-mysql
 Summary:	MySQL client plugin for ROOT
+Group:		Applications/Engineering
 
 %description sql-mysql
 This package contains the MySQL plugin for ROOT. This plugin
@@ -774,6 +896,7 @@ ROOT environment.
 
 %package sql-odbc
 Summary:	ODBC plugin for ROOT
+Group:		Applications/Engineering
 
 %description sql-odbc
 This package contains the ODBC (Open DataBase Connectivity) plugin
@@ -782,6 +905,7 @@ supports the ODBC protocol.
 
 %package sql-pgsql
 Summary:	PostgreSQL client plugin for ROOT
+Group:		Applications/Engineering
 
 %description sql-pgsql
 This package contains the PostGreSQL plugin for ROOT. This plugin
@@ -791,6 +915,7 @@ ROOT environment.
 
 %package tmva
 Summary:	Toolkit for multivariate data analysis
+Group:		Applications/Engineering
 License:	BSD
 
 %description tmva
@@ -815,36 +940,45 @@ compared.
 
 %package tree
 Summary:	Tree library for ROOT
+Group:		Applications/Engineering
 
 %description tree
 This package contains the Tree library for ROOT.
 
 %package tree-player
 Summary:	Library to loop over a ROOT tree
+Group:		Applications/Engineering
 
 %description tree-player
 This package contains a plugin to loop over a ROOT tree.
 
 %package tree-viewer
 Summary:	GUI to browse a ROOT tree
+Group:		Applications/Engineering
 
 %description tree-viewer
 This package contains a plugin for browsing a ROOT tree in ROOT.
 
 %package -n emacs-%{name}
+Summary:	Compiled elisp files to run root under GNU Emacs
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+BuildArch:	noarch
+%endif
 Requires:	%{name} = %{version}-%{release}
 Requires:	emacs(bin) >= %{emacs_version}
-Summary:	Compiled elisp files to run root under GNU Emacs
-BuildArch:	noarch
 
 %description -n emacs-%{name}
 emacs-root is an add-on package for GNU Emacs. It provides integration
 with ROOT.
 
 %package -n emacs-%{name}-el
-Requires:	emacs-%{name} = %{version}-%{release}
 Summary:	Elisp source files for root under GNU Emacs
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildArch:	noarch
+%endif
+Requires:	emacs-%{name} = %{version}-%{release}
 
 %description -n emacs-%{name}-el
 This package contains the elisp source files for root under GNU Emacs. You
@@ -853,7 +987,7 @@ package to use root with GNU Emacs.
 
 %prep
 %setup -q
-%if "%(pkg-config --modversion ftgl)" < "2.1.3"
+%if "%(pkg-config --modversion ftgl 2>/dev/null)" < "2.1.3"
 %patch0 -p1
 %endif
 %patch1 -p1
@@ -861,13 +995,6 @@ package to use root with GNU Emacs.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -877,51 +1004,27 @@ find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 
 chmod 644 cint/cint/include/makehpib \
 	  cint/cint/stl/_climits \
-	  cint/cint7/include/makeit.bat \
 	  test/DrawTest.sh \
 	  test/dt_RunDrawTest.sh \
 	  test/dt_MakeFiles.sh \
 	  test/ProofBench/make_event_par.sh \
 	  test/RootIDE/Makefile \
-	  test/RootShower/.rootshowerrc
-
-dos2unix tutorials/image/mditestbg.xpm \
-	 tutorials/gui/mditestbg.xpm
-
-for f in test/RootShower/RootShower.rc \
-	 tutorials/eve/alice_esd_html_summary.C \
-	 tutorials/eve/SplitGLView.C \
-	 tutorials/graphics/markerwarning.C ; do
-    iconv -f iso-8859-1 -t utf-8 $f -o $f.new
-    mv $f.new $f
-done
-
-# No idea how this happened...
-for f in core/base/inc/TVirtualFFT.h ; do
-    iconv -f euc-jp -t utf-8 $f -o $f.new
-    mv $f.new $f
-done
-
-# Junk byte - it is neither iso-8859-1 nor macroman - remove
-sed s/"plateau."/"plateau"/ -i test/stressFit.cxx
-
-# This one is a mixture of iso-8859-1 and macroman
-iconv -f macintosh -t utf-8 README/CREDITS | sed s/È/é/ > README/CREDITS.new
-mv README/CREDITS.new README/CREDITS
-
-# Typo in documentation
-sed s/SePalette/SetPalette/g -i hist/histpainter/src/THistPainter.cxx
+	  tutorials/fitsio/sample1.fits
 
 # Badly named file - not python - aborts python byte compilation
 mv tutorials/pyroot/fit1_py.py tutorials/pyroot/fit1_py.txt
 sed s/fit1_py.py/fit1_py.txt/ -i tutorials/pyroot/fit1.py
 
-# Fix strange example
-sed s/ABCDFGF/ABCDEFGH/ -i core/base/doc/macros/fonts.C
-
 # Remove embedded sources in order to be sure they are not used
 #  * afterimage
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 rm -rf graf2d/asimage/src/libAfterImage
+%else
+rm -rf graf2d/asimage/src/libAfterImage/libjpeg
+rm -rf graf2d/asimage/src/libAfterImage/libpng
+rm -rf graf2d/asimage/src/libAfterImage/zlib
+sed '/zlib\/zlib.h/d' -i graf2d/asimage/src/libAfterImage/.depend
+%endif
 #  * ftgl
 rm -rf graf3d/ftgl/src graf3d/ftgl/inc
 #  * freetype
@@ -972,7 +1075,11 @@ unset QTINC
 	    --etcdir=%{_datadir}/%{name} \
 	    --docdir=%{_defaultdocdir}/%{name}-%{version} \
 	    --elispdir=%{emacs_lispdir}/%{name} \
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 	    --disable-builtin-afterimage \
+%else
+	    --enable-builtin-afterimage \
+%endif
 	    --disable-builtin-ftgl \
 	    --disable-builtin-freetype \
 	    --disable-builtin-glew \
@@ -981,12 +1088,12 @@ unset QTINC
 	    --enable-asimage \
 	    --enable-astiff \
 	    --enable-bonjour \
-	    --enable-cint5 \
 	    --enable-clarens \
 	    --enable-dcache \
 	    --enable-editline \
 	    --enable-exceptions \
 	    --enable-explicitlink \
+	    --enable-fitsio \
 	    --enable-fftw3 \
 	    --enable-gdml \
 	    --enable-globus \
@@ -1004,8 +1111,13 @@ unset QTINC
 	    --enable-peac \
 	    --enable-pgsql \
 	    --enable-python \
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 	    --enable-qt \
 	    --enable-qtgsi \
+%else
+	    --disable-qt \
+	    --disable-qtgsi \
+%endif
 	    --enable-reflex \
 	    --enable-rfio \
 	      --with-rfio-incdir=%{_includedir}/dpm \
@@ -1019,6 +1131,7 @@ unset QTINC
 	    --enable-table \
 	    --enable-tmva \
 	    --enable-unuran \
+	    --enable-x11 \
 	    --enable-xml \
 	    --enable-xft \
 	    --enable-xrootd \
@@ -1031,16 +1144,15 @@ unset QTINC
 %endif
 	    --disable-afs \
 	    --disable-alien \
+	    --disable-alloc \
 	    --disable-castor \
 	    --disable-chirp \
-	    --disable-cint7 \
+	    --disable-cling \
 	    --disable-gfal \
-	    --disable-g4root \
 	    --disable-glite \
 	    --disable-hdfs \
 	    --disable-monalisa \
 	    --disable-oracle \
-	    --disable-pch \
 	    --disable-pythia6 \
 	    --disable-pythia8 \
 	    --disable-rpath \
@@ -1078,10 +1190,11 @@ Terminal=true
 Type=Application
 MimeType=application/x-root;
 Categories=Utility;
+Encoding=UTF-8
 EOF
 
 desktop-file-install --dir=${RPM_BUILD_ROOT}%{_datadir}/applications \
-		     root.desktop
+		     --vendor "" root.desktop
 install -p -m 644 build/package/debian/root-system-bin.png \
     ${RPM_BUILD_ROOT}%{_datadir}/icons/hicolor/48x48/apps/root.png
 
@@ -1117,6 +1230,10 @@ mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion} \
 ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_sitearch}`/libRuby.so \
    ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion}
 
+# These should be in PATH
+mv ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils/pq2/pq2* \
+   ${RPM_BUILD_ROOT}%{_bindir}
+
 # Remove some junk
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.plist
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.xinetd
@@ -1128,6 +1245,10 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/hostcert.conf
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
 rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
+%if %{?fedora}%{!?fedora:0} < 10 && %{?rhel}%{!?rhel:0} < 6
+rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
+%endif
+rm ${RPM_BUILD_ROOT}%{_bindir}/drop_from_path
 rm ${RPM_BUILD_ROOT}%{_bindir}/thisroot*
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cint.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cmsd.1
@@ -1136,11 +1257,14 @@ rm ${RPM_BUILD_ROOT}%{_mandir}/man1/makecint.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/olbd.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/proofserva.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/roota.1
+rm ${RPM_BUILD_ROOT}%{_mandir}/man1/setup-pq2.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xprep.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xrd*.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xrootd.1
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.cw
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.pri
+%endif
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/proofdp.h
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/rootdp.h
 rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/BUILDSYSTEM
@@ -1167,6 +1291,9 @@ rm TFile/P110_THDFSFile.C
 rm TGLManager/P020_TGWin32GLManager.C
 rm TGrid/P010_TAlien.C
 rm TGrid/P020_TGLite.C
+%if %{?fedora}%{!?fedora:0} < 9 && %{?rhel}%{!?rhel:0} < 6
+rm TGuiFactory/P020_TQtRootGuiFactory.C
+%endif
 rm TImagePlugin/P010_TASPluginGS.C
 rm TSQLServer/P030_TSapDBServer.C
 rm TSQLServer/P040_TOracleServer.C
@@ -1176,6 +1303,9 @@ rm TViewerX3D/P020_TQtViewerX3D.C
 rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
+%if %{?fedora}%{!?fedora:0} < 9 && %{?rhel}%{!?rhel:0} < 6
+rm TVirtualX/P040_TGQt.C
+%endif
 rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
@@ -1195,21 +1325,18 @@ sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
-# Partial workaround for https://savannah.cern.ch/bugs/?70608
-touch htmldoc/INCLUDE_Index.html
 mv htmldoc ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/html
 
 # Create includelist files ...
 for module in `find * -name Module.mk` ; do
     module=`dirname $module`
-    make -f %{SOURCE1} includelist MODULE=$module
+    make -f %{SOURCE1} includelist MODULE=$module ROOT_SRCDIR=$PWD
 done
 
 # ... and merge some of them
 cat includelist-core-[^w]* > includelist-core
-cat includelist-io-io >> includelist-core
 cat includelist-geom-geom* > includelist-geom
-cat includelist-roofit-* > includelist-roofit
+cat includelist-roofit-roo* > includelist-roofit
 cat includelist-gui-qt* > includelist-gui-qt
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
 cat includelist-gui-guihtml >> includelist-gui-gui
@@ -1277,6 +1404,8 @@ fi
 %postun python -p /sbin/ldconfig
 %post ruby -p /sbin/ldconfig
 %postun ruby -p /sbin/ldconfig
+%post genetic -p /sbin/ldconfig
+%postun genetic -p /sbin/ldconfig
 %post geom -p /sbin/ldconfig
 %postun geom -p /sbin/ldconfig
 %post gdml -p /sbin/ldconfig
@@ -1285,14 +1414,18 @@ fi
 %postun graf -p /sbin/ldconfig
 %post graf-asimage -p /sbin/ldconfig
 %postun graf-asimage -p /sbin/ldconfig
+%post graf-fitsio -p /sbin/ldconfig
+%postun graf-fitsio -p /sbin/ldconfig
 %post graf-gpad -p /sbin/ldconfig
 %postun graf-gpad -p /sbin/ldconfig
 %post graf-gviz -p /sbin/ldconfig
 %postun graf-gviz -p /sbin/ldconfig
 %post graf-postscript -p /sbin/ldconfig
 %postun graf-postscript -p /sbin/ldconfig
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %post graf-qt -p /sbin/ldconfig
 %postun graf-qt -p /sbin/ldconfig
+%endif
 %post graf-x11 -p /sbin/ldconfig
 %postun graf-x11 -p /sbin/ldconfig
 %post graf3d -p /sbin/ldconfig
@@ -1313,8 +1446,10 @@ fi
 %postun gui-ged -p /sbin/ldconfig
 %post guibuilder -p /sbin/ldconfig
 %postun guibuilder -p /sbin/ldconfig
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %post gui-qt -p /sbin/ldconfig
 %postun gui-qt -p /sbin/ldconfig
+%endif
 %post gui-recorder -p /sbin/ldconfig
 %postun gui-recorder -p /sbin/ldconfig
 %post hbook -p /sbin/ldconfig
@@ -1327,8 +1462,12 @@ fi
 %postun spectrum -p /sbin/ldconfig
 %post spectrum-painter -p /sbin/ldconfig
 %postun spectrum-painter -p /sbin/ldconfig
+%post hist-factory -p /sbin/ldconfig
+%postun hist-factory -p /sbin/ldconfig
 %post html -p /sbin/ldconfig
 %postun html -p /sbin/ldconfig
+%post io -p /sbin/ldconfig
+%postun io -p /sbin/ldconfig
 %post io-dcache -p /sbin/ldconfig
 %postun io-dcache -p /sbin/ldconfig
 %post io-rfio -p /sbin/ldconfig
@@ -1455,10 +1594,10 @@ fi
 %{_libdir}/%{name}/libCore.*
 %{_libdir}/%{name}/libNew.*
 %{_libdir}/%{name}/libRint.*
-%{_libdir}/%{name}/libRIO.*
 %{_libdir}/%{name}/libThread.*
 %{_libdir}/%{name}/lib[^R]*Dict.*
 %dir %{_datadir}/%{name}
+%{_datadir}/%{name}/class.rules
 %{_datadir}/%{name}/gdb-backtrace.sh
 %{_datadir}/%{name}/root.mimes
 %{_datadir}/%{name}/system.rootauthrc
@@ -1469,8 +1608,6 @@ fi
 %{_datadir}/%{name}/macros/Dialogs.C
 %dir %{_datadir}/%{name}/plugins
 %dir %{_datadir}/%{name}/plugins/*
-%{_datadir}/%{name}/plugins/TArchiveFile/P010_TZIPFile.C
-%{_datadir}/%{name}/plugins/TVirtualStreamerInfo/P010_TStreamerInfo.C
 %{_includedir}/%{name}/RConfigOptions.h
 %{_includedir}/%{name}/RConfigure.h
 %{_includedir}/%{name}/compiledata.h
@@ -1553,6 +1690,11 @@ fi
 %{_libdir}/%{name}/libRuby.*
 %{ruby_sitearch}/libRuby.*
 
+%files genetic -f includelist-math-genetic
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libGenetic.*
+%{_datadir}/%{name}/plugins/ROOT@@Math@@Minimizer/P080_GeneticMinimizer.C
+
 %files geom -f includelist-geom
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGeom.*
@@ -1580,6 +1722,10 @@ fi
 %{_datadir}/%{name}/plugins/TImage/P010_TASImage.C
 %{_datadir}/%{name}/plugins/TPaletteEditor/P010_TASPaletteEditor.C
 
+%files graf-fitsio -f includelist-graf2d-fitsio
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libFITSIO.*
+
 %files graf-gpad -f includelist-graf2d-gpad
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGpad.*
@@ -1597,10 +1743,12 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualPS/P030_TPDF.C
 %{_datadir}/%{name}/plugins/TVirtualPS/P040_TImageDump.C
 
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %files graf-qt -f includelist-graf2d-qt
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGQt.*
 %{_datadir}/%{name}/plugins/TVirtualX/P040_TGQt.C
+%endif
 
 %files graf-x11 -f includelist-graf2d-x11
 %defattr(-,root,root,-)
@@ -1663,11 +1811,13 @@ fi
 %{_datadir}/%{name}/plugins/TGuiBuilder/P010_TRootGuiBuilder.C
 %{_datadir}/%{name}/plugins/TVirtualDragManager/P010_TGuiBldDragManager.C
 
+%if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %files gui-qt -f includelist-gui-qt
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libQtRoot.*
 %{_libdir}/%{name}/libQtGSI.*
 %{_datadir}/%{name}/plugins/TGuiFactory/P020_TQtRootGuiFactory.C
+%endif
 
 %files gui-recorder -f includelist-gui-recorder
 %defattr(-,root,root,-)
@@ -1700,11 +1850,28 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libSpectrumPainter.*
 
+%files hist-factory -f includelist-roofit-histfactory
+%defattr(-,root,root,-)
+%{_bindir}/hist2workspace
+%{_bindir}/prepareHistFactory
+%{_mandir}/man1/hist2workspace.1*
+%{_mandir}/man1/prepareHistFactory.1*
+%{_libdir}/%{name}/libHistFactory.*
+%{_datadir}/%{name}/HistFactorySchema.dtd
+%dir %{_includedir}/%{name}/RooStats/HistFactory
+%doc roofit/histfactory/doc/README
+
 %files html -f includelist-html
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libHtml.*
 %{_datadir}/%{name}/html
 %{_datadir}/%{name}/macros/html.C
+
+%files io -f includelist-io-io
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libRIO.*
+%{_datadir}/%{name}/plugins/TArchiveFile/P010_TZIPFile.C
+%{_datadir}/%{name}/plugins/TVirtualStreamerInfo/P010_TStreamerInfo.C
 
 %files io-dcache -f includelist-io-dcache
 %defattr(-,root,root,-)
@@ -1732,6 +1899,7 @@ fi
 %files foam -f includelist-math-foam
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libFoam.*
+%{_datadir}/%{name}/plugins/ROOT@@Math@@DistSampler/P020_TFoamSampler.C
 
 %files fftw -f includelist-math-fftw
 %defattr(-,root,root,-)
@@ -1814,11 +1982,11 @@ fi
 %files unuran -f includelist-math-unuran
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libUnuran.*
+%{_datadir}/%{name}/plugins/ROOT@@Math@@DistSampler/P010_TUnuranSampler.C
 
 %files memstat -f includelist-misc-memstat
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libMemStat.*
-%{_libdir}/%{name}/libMemStatGui.*
 
 %files table -f includelist-misc-table
 %defattr(-,root,root,-)
@@ -1896,6 +2064,11 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P060_TProofPlayerLite.C
 %{_datadir}/%{name}/valgrind-root.supp
 %doc %{_defaultdocdir}/%{name}-%{version}/README.PROOF
+
+%files proof-pq2 -f includelist-proof-pq2
+%defattr(-,root,root,-)
+%{_bindir}/pq2*
+%{_mandir}/man1/pq2*.1*
 
 %files proof-sessionviewer -f includelist-gui-sessionviewer
 %defattr(-,root,root,-)
@@ -1976,6 +2149,17 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Dec 15 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-1
+- Update to 5.28.00
+- Drop patches fixed upstream: root-linker-scripts.patch, root-dpm-rfio.patch,
+  root-missing-explicit-link.patch, root-split-latex.patch,
+  root-cern-filename.patch, root-make-3.82.patch,
+  root-fonttype-combobox-dtor.patch
+- New sub-packages: root-genetic, root-graf-fitsio, root-hist-factory,
+  root-proof-pq2
+- Make root-io a separate package again - the circular dependency with the
+  root-core package was resolved upstream
+
 * Fri Nov 12 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00e-3
 - Fix crash in TGFontTypeComboBox destructor
 - Add Requires on root-gui-ged to root-gui

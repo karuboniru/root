@@ -1,7 +1,7 @@
-diff -ur root-5.26.00.orig/core/base/src/TApplication.cxx root-5.26.00/core/base/src/TApplication.cxx
---- root-5.26.00.orig/core/base/src/TApplication.cxx	2009-12-14 20:17:59.000000000 +0100
-+++ root-5.26.00/core/base/src/TApplication.cxx	2010-01-12 16:42:30.247556669 +0100
-@@ -231,20 +231,9 @@
+diff -ur root-trunk.orig/core/base/src/TApplication.cxx root-trunk/core/base/src/TApplication.cxx
+--- root-trunk.orig/core/base/src/TApplication.cxx	2010-11-03 22:51:34.000000000 +0100
++++ root-trunk/core/base/src/TApplication.cxx	2010-11-25 20:47:25.726705009 +0100
+@@ -252,20 +252,9 @@
     // Try to load TrueType font renderer. Only try to load if not in batch
     // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
     // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
@@ -23,7 +23,7 @@ diff -ur root-5.26.00.orig/core/base/src/TApplication.cxx root-5.26.00/core/base
        if (gClassTable->GetDict("TGX11TTF")) {
           // in principle we should not have linked anything against libGX11TTF
           // but with ACLiC this can happen, initialize TGX11TTF by hand
-@@ -257,7 +246,6 @@
+@@ -279,7 +268,6 @@
        }
     }
  #endif
@@ -31,9 +31,9 @@ diff -ur root-5.26.00.orig/core/base/src/TApplication.cxx root-5.26.00/core/base
  
     // Create WM dependent application environment
     if (fAppImp)
-diff -ur root-5.26.00.orig/graf2d/graf/Module.mk root-5.26.00/graf2d/graf/Module.mk
---- root-5.26.00.orig/graf2d/graf/Module.mk	2009-12-14 20:18:27.000000000 +0100
-+++ root-5.26.00/graf2d/graf/Module.mk	2010-01-12 16:42:30.248319334 +0100
+diff -ur root-trunk.orig/graf2d/graf/Module.mk root-trunk/graf2d/graf/Module.mk
+--- root-trunk.orig/graf2d/graf/Module.mk	2010-11-25 20:41:40.000000000 +0100
++++ root-trunk/graf2d/graf/Module.mk	2010-11-25 20:47:25.727705004 +0100
 @@ -45,7 +45,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
@@ -42,10 +42,10 @@ diff -ur root-5.26.00.orig/graf2d/graf/Module.mk root-5.26.00/graf2d/graf/Module
 +		   "$(FREETYPELDFLAGS) $(FREETYPELIB) $(GRAFLIBEXTRA) -lfontconfig"
  
  $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
- 		@echo "Generating dictionary $@..."
-diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/TTF.cxx
---- root-5.26.00.orig/graf2d/graf/src/TTF.cxx	2009-12-14 20:18:27.000000000 +0100
-+++ root-5.26.00/graf2d/graf/src/TTF.cxx	2010-01-12 16:42:30.265068705 +0100
+ 		$(MAKEDIR)
+diff -ur root-trunk.orig/graf2d/graf/src/TTF.cxx root-trunk/graf2d/graf/src/TTF.cxx
+--- root-trunk.orig/graf2d/graf/src/TTF.cxx	2010-11-03 22:51:58.000000000 +0100
++++ root-trunk/graf2d/graf/src/TTF.cxx	2010-11-25 20:47:25.780705003 +0100
 @@ -26,6 +26,7 @@
  #include "TMath.h"
  #include "TError.h"
@@ -54,7 +54,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
  
  // to scale fonts to the same size as the old TT version
  const Float_t kScale = 0.93376068;
-@@ -111,10 +112,13 @@
+@@ -112,10 +113,13 @@
           charmap  = fgFace[fgCurFontIdx]->charmaps[i];
           platform = charmap->platform_id;
           encoding = charmap->encoding_id;
@@ -69,7 +69,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
               (platform == 1 && encoding == 0 &&
                !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")))
           {
-@@ -336,19 +340,86 @@
+@@ -360,19 +364,86 @@
        return 0;
     }
  
@@ -153,7 +153,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
 +      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
 +   }
-+   else if (strcmp(basename, /* 12 */ "symbol.ttf") == 0) {
++   else if (strcmp(basename, /* 12 and 15 */ "symbol.ttf") == 0) {
 +      FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
 +      FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
@@ -169,7 +169,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
        if (fgFontCount) {
           Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
           fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
-@@ -358,11 +429,18 @@
+@@ -382,11 +453,18 @@
        }
     }
  
@@ -190,7 +190,7 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
        if (tface) FT_Done_Face(tface);
        if (fgFontCount) {
           Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
-@@ -373,7 +451,8 @@
+@@ -397,7 +475,8 @@
        }
     }
  
@@ -200,15 +200,15 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
  
     fgFontName[fgFontCount] = StrDup(basename);
     fgCurFontIdx            = fgFontCount;
-@@ -428,35 +507,10 @@
-       /*14 */ { "wingding.ttf",  "opens___.ttf"            }
+@@ -464,37 +543,12 @@
+       /*15 */ { "symbol.ttf",    "symbol.ttf"              }
     };
  
 -   static int fontset = -1;
 -   int        thisset = fontset;
 -
     int fontid = fontnumber / 10;
-    if (fontid < 0 || fontid > 14) fontid = 0;
+    if (fontid < 0 || fontid > 15) fontid = 0;
  
 -   if (thisset == -1) {
 -      // try to load font (font must be in Root.TTFontPath resource)
@@ -229,17 +229,19 @@ diff -ur root-5.26.00.orig/graf2d/graf/src/TTF.cxx root-5.26.00/graf2d/graf/src/
 -         thisset = 1;
 -      }
 -   }
--   int ret = SetTextFont(fonttable[fontid][thisset]);
+    Int_t italic = 0;
+    if (fontid==15) italic = 1;
+-   int ret = SetTextFont(fonttable[fontid][thisset], italic);
 -   // Do not define font set is we're loading the symbol.ttf - it's
 -   // the same in both cases.
 -   if (ret == 0 && fontid != 12) fontset = thisset;
-+   SetTextFont(fonttable[fontid][0]);
++   SetTextFont(fonttable[fontid][0], italic);
  }
  
  //______________________________________________________________________________
-diff -ur root-5.26.00.orig/graf3d/gl/Module.mk root-5.26.00/graf3d/gl/Module.mk
---- root-5.26.00.orig/graf3d/gl/Module.mk	2009-12-14 20:18:13.000000000 +0100
-+++ root-5.26.00/graf3d/gl/Module.mk	2010-01-12 16:42:30.265068705 +0100
+diff -ur root-trunk.orig/graf3d/gl/Module.mk root-trunk/graf3d/gl/Module.mk
+--- root-trunk.orig/graf3d/gl/Module.mk	2010-11-25 20:41:36.000000000 +0100
++++ root-trunk/graf3d/gl/Module.mk	2010-11-25 20:47:25.781705003 +0100
 @@ -68,7 +68,7 @@
  $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GLEWLIB)
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -248,31 +250,33 @@ diff -ur root-5.26.00.orig/graf3d/gl/Module.mk root-5.26.00/graf3d/gl/Module.mk
 +		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
  
  $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
- 		@echo "Generating dictionary $@..."
-diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/gl/src/TGLFontManager.cxx
---- root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx	2009-12-14 20:18:13.000000000 +0100
-+++ root-5.26.00/graf3d/gl/src/TGLFontManager.cxx	2010-01-12 16:55:59.130070188 +0100
-@@ -35,6 +35,8 @@
- # include "FTGLBitmapFont.h"
+ 		$(MAKEDIR)
+diff -ur root-trunk.orig/graf3d/gl/src/TGLFontManager.cxx root-trunk/graf3d/gl/src/TGLFontManager.cxx
+--- root-trunk.orig/graf3d/gl/src/TGLFontManager.cxx	2010-11-03 22:51:45.000000000 +0100
++++ root-trunk/graf3d/gl/src/TGLFontManager.cxx	2010-11-25 20:47:25.782705002 +0100
+@@ -37,6 +37,8 @@
  #endif
+ 
  
 +#include <fontconfig/fontconfig.h>
 +
  //______________________________________________________________________________
  // TGLFont
  //
-@@ -389,14 +391,91 @@
+@@ -391,17 +393,91 @@
     FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
     if (it == fFontMap.end())
     {
--      TString ttpath;
+-      TString ttpath, file;
 -# ifdef TTFFONTDIR
 -      ttpath = gEnv->GetValue("Root.TTGLFontPath", TTFFONTDIR );
 -# else
 -      ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 -# endif
--      TObjString* name = (TObjString*)fgFontFileArray[fileID];
--      TString file = gSystem->Which(ttpath.Data(), Form("%s.ttf", name->GetString().Data()));
+-      {
+-         char *fp = gSystem->Which(ttpath, ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf");
+-         file = fp;
+-         delete [] fp;
 +      const char *fontname = ((TObjString*)fgFontFileArray[fileID])->String().Data();
 +
 +      FcPattern *pat, *match;
@@ -316,7 +320,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
 +         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+      }
+       }
 +      else if (strcmp(fontname, /* 7 */ "arialbi") == 0) {
 +         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
@@ -342,7 +346,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
 +      }
-+      else if (strcmp(fontname, /* 12 */ "symbol") == 0) {
++      else if (strcmp(fontname, /* 12 and 15 */ "symbol") == 0) {
 +         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
@@ -361,7 +365,7 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
  
        FTFont* ftfont = 0;
        switch (mode)
-@@ -422,9 +501,13 @@
+@@ -427,9 +503,13 @@
              break;
           default:
              Error("TGLFontManager::GetFont", "invalid FTGL type");
@@ -375,9 +379,9 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLFontManager.cxx root-5.26.00/graf3d/
        ftfont->FaceSize(size);
        const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
        out.CopyAttributes(mf);
-diff -ur root-5.26.00.orig/graf3d/gl/src/TGLText.cxx root-5.26.00/graf3d/gl/src/TGLText.cxx
---- root-5.26.00.orig/graf3d/gl/src/TGLText.cxx	2009-12-14 20:18:13.000000000 +0100
-+++ root-5.26.00/graf3d/gl/src/TGLText.cxx	2010-01-12 16:42:30.266069599 +0100
+diff -ur root-trunk.orig/graf3d/gl/src/TGLText.cxx root-trunk/graf3d/gl/src/TGLText.cxx
+--- root-trunk.orig/graf3d/gl/src/TGLText.cxx	2010-11-03 22:51:45.000000000 +0100
++++ root-trunk/graf3d/gl/src/TGLText.cxx	2010-11-25 20:47:25.783705001 +0100
 @@ -34,6 +34,8 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -494,10 +498,10 @@ diff -ur root-5.26.00.orig/graf3d/gl/src/TGLText.cxx root-5.26.00/graf3d/gl/src/
 +   FcPatternDestroy (match);
 +   FcPatternDestroy (pat);
  }
-diff -ur root-5.26.00.orig/gui/gui/src/TGApplication.cxx root-5.26.00/gui/gui/src/TGApplication.cxx
---- root-5.26.00.orig/gui/gui/src/TGApplication.cxx	2009-12-14 20:18:16.000000000 +0100
-+++ root-5.26.00/gui/gui/src/TGApplication.cxx	2010-01-12 16:42:30.266069599 +0100
-@@ -83,24 +83,11 @@
+diff -ur root-trunk.orig/gui/gui/src/TGApplication.cxx root-trunk/gui/gui/src/TGApplication.cxx
+--- root-trunk.orig/gui/gui/src/TGApplication.cxx	2010-11-03 22:51:54.000000000 +0100
++++ root-trunk/gui/gui/src/TGApplication.cxx	2010-11-25 20:47:25.784705001 +0100
+@@ -83,25 +83,12 @@
     gROOT->SetBatch(kFALSE);
  
     if (strcmp(appClassName, "proofserv")) {
@@ -516,16 +520,17 @@ diff -ur root-5.26.00.orig/gui/gui/src/TGApplication.cxx root-5.26.00/gui/gui/sr
 +      if (gEnv->GetValue("Root.UseTTFonts", 1)) {
           TPluginHandler *h;
           if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualX", "x11ttf")))
-             h->LoadPlugin();
+             if (h->LoadPlugin() == -1)
+                Info("TGApplication", "no TTF support");
        }
 -
 -      delete [] ttfont;
     }
  
     // Create the canvas colors early so they are allocated before
-diff -ur root-5.26.00.orig/gui/gui/src/TGSpeedo.cxx root-5.26.00/gui/gui/src/TGSpeedo.cxx
---- root-5.26.00.orig/gui/gui/src/TGSpeedo.cxx	2009-12-14 20:18:16.000000000 +0100
-+++ root-5.26.00/gui/gui/src/TGSpeedo.cxx	2010-01-12 16:58:26.233069701 +0100
+diff -ur root-trunk.orig/gui/gui/src/TGSpeedo.cxx root-trunk/gui/gui/src/TGSpeedo.cxx
+--- root-trunk.orig/gui/gui/src/TGSpeedo.cxx	2010-11-03 22:51:54.000000000 +0100
++++ root-trunk/gui/gui/src/TGSpeedo.cxx	2010-11-25 20:47:25.785705002 +0100
 @@ -117,8 +117,7 @@
  
     TString sc;

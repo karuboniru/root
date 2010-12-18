@@ -1,52 +1,11 @@
-diff -ur root-5.26.00e.orig/geom/geompainter/src/TGeoChecker.cxx root-5.26.00e/geom/geompainter/src/TGeoChecker.cxx
---- root-5.26.00e.orig/geom/geompainter/src/TGeoChecker.cxx	2010-10-13 12:40:03.000000000 +0200
-+++ root-5.26.00e/geom/geompainter/src/TGeoChecker.cxx	2010-10-23 16:07:47.281557948 +0200
-@@ -62,6 +62,7 @@
- //-----------------
- //
- //  -> add it from the doc.
-+//Begin_Html
- /*
- <img src="gif/t_checker.jpg">
- */
-diff -ur root-5.26.00e.orig/gui/gui/src/TGSimpleTable.cxx root-5.26.00e/gui/gui/src/TGSimpleTable.cxx
---- root-5.26.00e.orig/gui/gui/src/TGSimpleTable.cxx	2010-10-13 12:39:55.000000000 +0200
-+++ root-5.26.00e/gui/gui/src/TGSimpleTable.cxx	2010-10-23 16:08:51.592561863 +0200
-@@ -25,7 +25,7 @@
- ClassImp(TGSimpleTable)
+--- root-5.28.00/hist/hist/src/TGraph2DErrors.cxx.orig	2010-12-14 15:20:19.000000000 +0100
++++ root-5.28.00/hist/hist/src/TGraph2DErrors.cxx	2010-12-16 21:06:23.524327001 +0100
+@@ -75,7 +75,7 @@
+    return c;
+ }
+ End_Macro
+-End_Html */
++*/
+ 
  
  //______________________________________________________________________________
--/* Begin HTML 
-+/* Begin_Html 
- <center><h2>TGSimpleTable</h2></center> 
- <br><br> 
- To provide a simple class to visualize an array of doubles, the class
-diff -ur root-5.26.00e.orig/roofit/roofitcore/src/RooSimPdfBuilder.cxx root-5.26.00e/roofit/roofitcore/src/RooSimPdfBuilder.cxx
---- root-5.26.00e.orig/roofit/roofitcore/src/RooSimPdfBuilder.cxx	2010-10-13 12:39:50.000000000 +0200
-+++ root-5.26.00e/roofit/roofitcore/src/RooSimPdfBuilder.cxx	2010-10-23 16:08:51.592561863 +0200
-@@ -16,12 +16,10 @@
- 
- //////////////////////////////////////////////////////////////////////////////
- //
--// BEGIN_HTML
-+// Begin_Html
- //
- // <b>This tool has now been superceded by RooSimWSTool</b>
- // 
--//Begin_Html
--//  </pre>
- //  <p>
- //    <tt>RooSimPdfBuilder</tt> is a powerful tool to build <tt>RooSimultaneous</tt>
- //    PDFs that are defined in terms component PDFs that are identical in
-@@ -411,10 +409,8 @@
- //    <tt>RooSimultaneous</tt> returned by <tt>buildPdf()</tt>. Therefore the builder instance should 
- //    exist as long as the constructed PDFs needs to exist.
- //  </p>
--//  <pre>
--//End_Html
- //
--// END_HTML
-+// End_Html
- //
- 
- 
