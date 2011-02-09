@@ -46,6 +46,8 @@ Patch3:		%{name}-unuran.patch
 Patch4:		%{name}-cern-ppc.patch
 #		Fix doc markup
 Patch5:		%{name}-htmldoc.patch
+#		Fix broken ppc link instructions
+Patch6:		%{name}-xlibs-ppc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -995,6 +997,7 @@ package to use root with GNU Emacs.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2151,6 +2154,9 @@ fi
 %changelog
 * Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.28.00-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Fri Jan 14 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-1.1
+- Fix linking of Xlibs on ppc
 
 * Wed Dec 15 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-1
 - Update to 5.28.00
