@@ -8,24 +8,8 @@ diff -ur root-5.24.00b.orig/configure root-5.24.00b/configure
 -          #if test $asimage_version -gt 1003 ; then
 -          if test $asimage_version -gt 0 ; then
 -             result "WARNING: System libAfterImage is too new, using built-in"
-+          if test $asimage_version -lt 1018 ; then
++          if test $asimage_version -lt 1020 ; then
 +             result "WARNING: System libAfterImage is too old, using built-in"
            else
               enable_builtin_afterimage="no"
               asextralib=`afterimage-config --libs`
-diff -ur root-5.24.00b.orig/graf2d/asimage/src/TASImage.cxx root-5.24.00b/graf2d/asimage/src/TASImage.cxx
---- root-5.24.00b.orig/graf2d/asimage/src/TASImage.cxx	2009-10-11 22:39:57.000000000 +0200
-+++ root-5.24.00b/graf2d/asimage/src/TASImage.cxx	2009-11-26 10:26:55.054268550 +0100
-@@ -102,6 +102,12 @@
- // auxilary functions for general polygon filling
- #include "TASPolyUtils.c"
- 
-+// used things from libAfterImage that are not declared in the headers...
-+#define ASDrawCTX_CanvasIsARGB	(0x01<<1)
-+#define ASDrawCTX_ToolIsARGB	(0x01<<2)
-+extern "C" {
-+Bool asim_set_custom_brush_colored( ASDrawContext *ctx, ASDrawTool *brush);
-+}
- 
- ASVisual *TASImage::fgVisual = 0;
- Bool_t TASImage::fgInit = kFALSE;

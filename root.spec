@@ -1,5 +1,12 @@
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
+%if "%{?rhel}" == "5"
+%global __python26 /usr/bin/python26
+%{!?python26_sitearch: %global python26_sitearch %(%{__python26} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+# Disable the default python byte code compilation
+%global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
+%endif
+
 %{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]')}
 
 %if %($(pkg-config emacs) ; echo $?)
@@ -13,7 +20,7 @@
 Name:		root
 Version:	5.28.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -48,6 +55,10 @@ Patch4:		%{name}-cern-ppc.patch
 Patch5:		%{name}-htmldoc.patch
 #		Fix broken ppc link instructions
 Patch6:		%{name}-xlibs-ppc.patch
+#		Fix an issue with the TGListBox height (backported from trunk)
+Patch7:		%{name}-listbox-height.patch
+#		Missing inclusion of cstddef (gcc 4.6 issue)
+Patch8:		%{name}-cstddef.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -64,8 +75,8 @@ BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
 BuildRequires:	zlib-devel
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
-BuildRequires:	libAfterImage-devel
+%if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
+BuildRequires:	libAfterImage-devel >= 1.20
 %else
 BuildRequires:	libjpeg-devel
 BuildRequires:	libpng-devel
@@ -88,6 +99,9 @@ BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
+%if "%{?rhel}" == "5"
+BuildRequires:	python26-devel
+%endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	qt-devel
 %if %{?fedora}%{!?fedora:0} >= 14
@@ -278,6 +292,16 @@ Group:		Applications/Engineering
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
+%if "%{?rhel}" == "5"
+%package python26
+Summary:	Python extension for ROOT
+Group:		Applications/Engineering
+
+%description python26
+This package contains the Python extension for ROOT. This package
+provide a Python interface to ROOT, and a ROOT interface to Python.
+%endif
+
 %package ruby
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
@@ -338,6 +362,7 @@ System (FITS) data format in root.
 %package graf-gpad
 Summary:	Canvas and pad library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-graf-postscript = %{version}-%{release}
 
 %description graf-gpad
 This package contains a library for canvas and pad manipulations.
@@ -989,7 +1014,7 @@ package to use root with GNU Emacs.
 
 %prep
 %setup -q
-%if "%(pkg-config --modversion ftgl 2>/dev/null)" < "2.1.3"
+%if %(pkg-config --max-version 2.1.2 ftgl 2>/dev/null && echo 1 || echo 0)
 %patch0 -p1
 %endif
 %patch1 -p1
@@ -998,6 +1023,8 @@ package to use root with GNU Emacs.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%patch7 -p1
+%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1020,7 +1047,7 @@ sed s/fit1_py.py/fit1_py.txt/ -i tutorials/pyroot/fit1.py
 
 # Remove embedded sources in order to be sure they are not used
 #  * afterimage
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
 rm -rf graf2d/asimage/src/libAfterImage
 %else
 rm -rf graf2d/asimage/src/libAfterImage/libjpeg
@@ -1069,6 +1096,12 @@ sed s/c1/c1c/g -i tutorials/graphics/earth.C
 sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
 sed s/c1/c1simp/g -i tutorials/hsimple.C
 
+%if "%{?rhel}" == "5"
+# Build PyROOT for python 2.6
+cp -pr bindings/pyroot bindings/pyroot26
+sed 's/python /python26 /' -i bindings/pyroot26/Module.mk
+%endif
+
 %build
 unset QTDIR
 unset QTLIB
@@ -1078,7 +1111,7 @@ unset QTINC
 	    --etcdir=%{_datadir}/%{name} \
 	    --docdir=%{_defaultdocdir}/%{name}-%{version} \
 	    --elispdir=%{emacs_lispdir}/%{name} \
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
 	    --disable-builtin-afterimage \
 %else
 	    --enable-builtin-afterimage \
@@ -1165,6 +1198,16 @@ unset QTINC
 
 make OPTFLAGS="%{optflags}" %{?_smp_mflags}
 
+%if "%{?rhel}" == "5"
+# Build PyROOT for python 2.6
+mkdir pyroot26
+cp bindings/pyroot26/ROOT.py pyroot26
+make OPTFLAGS="%{optflags}" %{?_smp_mflags} \
+	MODULES="build cint/cint core/utils bindings/pyroot26" \
+	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
+	PYROOTLIB=pyroot26/libPyROOT.so ROOTPY=pyroot26/ROOT.py
+%endif
+
 %install
 rm -rf $RPM_BUILD_ROOT
 make install DESTDIR=$RPM_BUILD_ROOT
@@ -1223,8 +1266,19 @@ sed 's/\(chkconfig: \)[0-9]*/\1-/' -i ${RPM_BUILD_ROOT}%{_initrddir}/*
 mkdir -p ${RPM_BUILD_ROOT}%{python_sitearch}
 mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion} \
    ${RPM_BUILD_ROOT}%{python_sitearch}/libPyROOT.so
+%if "%{?rhel}" == "5"
+touch ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%else
 ln -s ..`sed 's!%{_libdir}!!' <<< %{python_sitearch}`/libPyROOT.so \
    ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%endif
+
+%if "%{?rhel}" == "5"
+mkdir -p ${RPM_BUILD_ROOT}%{python26_sitearch}
+install pyroot26/libPyROOT.so.%{libversion} \
+   ${RPM_BUILD_ROOT}%{python26_sitearch}/libPyROOT.so
+install -m 644 pyroot26/ROOT.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
+%endif
 
 # Same for the Ruby interface library
 mkdir -p ${RPM_BUILD_ROOT}%{ruby_sitearch}
@@ -1248,7 +1302,7 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/hostcert.conf
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
 rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
-%if %{?fedora}%{!?fedora:0} < 10 && %{?rhel}%{!?rhel:0} < 6
+%if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
 rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
 %endif
 rm ${RPM_BUILD_ROOT}%{_bindir}/drop_from_path
@@ -1346,24 +1400,34 @@ cat includelist-gui-guihtml >> includelist-gui-gui
 cat includelist-io-xmlparser >> includelist-io-xml
 cat includelist-proof-proofplayer >> includelist-proof-proof
 
+%if "%{?rhel}" == "5"
+# Python byte code compilation
+%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/%{name}/python"'", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
+%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/%{name}/python"'", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
+%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitearch}"'", 10, "%{python_sitearch}", 1)' > /dev/null
+%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitearch}"'", 10, "%{python_sitearch}", 1)' > /dev/null
+%{__python26} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python26_sitearch}"'", 10, "%{python26_sitearch}", 1)' > /dev/null
+%{__python26} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python26_sitearch}"'", 10, "%{python26_sitearch}", 1)' > /dev/null
+%endif
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %post
-touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
-update-desktop-database &> /dev/null || :
-update-mime-database %{_datadir}/mime &> /dev/null || :
+touch --no-create %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
+update-desktop-database >/dev/null 2>&1 || :
+update-mime-database %{_datadir}/mime >/dev/null 2>&1 || :
 
 %postun
 if [ $1 -eq 0 ] ; then
-    touch --no-create %{_datadir}/icons/hicolor &>/dev/null
-    gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+    touch --no-create %{_datadir}/icons/hicolor >/dev/null 2>&1
+    gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 fi
-update-desktop-database &> /dev/null || :
-update-mime-database %{_datadir}/mime &> /dev/null || :
+update-desktop-database >/dev/null 2>&1 || :
+update-mime-database %{_datadir}/mime >/dev/null 2>&1 || :
 
 %posttrans
-gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 
 %post rootd
 /sbin/chkconfig --add rootd
@@ -1393,6 +1457,45 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service proofd condrestart >/dev/null 2>&1 || :
 fi
 
+%if "%{?rhel}" == "5"
+%post python
+[ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
+    readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
+    grep -q site-packages && rm %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{libversion} \
+    libPyROOT.so %{python_sitearch}/libPyROOT.so 20
+/sbin/ldconfig
+
+%postun python -p /sbin/ldconfig
+
+%preun python
+if [ $1 = 0 ]; then
+    %{_sbindir}/update-alternatives --remove \
+	libPyROOT.so %{python_sitearch}/libPyROOT.so
+fi
+
+%post python26
+[ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
+    readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
+    grep -q site-packages && rm %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{libversion} \
+    libPyROOT.so %{python26_sitearch}/libPyROOT.so 10
+/sbin/ldconfig
+
+%preun python26
+if [ $1 = 0 ]; then
+    %{_sbindir}/update-alternatives --remove \
+	libPyROOT.so %{python26_sitearch}/libPyROOT.so
+fi
+
+%postun python26 -p /sbin/ldconfig
+%else
+%post python -p /sbin/ldconfig
+%postun python -p /sbin/ldconfig
+%endif
+
 %post core -p /sbin/ldconfig
 %postun core -p /sbin/ldconfig
 %post cint -p /sbin/ldconfig
@@ -1403,8 +1506,6 @@ fi
 %post cintex -p /sbin/ldconfig
 %postun cintex -p /sbin/ldconfig
 %endif
-%post python -p /sbin/ldconfig
-%postun python -p /sbin/ldconfig
 %post ruby -p /sbin/ldconfig
 %postun ruby -p /sbin/ldconfig
 %post genetic -p /sbin/ldconfig
@@ -1684,9 +1785,27 @@ fi
 
 %files python -f includelist-bindings-pyroot
 %defattr(-,root,root,-)
+%if "%{?rhel}" == "5"
+%{_libdir}/%{name}/libPyROOT.rootmap
+%{_libdir}/%{name}/libPyROOT.so
+%{_libdir}/%{name}/libPyROOT.so.5
+%ghost %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%else
 %{_libdir}/%{name}/libPyROOT.*
+%endif
 %{python_sitearch}/libPyROOT.*
 %{python_sitearch}/ROOT.py*
+
+%if "%{?rhel}" == "5"
+%files python26 -f includelist-bindings-pyroot
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libPyROOT.rootmap
+%{_libdir}/%{name}/libPyROOT.so
+%{_libdir}/%{name}/libPyROOT.so.5
+%ghost %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%{python26_sitearch}/libPyROOT.*
+%{python26_sitearch}/ROOT.py*
+%endif
 
 %files ruby -f includelist-bindings-ruby
 %defattr(-,root,root,-)
@@ -2152,6 +2271,15 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Feb 10 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-3
+- Add Requires on root-graf-postscript to root-gpad
+- Require libAfterImage 1.20 or later to fix issues with circular markers in
+  batch mode
+- Add python26 subpackage for EPEL 5
+- Fix an issue where the last item in a TGFontTypeComboBox is almost
+  invisible (backported from upstream)
+- Add missing cstddef includes for gcc 4.6
+
 * Wed Feb 09 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.28.00-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 

@@ -1,0 +1,20 @@
+--- trunk/gui/gui/src/TGListBox.cxx	2011/01/05 15:36:19	37716
++++ trunk/gui/gui/src/TGListBox.cxx	2011/01/05 15:38:02	37717
+@@ -45,6 +45,7 @@
+ #include "TGResourcePool.h"
+ #include "TSystem.h"
+ #include "Riostream.h"
++#include "TMath.h"
+ #include <stdlib.h>
+ 
+ 
+@@ -1492,7 +1493,8 @@
+       fVScrollbar->SetPosition(0);
+    }
+ 
+-   fVScrollbar->SetRange(container->GetHeight()/fItemVsize, fVport->GetHeight()/fItemVsize);
++   fVScrollbar->SetRange(TMath::Ceil((Double_t)container->GetHeight()/(Double_t)fItemVsize),
++                         fVport->GetHeight()/fItemVsize);
+    //fClient->NeedRedraw(container);
+    ((TGContainer *)container)->ClearViewPort();
+ }
