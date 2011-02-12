@@ -2,12 +2,14 @@
 
 %if "%{?rhel}" == "5"
 %global __python26 /usr/bin/python26
+%if %(test -x %{__python26} && echo 1 || echo 0)
 %{!?python26_sitearch: %global python26_sitearch %(%{__python26} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
+%endif
 # Disable the default python byte code compilation
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
-%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]')}
+%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null || echo "ruby_not_present")}
 
 %if %($(pkg-config emacs) ; echo $?)
 %global emacs_version 22.1
@@ -20,7 +22,7 @@
 Name:		root
 Version:	5.28.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2271,6 +2273,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Feb 12 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-4
+- Add workaround for changes in fedpkg
+
 * Thu Feb 10 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-3
 - Add Requires on root-graf-postscript to root-gpad
 - Require libAfterImage 1.20 or later to fix issues with circular markers in
