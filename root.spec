@@ -2,14 +2,12 @@
 
 %if "%{?rhel}" == "5"
 %global __python26 /usr/bin/python26
-%if %(test -x %{__python26} && echo 1 || echo 0)
 %{!?python26_sitearch: %global python26_sitearch %(%{__python26} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
-%endif
 # Disable the default python byte code compilation
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
-%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null || echo "ruby_not_present")}
+%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %($(pkg-config emacs) ; echo $?)
 %global emacs_version 22.1
@@ -20,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00
+Version:	5.28.00a
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -47,20 +45,12 @@ Source5:	http://root.cern.ch/drupal/sites/all/themes/newsflash/images/info.png
 Patch0:		%{name}-ftgl.patch
 #		Use system fonts:
 Patch1:		%{name}-fontconfig.patch
-#		Use system afterimage:
-Patch2:		%{name}-afterimage.patch
 #		Use system unuran:
-Patch3:		%{name}-unuran.patch
+Patch2:		%{name}-unuran.patch
 #		Workaround for broken Form() on ppc
-Patch4:		%{name}-cern-ppc.patch
-#		Fix doc markup
-Patch5:		%{name}-htmldoc.patch
-#		Fix broken ppc link instructions
-Patch6:		%{name}-xlibs-ppc.patch
+Patch3:		%{name}-cern-ppc.patch
 #		Fix an issue with the TGListBox height (backported from trunk)
-Patch7:		%{name}-listbox-height.patch
-#		Missing inclusion of cstddef (gcc 4.6 issue)
-Patch8:		%{name}-cstddef.patch
+Patch4:		%{name}-listbox-height.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1023,10 +1013,6 @@ package to use root with GNU Emacs.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2273,6 +2259,12 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Feb 21 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00a-1
+- Update to 5.28.00a
+- Drop patches fixed upstream: root-afterimage.patch, root-htmldoc.patch,
+  root-xlibs-ppc.patch, root-cstddef.patch
+- Remove the fedpkg workaround - no longer needed
+
 * Sat Feb 12 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00-4
 - Add workaround for changes in fedpkg
 
