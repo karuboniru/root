@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.28.00b
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2259,6 +2259,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Mar 23 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00b-2
+- Rebuild for mysql 5.5.10
+
 * Sat Mar 19 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00b-1
 - Update to 5.28.00b
 
