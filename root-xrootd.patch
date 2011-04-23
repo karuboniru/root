@@ -1,0 +1,65 @@
+diff -ur root-5.28.00c.orig/configure root-5.28.00c/configure
+--- root-5.28.00c.orig/configure	2011-04-15 17:34:20.000000000 +0200
++++ root-5.28.00c/configure	2011-04-23 13:02:29.385052080 +0200
+@@ -4307,13 +4307,14 @@
+     if test "x$externalxrd" = "xyes"; then
+        buildxrd="no"
+        # Check if bonjour is available for code potentially using it ...
+-       if test "x$enable_bonjour" = "xyes"; then
+-          check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
+-          if test  $found_symbol -eq 0 ; then
+-             bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
+-             bonjourcppflags=
+-          fi
+-       fi
++       ## This test is broken and will always fail.
++       ##if test "x$enable_bonjour" = "xyes"; then
++       ##   check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
++       ##   if test  $found_symbol -eq 0 ; then
++       ##      bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
++       ##      bonjourcppflags=
++       ##   fi
++       ##fi
+     fi
+ else
+     buildxrd="no"
+diff -ur root-5.28.00c.orig/proof/proofd/Module.mk root-5.28.00c/proof/proofd/Module.mk
+--- root-5.28.00c.orig/proof/proofd/Module.mk	2011-04-15 17:33:43.000000000 +0200
++++ root-5.28.00c/proof/proofd/Module.mk	2011-04-23 13:51:01.294607207 +0200
+@@ -115,12 +115,10 @@
+ ifeq ($(HASXRD),yes)
+ XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
+ XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
+-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
+-                  -lXrdClient -lXrdSut $(DNSSDLIB)
+-XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
+-                  $(XROOTDDIRL)/libXrdNet.a \
+-                  $(XROOTDDIRL)/libXrdOuc.a \
+-                  $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
++XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
++                  -lXrdNet -lXrdOuc -lXrdSys $(DNSSDLIB)
++XPROOFDEXELIBS := -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
++                  -lXrdNet -lXrdOuc -lXrdSys
+ # Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
+ # both are needed
+ XRDNETUTIL     :=
+@@ -130,8 +128,8 @@
+                           fi)
+ endif
+ ifeq ($(XRDNETUTIL),yes)
+-XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
+-XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
++XPDLIBEXTRA    += -lXrdNetUtil
++XPROOFDEXELIBS += -lXrdNetUtil
+ endif
+ XPDLIBEXTRA    +=  $(DNSSDLIB)
+ 
+@@ -166,7 +164,7 @@
+ 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
+ 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) $(SYSLIBS)
+ 
+-$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD)
++$(XPROOFDEXE):  $(XPDO) $(XRDPROOFXD)
+ 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
+ 
+ $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD)

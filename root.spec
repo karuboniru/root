@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00b
+Version:	5.28.00c
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -51,6 +51,8 @@ Patch2:		%{name}-unuran.patch
 Patch3:		%{name}-cern-ppc.patch
 #		Fix an issue with the TGListBox height (backported from trunk)
 Patch4:		%{name}-listbox-height.patch
+#		Fixes for external xrootd
+Patch5:		%{name}-xrootd.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1013,6 +1015,7 @@ package to use root with GNU Emacs.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1060,8 +1063,6 @@ sed 's/^GLLIBS *:= .* $(OPENGLLIB)/& -lgl2ps/' -i graf3d/gl/Module.mk
 rm -rf math/unuran/src/unuran-1.5.1-root.tar.gz
 #  * xrootd
 rm -rf net/xrootd/src
-sed -e 's!-lXrdOuc!-lXrd &!' \
-    -e 's!$(XROOTDDIRL)/lib\(Xrd\w*\).a!-l\1!g' -i proof/proofd/Module.mk
 
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
@@ -2119,7 +2120,10 @@ fi
 %{_datadir}/%{name}/plugins/TApplication/P010_TApplicationRemote.C
 %{_datadir}/%{name}/plugins/TApplication/P020_TApplicationServer.C
 %{_datadir}/%{name}/plugins/TFile/P010_TWebFile.C
+%{_datadir}/%{name}/plugins/TFile/P120_TNetFile.C
+%{_datadir}/%{name}/plugins/TFileStager/P020_TNetFileStager.C
 %{_datadir}/%{name}/plugins/TSystem/P050_TWebSystem.C
+%{_datadir}/%{name}/plugins/TSystem/P070_TNetSystem.C
 %{_datadir}/%{name}/plugins/TVirtualMonitoringWriter/P020_TSQLMonitoringWriter.C
 
 %files net-rpdutils -f includelist-net-rpdutils
@@ -2259,6 +2263,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Apr 21 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00c-1
+- Update to 5.28.00c
+
 * Wed Mar 23 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00b-2
 - Rebuild for mysql 5.5.10
 
