@@ -10,7 +10,7 @@
 %{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %($(pkg-config emacs) ; echo $?)
-%global emacs_version 22.1
+%global emacs_version 21.4
 %global emacs_lispdir %{_datadir}/emacs/site-lisp
 %else
 %global emacs_version %(pkg-config emacs --modversion)
@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.28.00c
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	1%{?dist}.1
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -987,7 +987,11 @@ Group:		Applications/Engineering
 BuildArch:	noarch
 %endif
 Requires:	%{name} = %{version}-%{release}
+%if "%{?rhel}" == "5"
+Requires:	emacs >= %{emacs_version}
+%else
 Requires:	emacs(bin) >= %{emacs_version}
+%endif
 
 %description -n emacs-%{name}
 emacs-root is an add-on package for GNU Emacs. It provides integration
@@ -2263,6 +2267,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon May 02 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00c-1.1
+- Fix emacs Requires on RHEL5
+
 * Thu Apr 21 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00c-1
 - Update to 5.28.00c
 
