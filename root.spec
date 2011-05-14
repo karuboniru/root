@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00c
+Version:	5.28.00d
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}.1
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2267,6 +2267,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri May 13 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00d-1
+- Update to 5.28.00d
+
 * Mon May 02 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00c-1.1
 - Fix emacs Requires on RHEL5
 
