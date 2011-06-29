@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.28.00e
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -97,9 +97,9 @@ BuildRequires:	python-devel
 BuildRequires:	python26-devel
 %endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
-BuildRequires:	qt-devel
+BuildRequires:	qt4-devel
 %if %{?fedora}%{!?fedora:0} >= 14
-BuildRequires:	qt-webkit-devel
+BuildRequires:	qt4-webkit-devel
 %endif
 %endif
 BuildRequires:	ruby
@@ -2267,6 +2267,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Jun 29 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00e-2
+- Change build requires from qt-devel to qt4-devel
+
 * Wed Jun 29 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00e-1
 - Update to 5.28.00e
 
