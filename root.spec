@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00d
+Version:	5.28.00e
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2267,6 +2267,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Jun 29 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00e-1
+- Update to 5.28.00e
+
 * Mon Jun 20 2011 ajax@redhat.com - 5.28.00d-2
 - Rebuild for new glew soname
 
