@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00e
+Version:	5.30.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -49,10 +49,10 @@ Patch1:		%{name}-fontconfig.patch
 Patch2:		%{name}-unuran.patch
 #		Workaround for broken Form() on ppc
 Patch3:		%{name}-cern-ppc.patch
-#		Fix an issue with the TGListBox height (backported from trunk)
-Patch4:		%{name}-listbox-height.patch
 #		Fixes for external xrootd
-Patch5:		%{name}-xrootd.patch
+Patch4:		%{name}-xrootd.patch
+#		Fix LZMA header search order
+Patch5:		%{name}-lzma-searchorder.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -69,6 +69,7 @@ BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
 BuildRequires:	zlib-devel
+BuildRequires:	xz-devel
 %if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	libAfterImage-devel >= 1.20
 %else
@@ -839,6 +840,13 @@ Group:		Applications/Engineering
 This package contains the proof extension for ROOT. This provides a
 client to use in a PROOF environment.
 
+%package proof-bench
+Summary:	PROOF benchmarking
+Group:		Applications/Engineering
+
+%description proof-bench
+This package contains the steering class for PROOF benchmarks.
+
 %package proof-pq2
 Summary:	PROOF Quick Query (pq2)
 Group:		Applications/Engineering
@@ -1060,11 +1068,13 @@ rm -rf graf3d/glew/src graf3d/glew/inc
 rm -rf core/pcre/src
 #  * zlib
 rm -rf core/zip/src/[a-z]* core/zip/inc/[a-z]*
+#  * lzma
+rm -rf core/lzma/src/*.tar.gz
 #  * gl2ps
 rm graf3d/gl/src/gl2ps.cxx graf3d/gl/inc/gl2ps.h
 sed 's/^GLLIBS *:= .* $(OPENGLLIB)/& -lgl2ps/' -i graf3d/gl/Module.mk
 #  * unuran
-rm -rf math/unuran/src/unuran-1.5.1-root.tar.gz
+rm -rf math/unuran/src/*.tar.gz
 #  * xrootd
 rm -rf net/xrootd/src
 
@@ -1112,6 +1122,7 @@ unset QTINC
 	    --disable-builtin-ftgl \
 	    --disable-builtin-freetype \
 	    --disable-builtin-glew \
+	    --disable-builtin-lzma \
 	    --disable-builtin-pcre \
 	    --disable-builtin-zlib \
 	    --enable-asimage \
@@ -1119,18 +1130,17 @@ unset QTINC
 	    --enable-bonjour \
 	    --enable-clarens \
 	    --enable-dcache \
-	    --enable-editline \
 	    --enable-exceptions \
 	    --enable-explicitlink \
-	    --enable-fitsio \
 	    --enable-fftw3 \
+	    --enable-fitsio \
 	    --enable-gdml \
+	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
 	    --enable-krb5 \
 	    --enable-ldap \
-	    --enable-genvector \
 	    --enable-mathmore \
 	    --enable-memstat \
 	    --enable-minuit2 \
@@ -1171,6 +1181,7 @@ unset QTINC
 %else
 	    --disable-cintex \
 %endif
+	    --disable-afdsmgrd \
 	    --disable-afs \
 	    --disable-alien \
 	    --disable-alloc \
@@ -1294,6 +1305,7 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/README
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/hostcert.conf
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
 rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
+rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/system.plugins-ios
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
 %if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
 rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
@@ -1762,6 +1774,7 @@ fi
 %files proofd
 %defattr(-,root,root,-)
 %{_bindir}/proofd
+%{_bindir}/proofexecv
 %{_bindir}/proofserv
 %{_bindir}/proofserv.exe
 %{_bindir}/xproofd
@@ -2183,6 +2196,10 @@ fi
 %{_datadir}/%{name}/valgrind-root.supp
 %doc %{_defaultdocdir}/%{name}-%{version}/README.PROOF
 
+%files proof-bench -f includelist-proof-proofbench
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libProofBench.*
+
 %files proof-pq2 -f includelist-proof-pq2
 %defattr(-,root,root,-)
 %{_bindir}/pq2*
@@ -2267,6 +2284,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sun Jul 24 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-1
+- Update to 5.30.00
+- Drop patch root-listbox-height.patch
+- New sub-package: root-proof-bench
+
 * Wed Jun 29 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00e-2
 - Change build requires from qt-devel to qt4-devel
 
