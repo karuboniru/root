@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.30.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -53,6 +53,8 @@ Patch3:		%{name}-cern-ppc.patch
 Patch4:		%{name}-xrootd.patch
 #		Fix LZMA header search order
 Patch5:		%{name}-lzma-searchorder.patch
+#		Work-around for a bug in cint that affects Fedora 16 i686
+Patch6:		%{name}-cint-i686.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1028,6 +1030,7 @@ package to use root with GNU Emacs.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1200,13 +1203,15 @@ unset QTINC
 	    --disable-srp \
 	    --fail-on-missing
 
-make OPTFLAGS="%{optflags}" %{?_smp_mflags}
+make OPTFLAGS="%{optflags}" \
+	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags}
 
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 mkdir pyroot26
 cp bindings/pyroot26/ROOT.py pyroot26
-make OPTFLAGS="%{optflags}" %{?_smp_mflags} \
+make OPTFLAGS="%{optflags}" \
+	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
 	MODULES="build cint/cint core/utils bindings/pyroot26" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
 	PYROOTLIB=pyroot26/libPyROOT.so ROOTPY=pyroot26/ROOT.py
@@ -2284,6 +2289,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Jul 26 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-2
+- Add workaround for rootcint problem on i686
+- Pass default LDFLAGS (relro) to make
+
 * Sun Jul 24 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-1
 - Update to 5.30.00
 - Drop patch root-listbox-height.patch

@@ -1,0 +1,17 @@
+diff -ur root-5.30.00.orig/math/mathcore/inc/Fit/Chi2FCN.h root-5.30.00/math/mathcore/inc/Fit/Chi2FCN.h
+--- root-5.30.00.orig/math/mathcore/inc/Fit/Chi2FCN.h	2011-06-28 11:49:18.000000000 +0200
++++ root-5.30.00/math/mathcore/inc/Fit/Chi2FCN.h	2011-07-26 09:20:47.507000002 +0200
+@@ -55,11 +55,11 @@
+ 
+ template<class FunType> 
+ struct ModelFunctionTrait { 
+-   typedef  ::ROOT::Math::IParamMultiFunction ModelFunc;
++   typedef  ROOT::Math::IParamMultiFunction ModelFunc;
+ };
+ template<>      
+ struct ModelFunctionTrait<ROOT::Math::IMultiGradFunction>  { 
+-   typedef  ::ROOT::Math::IParamMultiGradFunction ModelFunc;
++   typedef  ROOT::Math::IParamMultiGradFunction ModelFunc;
+ };
+ 
+ 
