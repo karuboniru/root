@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.30.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -51,9 +51,9 @@ Patch2:		%{name}-unuran.patch
 Patch3:		%{name}-cern-ppc.patch
 #		Fixes for external xrootd
 Patch4:		%{name}-xrootd.patch
-#		Fix LZMA header search order
+#		Fix LZMA header search order (svn rev. 40127)
 Patch5:		%{name}-lzma-searchorder.patch
-#		Work-around for a bug in cint that affects Fedora 16 i686
+#		Fix corrupted strings during cint compilation (svn rev. 40577)
 Patch6:		%{name}-cint-i686.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
@@ -2289,6 +2289,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Aug 17 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-3
+- Backport upstream's fix for the i686 rootcint problem
+
 * Tue Jul 26 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-2
 - Add workaround for rootcint problem on i686
 - Pass default LDFLAGS (relro) to make
