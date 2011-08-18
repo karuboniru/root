@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.30.00
+Version:	5.30.01
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -51,10 +51,6 @@ Patch2:		%{name}-unuran.patch
 Patch3:		%{name}-cern-ppc.patch
 #		Fixes for external xrootd
 Patch4:		%{name}-xrootd.patch
-#		Fix LZMA header search order (svn rev. 40127)
-Patch5:		%{name}-lzma-searchorder.patch
-#		Fix corrupted strings during cint compilation (svn rev. 40577)
-Patch6:		%{name}-cint-i686.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1029,8 +1025,6 @@ package to use root with GNU Emacs.
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
-%patch6 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2289,6 +2283,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Aug 18 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.01-1
+- Update to 5.30.01
+- Drop patches root-lzma-searchorder.patch and root-cint-i686.patch
+
 * Wed Aug 17 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.00-3
 - Backport upstream's fix for the i686 rootcint problem
 

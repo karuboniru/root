@@ -1,6 +1,6 @@
-diff -ur root-trunk.orig/core/base/src/TApplication.cxx root-trunk/core/base/src/TApplication.cxx
---- root-trunk.orig/core/base/src/TApplication.cxx	2010-11-03 22:51:34.000000000 +0100
-+++ root-trunk/core/base/src/TApplication.cxx	2010-11-25 20:47:25.726705009 +0100
+diff -ur root-5.30.01.orig/core/base/src/TApplication.cxx root-5.30.01/core/base/src/TApplication.cxx
+--- root-5.30.01.orig/core/base/src/TApplication.cxx	2011-08-18 16:45:43.000000000 +0200
++++ root-5.30.01/core/base/src/TApplication.cxx	2011-08-18 19:28:45.079497320 +0200
 @@ -252,20 +252,9 @@
     // Try to load TrueType font renderer. Only try to load if not in batch
     // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
@@ -31,9 +31,9 @@ diff -ur root-trunk.orig/core/base/src/TApplication.cxx root-trunk/core/base/src
  
     // Create WM dependent application environment
     if (fAppImp)
-diff -ur root-trunk.orig/graf2d/graf/Module.mk root-trunk/graf2d/graf/Module.mk
---- root-trunk.orig/graf2d/graf/Module.mk	2010-11-25 20:41:40.000000000 +0100
-+++ root-trunk/graf2d/graf/Module.mk	2010-11-25 20:47:25.727705004 +0100
+diff -ur root-5.30.01.orig/graf2d/graf/Module.mk root-5.30.01/graf2d/graf/Module.mk
+--- root-5.30.01.orig/graf2d/graf/Module.mk	2011-08-18 16:46:08.000000000 +0200
++++ root-5.30.01/graf2d/graf/Module.mk	2011-08-18 19:28:45.086497316 +0200
 @@ -45,7 +45,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
@@ -43,9 +43,9 @@ diff -ur root-trunk.orig/graf2d/graf/Module.mk root-trunk/graf2d/graf/Module.mk
  
  $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
  		$(MAKEDIR)
-diff -ur root-trunk.orig/graf2d/graf/src/TTF.cxx root-trunk/graf2d/graf/src/TTF.cxx
---- root-trunk.orig/graf2d/graf/src/TTF.cxx	2010-11-03 22:51:58.000000000 +0100
-+++ root-trunk/graf2d/graf/src/TTF.cxx	2010-11-25 20:47:25.780705003 +0100
+diff -ur root-5.30.01.orig/graf2d/graf/src/TTF.cxx root-5.30.01/graf2d/graf/src/TTF.cxx
+--- root-5.30.01.orig/graf2d/graf/src/TTF.cxx	2011-08-18 16:46:08.000000000 +0200
++++ root-5.30.01/graf2d/graf/src/TTF.cxx	2011-08-18 19:28:45.130497322 +0200
 @@ -26,6 +26,7 @@
  #include "TMath.h"
  #include "TError.h"
@@ -239,21 +239,21 @@ diff -ur root-trunk.orig/graf2d/graf/src/TTF.cxx root-trunk/graf2d/graf/src/TTF.
  }
  
  //______________________________________________________________________________
-diff -ur root-trunk.orig/graf3d/gl/Module.mk root-trunk/graf3d/gl/Module.mk
---- root-trunk.orig/graf3d/gl/Module.mk	2010-11-25 20:41:36.000000000 +0100
-+++ root-trunk/graf3d/gl/Module.mk	2010-11-25 20:47:25.781705003 +0100
-@@ -68,7 +68,7 @@
- $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) $(GLEWLIB)
+diff -ur root-5.30.01.orig/graf3d/gl/Module.mk root-5.30.01/graf3d/gl/Module.mk
+--- root-5.30.01.orig/graf3d/gl/Module.mk	2011-08-18 16:45:57.000000000 +0200
++++ root-5.30.01/graf3d/gl/Module.mk	2011-08-18 19:30:30.171500251 +0200
+@@ -70,7 +70,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
--		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
-+		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
+ 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
+-		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
++		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
  
  $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
  		$(MAKEDIR)
-diff -ur root-trunk.orig/graf3d/gl/src/TGLFontManager.cxx root-trunk/graf3d/gl/src/TGLFontManager.cxx
---- root-trunk.orig/graf3d/gl/src/TGLFontManager.cxx	2010-11-03 22:51:45.000000000 +0100
-+++ root-trunk/graf3d/gl/src/TGLFontManager.cxx	2010-11-25 20:47:25.782705002 +0100
+diff -ur root-5.30.01.orig/graf3d/gl/src/TGLFontManager.cxx root-5.30.01/graf3d/gl/src/TGLFontManager.cxx
+--- root-5.30.01.orig/graf3d/gl/src/TGLFontManager.cxx	2011-08-18 16:45:57.000000000 +0200
++++ root-5.30.01/graf3d/gl/src/TGLFontManager.cxx	2011-08-18 19:28:45.153497322 +0200
 @@ -37,6 +37,8 @@
  #endif
  
@@ -379,9 +379,9 @@ diff -ur root-trunk.orig/graf3d/gl/src/TGLFontManager.cxx root-trunk/graf3d/gl/s
        ftfont->FaceSize(size);
        const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
        out.CopyAttributes(mf);
-diff -ur root-trunk.orig/graf3d/gl/src/TGLText.cxx root-trunk/graf3d/gl/src/TGLText.cxx
---- root-trunk.orig/graf3d/gl/src/TGLText.cxx	2010-11-03 22:51:45.000000000 +0100
-+++ root-trunk/graf3d/gl/src/TGLText.cxx	2010-11-25 20:47:25.783705001 +0100
+diff -ur root-5.30.01.orig/graf3d/gl/src/TGLText.cxx root-5.30.01/graf3d/gl/src/TGLText.cxx
+--- root-5.30.01.orig/graf3d/gl/src/TGLText.cxx	2011-08-18 16:45:57.000000000 +0200
++++ root-5.30.01/graf3d/gl/src/TGLText.cxx	2011-08-18 19:28:45.162497322 +0200
 @@ -34,6 +34,8 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -498,9 +498,9 @@ diff -ur root-trunk.orig/graf3d/gl/src/TGLText.cxx root-trunk/graf3d/gl/src/TGLT
 +   FcPatternDestroy (match);
 +   FcPatternDestroy (pat);
  }
-diff -ur root-trunk.orig/gui/gui/src/TGApplication.cxx root-trunk/gui/gui/src/TGApplication.cxx
---- root-trunk.orig/gui/gui/src/TGApplication.cxx	2010-11-03 22:51:54.000000000 +0100
-+++ root-trunk/gui/gui/src/TGApplication.cxx	2010-11-25 20:47:25.784705001 +0100
+diff -ur root-5.30.01.orig/gui/gui/src/TGApplication.cxx root-5.30.01/gui/gui/src/TGApplication.cxx
+--- root-5.30.01.orig/gui/gui/src/TGApplication.cxx	2011-08-18 16:46:02.000000000 +0200
++++ root-5.30.01/gui/gui/src/TGApplication.cxx	2011-08-18 19:28:45.169497323 +0200
 @@ -83,25 +83,12 @@
     gROOT->SetBatch(kFALSE);
  
@@ -528,9 +528,9 @@ diff -ur root-trunk.orig/gui/gui/src/TGApplication.cxx root-trunk/gui/gui/src/TG
     }
  
     // Create the canvas colors early so they are allocated before
-diff -ur root-trunk.orig/gui/gui/src/TGSpeedo.cxx root-trunk/gui/gui/src/TGSpeedo.cxx
---- root-trunk.orig/gui/gui/src/TGSpeedo.cxx	2010-11-03 22:51:54.000000000 +0100
-+++ root-trunk/gui/gui/src/TGSpeedo.cxx	2010-11-25 20:47:25.785705002 +0100
+diff -ur root-5.30.01.orig/gui/gui/src/TGSpeedo.cxx root-5.30.01/gui/gui/src/TGSpeedo.cxx
+--- root-5.30.01.orig/gui/gui/src/TGSpeedo.cxx	2011-08-18 16:46:02.000000000 +0200
++++ root-5.30.01/gui/gui/src/TGSpeedo.cxx	2011-08-18 19:28:45.170497323 +0200
 @@ -117,8 +117,7 @@
  
     TString sc;
@@ -541,7 +541,7 @@ diff -ur root-trunk.orig/gui/gui/src/TGSpeedo.cxx root-trunk/gui/gui/src/TGSpeed
     Int_t i, nexe, offset;
  
     const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
-@@ -519,8 +518,7 @@
+@@ -521,8 +520,7 @@
        if (fImage2 && fImage2->IsValid())
           delete fImage2;
        fImage2 = (TImage*)fImage->Clone("fImage2");
@@ -551,7 +551,7 @@ diff -ur root-trunk.orig/gui/gui/src/TGSpeedo.cxx root-trunk/gui/gui/src/TGSpeed
        // format counter value
        Int_t nexe = 0;
        Int_t ww = fCounter;
-@@ -599,8 +597,7 @@
+@@ -601,8 +599,7 @@
        if (fImage2 && fImage2->IsValid())
           delete fImage2;
        fImage2 = (TImage*)fImage->Clone("fImage2");
