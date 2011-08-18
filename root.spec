@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.28.00e
+Version:	5.28.00f
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -1064,7 +1064,7 @@ rm -rf core/zip/src/[a-z]* core/zip/inc/[a-z]*
 rm graf3d/gl/src/gl2ps.cxx graf3d/gl/inc/gl2ps.h
 sed 's/^GLLIBS *:= .* $(OPENGLLIB)/& -lgl2ps/' -i graf3d/gl/Module.mk
 #  * unuran
-rm -rf math/unuran/src/unuran-1.5.1-root.tar.gz
+rm -rf math/unuran/src/*.tar.gz
 #  * xrootd
 rm -rf net/xrootd/src
 
@@ -1122,15 +1122,15 @@ unset QTINC
 	    --enable-editline \
 	    --enable-exceptions \
 	    --enable-explicitlink \
-	    --enable-fitsio \
 	    --enable-fftw3 \
+	    --enable-fitsio \
 	    --enable-gdml \
+	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
 	    --enable-krb5 \
 	    --enable-ldap \
-	    --enable-genvector \
 	    --enable-mathmore \
 	    --enable-memstat \
 	    --enable-minuit2 \
@@ -1171,6 +1171,7 @@ unset QTINC
 %else
 	    --disable-cintex \
 %endif
+	    --disable-afdsmgrd \
 	    --disable-afs \
 	    --disable-alien \
 	    --disable-alloc \
@@ -1189,13 +1190,15 @@ unset QTINC
 	    --disable-srp \
 	    --fail-on-missing
 
-make OPTFLAGS="%{optflags}" %{?_smp_mflags}
+make OPTFLAGS="%{optflags}" \
+	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags}
 
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 mkdir pyroot26
 cp bindings/pyroot26/ROOT.py pyroot26
-make OPTFLAGS="%{optflags}" %{?_smp_mflags} \
+make OPTFLAGS="%{optflags}" \
+	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
 	MODULES="build cint/cint core/utils bindings/pyroot26" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
 	PYROOTLIB=pyroot26/libPyROOT.so ROOTPY=pyroot26/ROOT.py
@@ -2267,6 +2270,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Aug 17 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00f-1
+- Update to 5.28.00f
+
 * Wed Jun 29 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00e-2
 - Change build requires from qt-devel to qt4-devel
 
