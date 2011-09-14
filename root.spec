@@ -18,7 +18,7 @@
 %endif
 
 Name:		root
-Version:	5.28.00f
+Version:	5.28.00g
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -2270,6 +2270,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Sep 14 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00g-1
+- Update to 5.28.00g
+
 * Wed Aug 17 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00f-1
 - Update to 5.28.00f
 
