@@ -18,7 +18,7 @@
 %endif
 
 Name:		root
-Version:	5.30.01
+Version:	5.30.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -2198,6 +2198,7 @@ fi
 %files proof-bench -f includelist-proof-proofbench
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libProofBench.*
+%{_datadir}/%{name}/proof
 
 %files proof-pq2 -f includelist-proof-pq2
 %defattr(-,root,root,-)
@@ -2283,6 +2284,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Sep 23 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.02-1
+- Update to 5.30.02
+
 * Thu Aug 18 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.01-1
 - Update to 5.30.01
 - Drop patches root-lzma-searchorder.patch and root-cint-i686.patch
