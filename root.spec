@@ -18,7 +18,7 @@
 %endif
 
 Name:		root
-Version:	5.30.02
+Version:	5.30.03
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -2186,6 +2186,8 @@ fi
 %{_datadir}/%{name}/plugins/TProof/P010_TProofCondor.C
 %{_datadir}/%{name}/plugins/TProof/P020_TProofSuperMaster.C
 %{_datadir}/%{name}/plugins/TProof/P040_TProof.C
+%{_datadir}/%{name}/plugins/TProofMonSender/P010_TProofMonSenderML.C
+%{_datadir}/%{name}/plugins/TProofMonSender/P020_TProofMonSenderSQL.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P010_TProofPlayer.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P020_TProofPlayerRemote.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P030_TProofPlayerLocal.C
@@ -2284,6 +2286,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Oct 22 2011 Mattias Ellert <mattias.ellert@fysast,uu,se> - 5.30.03-1
+- Update to 5.30.03
+
 * Fri Sep 23 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.30.02-1
 - Update to 5.30.02
 
