@@ -20,7 +20,7 @@
 Name:		root
 Version:	5.30.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2286,6 +2286,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Feb 10 2012 Petr Pisar <ppisar@redhat.com> - 5.30.04-3
+- Rebuild against PCRE 8.30
+
 * Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.30.04-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
 
