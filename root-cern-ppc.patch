@@ -1,5 +1,20 @@
---- root-5.26.00d.orig/tutorials/tree/cernbuild.C	2010-08-29 10:20:56.069801363 +0200
-+++ root-5.26.00d/tutorials/tree/cernbuild.C	2010-08-29 15:52:51.000000000 +0200
+diff -ur root-5.28.00h.orig/core/base/doc/macros/fonts.C root-5.28.00h/core/base/doc/macros/fonts.C
+--- root-5.28.00h.orig/core/base/doc/macros/fonts.C	2011-11-24 17:12:40.000000000 +0100
++++ root-5.28.00h/core/base/doc/macros/fonts.C	2012-02-14 00:37:48.275434352 +0100
+@@ -16,7 +16,9 @@
+ 
+ void drawtext(double x, double y, int f, char *s)
+ {
+-   TLatex *t = new TLatex(x,y,Form("#font[41]{%d :} %s",f,s));
++   std::stringstream ss;
++   ss << "#font[41]{" << f << " :} " << s;
++   TLatex *t = new TLatex(x,y,ss.str().c_str());
+    t->SetTextFont(f);
+    t->SetTextAlign(12);
+    t->SetTextSize(0.048);
+diff -ur root-5.28.00h.orig/tutorials/tree/cernbuild.C root-5.28.00h/tutorials/tree/cernbuild.C
+--- root-5.28.00h.orig/tutorials/tree/cernbuild.C	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/tutorials/tree/cernbuild.C	2012-02-14 00:38:20.027019394 +0100
 @@ -22,7 +22,7 @@
     TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
     dir.ReplaceAll("cernbuild.C","");

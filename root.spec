@@ -2178,6 +2178,8 @@ fi
 %{_datadir}/%{name}/plugins/TProof/P010_TProofCondor.C
 %{_datadir}/%{name}/plugins/TProof/P020_TProofSuperMaster.C
 %{_datadir}/%{name}/plugins/TProof/P040_TProof.C
+%{_datadir}/%{name}/plugins/TProofMonSender/P010_TProofMonSenderML.C
+%{_datadir}/%{name}/plugins/TProofMonSender/P020_TProofMonSenderSQL.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P010_TProofPlayer.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P020_TProofPlayerRemote.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P030_TProofPlayerLocal.C
