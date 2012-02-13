@@ -7,7 +7,7 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
-%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null)}
+%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %($(pkg-config emacs) ; echo $?)
 %global emacs_version 21.4
@@ -18,9 +18,9 @@
 %endif
 
 Name:		root
-Version:	5.30.04
+Version:	5.32.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -47,10 +47,23 @@ Patch0:		%{name}-ftgl.patch
 Patch1:		%{name}-fontconfig.patch
 #		Use system unuran:
 Patch2:		%{name}-unuran.patch
-#		Workaround for broken Form() on ppc
-Patch3:		%{name}-cern-ppc.patch
-#		Fixes for external xrootd
-Patch4:		%{name}-xrootd.patch
+#		Fixes for xrootd bonjour
+Patch3:		%{name}-xrootd.patch
+#		Fix rfio configure
+#		https://savannah.cern.ch/bugs/index.php?91460
+Patch4:		%{name}-rfio.patch
+#		Missing globus auth module deps
+#		https://savannah.cern.ch/bugs/index.php?91462
+Patch5:		%{name}-globus-deps.patch
+#		Removed globals
+#		https://savannah.cern.ch/bugs/index.php?91463
+Patch6:		%{name}-globals.patch
+#		Ruby 1.9 configuration
+#		https://savannah.cern.ch/bugs/index.php?91461
+Patch7:		%{name}-ruby.patch
+#		Dictionary generation fails on i686
+#		https://savannah.cern.ch/bugs/index.php?91459
+Patch8:		%{name}-fit.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -107,6 +120,7 @@ BuildRequires:	openssl-devel
 BuildRequires:	globus-gss-assist-devel
 BuildRequires:	globus-gsi-credential-devel
 BuildRequires:	globus-proxy-utils
+BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
@@ -119,6 +133,7 @@ BuildRequires:	graphviz-devel
 %if "%{?rhel}" == "5"
 BuildRequires:	graphviz-gd
 %endif
+BuildRequires:	expat-devel
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(liberationsans)
 BuildRequires:	font(liberationserif)
@@ -299,7 +314,11 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
 Provides:	ruby(libRuby) = %{version}
-requires:	ruby(abi) = 1.8
+%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
+Requires:	ruby(abi) = 1.9.1
+%else
+Requires:	ruby(abi) = 1.8
+%endif
 
 %description ruby
 This package contains the Ruby extension for ROOT. The interface
@@ -1018,13 +1037,17 @@ package to use root with GNU Emacs.
 
 %prep
 %setup -q
-%if %(pkg-config --max-version 2.1.2 ftgl 2>/dev/null && echo 1 || echo 0)
+if pkg-config --max-version 2.1.2 ftgl ; then
 %patch0 -p1
-%endif
+fi
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
+%patch6 -p1
+%patch7 -p1
+%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1297,31 +1320,24 @@ mv ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils/pq2/pq2* \
 # Remove some junk
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.plist
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.xinetd
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/cmsd.rc.d
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/olbd.rc.d
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/xrootd.rc.d
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/README
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/hostcert.conf
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
 rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
+rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/root.desktop
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/system.plugins-ios
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
 %if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
 rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
 %endif
-rm ${RPM_BUILD_ROOT}%{_bindir}/drop_from_path
+rm ${RPM_BUILD_ROOT}%{_bindir}/setxrd*
 rm ${RPM_BUILD_ROOT}%{_bindir}/thisroot*
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cint.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cmsd.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/g2rootold.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/makecint.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/olbd.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/proofserva.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/roota.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/setup-pq2.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xprep.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xrd*.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xrootd.1
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.cw
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.pri
@@ -1391,7 +1407,8 @@ mv htmldoc ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/html
 # Create includelist files ...
 for module in `find * -name Module.mk` ; do
     module=`dirname $module`
-    make -f %{SOURCE1} includelist MODULE=$module ROOT_SRCDIR=$PWD
+    make -f %{SOURCE1} includelist MODULE=$module ROOT_SRCDIR=$PWD \
+	HASXRD=yes CRYPTOLIB=yes SSLLIB=yes
 done
 
 # ... and merge some of them
@@ -1707,6 +1724,7 @@ fi
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/class.rules
 %{_datadir}/%{name}/gdb-backtrace.sh
+%{_datadir}/%{name}/Makefile.arch
 %{_datadir}/%{name}/root.mimes
 %{_datadir}/%{name}/system.rootauthrc
 %{_datadir}/%{name}/system.rootdaemonrc
@@ -2137,6 +2155,8 @@ fi
 %{_datadir}/%{name}/plugins/TApplication/P020_TApplicationServer.C
 %{_datadir}/%{name}/plugins/TFile/P010_TWebFile.C
 %{_datadir}/%{name}/plugins/TFile/P120_TNetFile.C
+%{_datadir}/%{name}/plugins/TFile/P130_TAS3File.C
+%{_datadir}/%{name}/plugins/TFile/P140_TGSFile.C
 %{_datadir}/%{name}/plugins/TFileStager/P020_TNetFileStager.C
 %{_datadir}/%{name}/plugins/TSystem/P050_TWebSystem.C
 %{_datadir}/%{name}/plugins/TSystem/P070_TNetSystem.C
@@ -2286,6 +2306,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Feb 10 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.00-1
+- Update to 5.32.00
+
 * Fri Feb 10 2012 Petr Pisar <ppisar@redhat.com> - 5.30.04-3
 - Rebuild against PCRE 8.30
 

@@ -1,69 +1,36 @@
-diff -ur root-5.30.04.orig/configure root-5.30.04/configure
---- root-5.30.04.orig/configure	2011-11-08 14:28:55.000000000 +0100
-+++ root-5.30.04/configure	2011-11-16 05:48:21.224144395 +0100
-@@ -4424,13 +4424,14 @@
-     if test "x$externalxrd" = "xyes"; then
-        buildxrd="no"
-        # Check if bonjour is available for code potentially using it ...
--       if test "x$enable_bonjour" = "xyes"; then
--          check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
--          if test  $found_symbol -eq 0 ; then
--             bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
--             bonjourcppflags=
--          fi
--       fi
-+       ## This test is broken and will always fail.
-+       ##if test "x$enable_bonjour" = "xyes"; then
-+       ##   check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
-+       ##   if test  $found_symbol -eq 0 ; then
-+       ##      bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
-+       ##      bonjourcppflags=
-+       ##   fi
-+       ##fi
-     fi
- else
-     buildxrd="no"
-diff -ur root-5.30.04.orig/proof/proofd/Module.mk root-5.30.04/proof/proofd/Module.mk
---- root-5.30.04.orig/proof/proofd/Module.mk	2011-11-08 14:28:15.000000000 +0100
-+++ root-5.30.04/proof/proofd/Module.mk	2011-11-16 07:29:54.315314349 +0100
-@@ -129,12 +129,10 @@
- XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
- ifeq ($(HASXRDUTILS),no)
+--- root-5.32.00.orig/configure	2011-12-02 12:42:22.000000000 +0100
++++ root-5.32.00/configure	2012-02-11 20:15:07.910877372 +0100
+@@ -4463,18 +4463,22 @@
+          fi
+       fi
+    done
++   xrdlibdir=$tmpxrdlibdir
  
--XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdOuc -lXrdNet -lXrdSys \
--                  -lXrdClient -lXrdSut $(DNSSDLIB)
--XPROOFDEXELIBS := $(XROOTDDIRL)/libXrd.a $(XROOTDDIRL)/libXrdClient.a \
--                  $(XROOTDDIRL)/libXrdNet.a \
--                  $(XROOTDDIRL)/libXrdOuc.a \
--                  $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
-+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
-+                  -lXrdNet -lXrdOuc -lXrdSys $(DNSSDLIB)
-+XPROOFDEXELIBS := -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
-+                  -lXrdNet -lXrdOuc -lXrdSys
- # Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
- # both are needed
- XRDNETUTIL     :=
-@@ -144,8 +142,8 @@
-                           fi)
- endif
- ifeq ($(XRDNETUTIL),yes)
--XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrdNetUtil
--XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
-+XPDLIBEXTRA    += -lXrdNetUtil
-+XPROOFDEXELIBS += -lXrdNetUtil
- endif
+-   #
+-   # Check if bonjour is available for code potentially using it ...
+-   if test "x$enable_xrootd" = "xyes"; then
+-      xrdlibdir="$tmpxrdlibdir"
+-      if test "x$enable_bonjour" = "xyes"; then
+-         check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
+-         if test  $found_symbol -eq 0 ; then
+-            bonjourcppflags=
+-         fi
+-      fi
+-   fi
++   # This check is broken. The xrootd libraries are C++ hence their
++   # symbol names are mangled. The check_symbol macro is designed
++   # to check for unmangled symbol names in C libraries.
++   # #
++   # # Check if bonjour is available for code potentially using it ...
++   # if test "x$enable_xrootd" = "xyes"; then
++   #    xrdlibdir="$tmpxrdlibdir"
++   #    if test "x$enable_bonjour" = "xyes"; then
++   #       check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
++   #       if test  $found_symbol -eq 0 ; then
++   #          bonjourcppflags=
++   #      fi
++   #    fi
++   # fi
+ fi
  
- else
-@@ -191,10 +189,10 @@
- 		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
- 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) $(SYSLIBS)
- 
--$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD) $(RPDCONNO)
-+$(XPROOFDEXE):  $(XPDO) $(XRDPROOFXD) $(RPDCONNO)
- 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(RPDCONNO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
- 
--$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(XPROOFDEXELIBS) $(MAINLIBS) $(XRDPROOFXD) $(RPDCONNO)
-+$(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD) $(RPDCONNO)
- 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
- 		   "$(SOFLAGS)" libXrdProofd.$(SOEXT) $@ "$(XPDO) $(RPDCONNO)" \
- 		   "$(XPDLIBEXTRA)"
+ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \

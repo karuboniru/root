@@ -1,0 +1,75 @@
+diff -ur root-5.32.00.orig/math/mathcore/inc/Fit/Chi2FCN.h root-5.32.00/math/mathcore/inc/Fit/Chi2FCN.h
+--- root-5.32.00.orig/math/mathcore/inc/Fit/Chi2FCN.h	2011-12-02 12:41:53.000000000 +0100
++++ root-5.32.00/math/mathcore/inc/Fit/Chi2FCN.h	2012-02-12 22:45:37.560460921 +0100
+@@ -61,17 +61,14 @@
+    @ingroup  FitMethodFunc   
+ */ 
+ template<class FunType> 
+-class Chi2FCN : public ::ROOT::Math::BasicFitMethodFunction<FunType> {
++class Chi2FCN : public ROOT::Math::BasicFitMethodFunction<FunType> {
+ 
+ public: 
++   typedef ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction; 
++   typedef typename BaseObjFunction::BaseFunction BaseFunction; 
+ 
+-
+-
+-   typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction; 
+-   typedef typename  BaseObjFunction::BaseFunction BaseFunction; 
+-
+-   //typedef  typename ::ROOT::Math::ParamFunctionTrait<FunType>::PFType IModelFunction;
+-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
++   //typedef typename ROOT::Math::ParamFunctionTrait<FunType>::PFType IModelFunction;
++   typedef ROOT::Math::IParamMultiFunction IModelFunction;
+    typedef typename BaseObjFunction::Type_t Type_t;
+ 
+    /** 
+diff -ur root-5.32.00.orig/math/mathcore/inc/Fit/LogLikelihoodFCN.h root-5.32.00/math/mathcore/inc/Fit/LogLikelihoodFCN.h
+--- root-5.32.00.orig/math/mathcore/inc/Fit/LogLikelihoodFCN.h	2011-12-02 12:41:53.000000000 +0100
++++ root-5.32.00/math/mathcore/inc/Fit/LogLikelihoodFCN.h	2012-02-12 22:48:57.058092616 +0100
+@@ -50,17 +50,13 @@
+    @ingroup  FitMethodFunc   
+ */ 
+ template<class FunType> 
+-class LogLikelihoodFCN : public ::ROOT::Math::BasicFitMethodFunction<FunType>  {
++class LogLikelihoodFCN : public ROOT::Math::BasicFitMethodFunction<FunType>  {
+ 
+ public: 
++   typedef ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction; 
++   typedef typename BaseObjFunction::BaseFunction BaseFunction; 
+ 
+-
+-
+-   typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction; 
+-   typedef typename  BaseObjFunction::BaseFunction BaseFunction; 
+-
+-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
+-
++   typedef ROOT::Math::IParamMultiFunction IModelFunction;
+ 
+    /** 
+       Constructor from unbin data set and model function (pdf)
+diff -ur root-5.32.00.orig/math/mathcore/inc/Fit/PoissonLikelihoodFCN.h root-5.32.00/math/mathcore/inc/Fit/PoissonLikelihoodFCN.h
+--- root-5.32.00.orig/math/mathcore/inc/Fit/PoissonLikelihoodFCN.h	2011-12-02 12:41:53.000000000 +0100
++++ root-5.32.00/math/mathcore/inc/Fit/PoissonLikelihoodFCN.h	2012-02-12 22:48:29.878448447 +0100
+@@ -50,16 +50,13 @@
+    @ingroup  FitMethodFunc
+ */
+ template<class FunType>
+-class PoissonLikelihoodFCN : public ::ROOT::Math::BasicFitMethodFunction<FunType>  {
++class PoissonLikelihoodFCN : public ROOT::Math::BasicFitMethodFunction<FunType>  {
+ 
+ public:
++   typedef ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
++   typedef typename BaseObjFunction::BaseFunction BaseFunction;
+ 
+-
+-   typedef  ::ROOT::Math::BasicFitMethodFunction<FunType> BaseObjFunction;
+-   typedef typename  BaseObjFunction::BaseFunction BaseFunction;
+-
+-   typedef  ::ROOT::Math::IParamMultiFunction IModelFunction;
+-
++   typedef ROOT::Math::IParamMultiFunction IModelFunction;
+ 
+    /**
+       Constructor from unbin data set and model function (pdf)

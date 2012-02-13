@@ -3,11 +3,9 @@ includelist:
 	@list=includelist-`tr / - <<< $(MODULE)` ; \
 	rm -f $$list ; \
 	for h in $(filter-out %.cw %.pri, $(ALLHDRS)) ; do \
-	    if [ "$(MODULE)" = "cint/cint7" ] ; then \
-		sed 's!^include!%{_includedir}/%{name}/cint7!' <<< $$h >> $$list ; \
-	    else \
-		sed 's!^include!%{_includedir}/%{name}!' <<< $$h >> $$list ; \
-	    fi ; \
+	    sed 's!^include!%{_includedir}/%{name}!' <<< $$h >> $$list ; \
+	done ; \
+	if [ -r $$list ] ; then \
 	    sort -u $$list > $$list.unique ; \
 	    mv $$list.unique $$list ; \
-	done
+	fi
