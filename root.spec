@@ -18,7 +18,7 @@
 %endif
 
 Name:		root
-Version:	5.28.00g
+Version:	5.28.00h
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -108,6 +108,7 @@ BuildRequires:	openssl-devel
 BuildRequires:	globus-gss-assist-devel
 BuildRequires:	globus-gsi-credential-devel
 BuildRequires:	globus-proxy-utils
+BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
@@ -1012,9 +1013,9 @@ package to use root with GNU Emacs.
 
 %prep
 %setup -q
-%if %(pkg-config --max-version 2.1.2 ftgl 2>/dev/null && echo 1 || echo 0)
+if pkg-config --max-version 2.1.2 ftgl ; then
 %patch0 -p1
-%endif
+fi
 %patch1 -p1
 %patch2 -p1
 %patch3 -p1
@@ -2270,6 +2271,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Feb 13 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00h-1
+- Update to 5.28.00h
+
 * Wed Sep 14 2011 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00g-1
 - Update to 5.28.00g
 
