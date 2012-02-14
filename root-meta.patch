@@ -1,0 +1,20 @@
+diff -ur root-5.32.00.orig/core/meta/src/TCint.cxx root-5.32.00/core/meta/src/TCint.cxx
+--- root-5.32.00.orig/core/meta/src/TCint.cxx	2011-12-02 12:41:50.000000000 +0100
++++ root-5.32.00/core/meta/src/TCint.cxx	2012-02-14 13:36:39.840687660 +0100
+@@ -322,11 +322,14 @@
+ 
+    TString include;
+    // Add the root include directory to list searched by default
+-#ifndef ROOTINCDIR
+    include = gSystem->Getenv("ROOTSYS");
++#ifndef ROOTINCDIR
+    include.Append("/include");
+ #else
+-   include = ROOTINCDIR;
++   if (include != "")
++     include.Append("/include");
++   else
++     include = ROOTINCDIR;
+ #endif
+   TCint::AddIncludePath(include);
+ 

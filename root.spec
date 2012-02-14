@@ -7,7 +7,15 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
-%{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
+%{!?ruby_sitearchdir: %global ruby_sitearchdir %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
+
+%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
+%global ruby_installdir %{ruby_vendorarchdir}
+%global ruby_abi 1.9.1
+%else
+%global ruby_installdir %{ruby_sitearchdir}
+%global ruby_abi 1.8
+%endif
 
 %if %($(pkg-config emacs) ; echo $?)
 %global emacs_version 21.4
@@ -20,7 +28,7 @@
 Name:		root
 Version:	5.32.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -55,9 +63,9 @@ Patch4:		%{name}-rfio.patch
 #		Missing globus auth module deps
 #		https://savannah.cern.ch/bugs/index.php?91462
 Patch5:		%{name}-globus-deps.patch
-#		Removed globals
+#		Fix hardcoded include path
 #		https://savannah.cern.ch/bugs/index.php?91463
-Patch6:		%{name}-globals.patch
+Patch6:		%{name}-meta.patch
 #		Ruby 1.9 configuration
 #		https://savannah.cern.ch/bugs/index.php?91461
 Patch7:		%{name}-ruby.patch
@@ -314,11 +322,7 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
 Provides:	ruby(libRuby) = %{version}
-%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
-Requires:	ruby(abi) = 1.9.1
-%else
-Requires:	ruby(abi) = 1.8
-%endif
+Requires:	ruby(abi) = %{ruby_abi}
 
 %description ruby
 This package contains the Ruby extension for ROOT. The interface
@@ -1307,10 +1311,10 @@ install -m 644 pyroot26/ROOT.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
 %endif
 
 # Same for the Ruby interface library
-mkdir -p ${RPM_BUILD_ROOT}%{ruby_sitearch}
+mkdir -p ${RPM_BUILD_ROOT}%{ruby_installdir}
 mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion} \
-   ${RPM_BUILD_ROOT}%{ruby_sitearch}/libRuby.so
-ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_sitearch}`/libRuby.so \
+   ${RPM_BUILD_ROOT}%{ruby_installdir}/libRuby.so
+ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_installdir}`/libRuby.so \
    ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion}
 
 # These should be in PATH
@@ -1833,7 +1837,7 @@ fi
 %files ruby -f includelist-bindings-ruby
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libRuby.*
-%{ruby_sitearch}/libRuby.*
+%{ruby_installdir}/libRuby.*
 
 %files genetic -f includelist-math-genetic
 %defattr(-,root,root,-)
@@ -2306,6 +2310,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Feb 14 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.00-2
+- Adapt to new ruby packaging guidelines
+
 * Fri Feb 10 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.00-1
 - Update to 5.32.00
 
