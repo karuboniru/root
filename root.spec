@@ -28,7 +28,7 @@
 Name:		root
 Version:	5.32.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2310,6 +2310,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Feb 28 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.32.00-3
+- Rebuilt for c++ ABI breakage
+
 * Tue Feb 14 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.00-2
 - Adapt to new ruby packaging guidelines
 
