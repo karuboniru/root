@@ -6,10 +6,11 @@
   gSystem->AddIncludePath("-I@PWD@/cint/cint/include");
   gSystem->AddIncludePath("-I@PWD@/cint/cint/stl");
   gSystem->AddIncludePath("-I@PWD@/cint/cint/lib");
-  gInterpreter->AddIncludePath("@PWD@/include");
-  gInterpreter->AddIncludePath("@PWD@/cint/cint/include");
-  gInterpreter->AddIncludePath("@PWD@/cint/cint/stl");
-  gInterpreter->AddIncludePath("@PWD@/cint/cint/lib");
+  TInterpreter::Instance()->AddIncludePath("@PWD@/include");
+  TInterpreter::Instance()->AddIncludePath("@PWD@/cint/cint/include");
+  TInterpreter::Instance()->AddIncludePath("@PWD@/cint/cint/stl");
+  TInterpreter::Instance()->AddIncludePath("@PWD@/cint/cint/lib");
+  #include <RtypesCint.h>
   #include <iostream>
   #include <string>
   #include <DllImport.h>

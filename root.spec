@@ -26,9 +26,9 @@
 %endif
 
 Name:		root
-Version:	5.32.00
+Version:	5.32.01
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -57,21 +57,9 @@ Patch1:		%{name}-fontconfig.patch
 Patch2:		%{name}-unuran.patch
 #		Fixes for xrootd bonjour
 Patch3:		%{name}-xrootd.patch
-#		Fix rfio configure
-#		https://savannah.cern.ch/bugs/index.php?91460
-Patch4:		%{name}-rfio.patch
-#		Missing globus auth module deps
-#		https://savannah.cern.ch/bugs/index.php?91462
-Patch5:		%{name}-globus-deps.patch
 #		Fix hardcoded include path
 #		https://savannah.cern.ch/bugs/index.php?91463
-Patch6:		%{name}-meta.patch
-#		Ruby 1.9 configuration
-#		https://savannah.cern.ch/bugs/index.php?91461
-Patch7:		%{name}-ruby.patch
-#		Dictionary generation fails on i686
-#		https://savannah.cern.ch/bugs/index.php?91459
-Patch8:		%{name}-fit.patch
+Patch4:		%{name}-meta.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1048,10 +1036,6 @@ fi
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
-%patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1400,6 +1384,7 @@ echo %{_libdir}/%{name} > \
 
 # Generate documentation
 echo Rint.Includes: 0 > .rootrc
+echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
@@ -2310,6 +2295,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Mar 03 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.01-1
+- Update to 5.32.01
+- Drop patches fixed upstream
+
 * Tue Feb 28 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.32.00-3
 - Rebuilt for c++ ABI breakage
 
