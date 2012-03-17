@@ -28,7 +28,7 @@
 Name:		root
 Version:	5.32.01
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2295,6 +2295,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Mar 17 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.01-2
+- Rebuild for xrootd 3.1.1
+
 * Sat Mar 03 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.01-1
 - Update to 5.32.01
 - Drop patches fixed upstream
