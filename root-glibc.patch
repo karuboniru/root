@@ -1,0 +1,44 @@
+diff -ur root-5.34.00.orig/build/rmkdepend/main.c root-5.34.00/build/rmkdepend/main.c
+--- root-5.34.00.orig/build/rmkdepend/main.c	2012-06-05 15:31:46.000000000 +0200
++++ root-5.34.00/build/rmkdepend/main.c	2012-06-10 16:03:57.954057521 +0200
+@@ -52,7 +52,7 @@
+ #else
+ #include <io.h>
+ #endif
+-#if !defined(__hpux)
++#if !defined(__USE_POSIX) && !defined(__hpux)
+ # if defined(__APPLE__)
+ #  include <AvailabilityMacros.h>
+ #  if !defined(MAC_OS_X_VERSION_10_4)
+@@ -60,7 +60,7 @@
+ #  endif
+ # elif defined(__CYGWIN__)
+ extern int fchmod(int, mode_t);
+-#else
++# else
+ extern int fchmod(int, int);
+ # endif
+ #endif
+diff -ur root-5.34.00.orig/cint/tool/rmkdepend/main.c root-5.34.00/cint/tool/rmkdepend/main.c
+--- root-5.34.00.orig/cint/tool/rmkdepend/main.c	2012-06-05 15:31:30.000000000 +0200
++++ root-5.34.00/cint/tool/rmkdepend/main.c	2012-06-10 16:03:58.327061162 +0200
+@@ -52,7 +52,7 @@
+ #else
+ #include <io.h>
+ #endif
+-#if !defined(__hpux)
++#if !defined(__USE_POSIX) && !defined(__hpux)
+ #if defined(__APPLE__)
+ #include <AvailabilityMacros.h>
+ #if !defined(MAC_OS_X_VERSION_10_4)
+diff -ur root-5.34.00.orig/core/unix/src/TUnixSystem.cxx root-5.34.00/core/unix/src/TUnixSystem.cxx
+--- root-5.34.00.orig/core/unix/src/TUnixSystem.cxx	2012-06-05 15:31:17.000000000 +0200
++++ root-5.34.00/core/unix/src/TUnixSystem.cxx	2012-06-10 15:53:40.483485520 +0200
+@@ -98,6 +98,7 @@
+ #include <pwd.h>
+ #include <grp.h>
+ #include <errno.h>
++#include <sys/resource.h>
+ #include <sys/wait.h>
+ #include <time.h>
+ #include <sys/time.h>

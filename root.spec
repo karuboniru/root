@@ -26,7 +26,7 @@
 %endif
 
 Name:		root
-Version:	5.32.03
+Version:	5.34.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -60,6 +60,8 @@ Patch3:		%{name}-xrootd.patch
 #		Fix hardcoded include path
 #		https://savannah.cern.ch/bugs/index.php?91463
 Patch4:		%{name}-meta.patch
+#		Fixes for latest glibc headers
+Patch5:		%{name}-glibc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -122,6 +124,8 @@ BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
 BuildRequires:	xrootd-devel
 BuildRequires:	cfitsio-devel
+BuildRequires:	gfal-devel
+BuildRequires:	srm-ifce-devel
 BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
@@ -564,6 +568,13 @@ Group:		Applications/Engineering
 
 %description io-dcache
 This package contains the dCache extension for ROOT.
+
+%package io-gfal
+Summary:	Grid File Access Library input/output library for ROOT
+Group:		Applications/Engineering
+
+%description io-gfal
+This package contains the Grid File Access Library extension for ROOT.
 
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
@@ -1036,6 +1047,7 @@ fi
 %patch2 -p1
 %patch3 -p1
 %patch4 -p1
+%patch5 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1138,11 +1150,13 @@ unset QTINC
 	    --enable-bonjour \
 	    --enable-clarens \
 	    --enable-dcache \
-	    --enable-exceptions \
 	    --enable-explicitlink \
 	    --enable-fftw3 \
 	    --enable-fitsio \
 	    --enable-gdml \
+	    --enable-gfal \
+	      --with-gfal-incdir=%{_includedir} \
+	      --with-gfal-libdir=%{_libdir} \
 	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
@@ -1179,8 +1193,8 @@ unset QTINC
 	    --enable-tmva \
 	    --enable-unuran \
 	    --enable-x11 \
-	    --enable-xml \
 	    --enable-xft \
+	    --enable-xml \
 	    --enable-xrootd \
 	      --with-xrootd-incdir=%{_includedir}/xrootd \
 	      --with-xrootd-libdir=%{_libdir} \
@@ -1196,7 +1210,7 @@ unset QTINC
 	    --disable-castor \
 	    --disable-chirp \
 	    --disable-cling \
-	    --disable-gfal \
+	    --disable-cxx11 \
 	    --disable-glite \
 	    --disable-hdfs \
 	    --disable-monalisa \
@@ -1349,7 +1363,6 @@ pushd ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
 rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TFile/P030_TCastorFile.C
-rm TFile/P050_TGFALFile.C
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
 rm TFile/P110_THDFSFile.C
@@ -1371,6 +1384,7 @@ rm TVirtualX/P030_TGWin32.C
 %if %{?fedora}%{!?fedora:0} < 9 && %{?rhel}%{!?rhel:0} < 6
 rm TVirtualX/P040_TGQt.C
 %endif
+rm TVirtualX/P050_TGQuartz.C
 rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
@@ -1401,7 +1415,7 @@ for module in `find * -name Module.mk` ; do
 done
 
 # ... and merge some of them
-cat includelist-core-[^w]* > includelist-core
+cat includelist-core-{[^mw],m[^a]}* > includelist-core
 cat includelist-geom-geom* > includelist-geom
 cat includelist-roofit-roo* > includelist-roofit
 cat includelist-gui-qt* > includelist-gui-qt
@@ -1584,6 +1598,8 @@ fi
 %postun io -p /sbin/ldconfig
 %post io-dcache -p /sbin/ldconfig
 %postun io-dcache -p /sbin/ldconfig
+%post io-gfal -p /sbin/ldconfig
+%postun io-gfal -p /sbin/ldconfig
 %post io-rfio -p /sbin/ldconfig
 %postun io-rfio -p /sbin/ldconfig
 %post io-sql -p /sbin/ldconfig
@@ -2013,6 +2029,11 @@ fi
 %{_datadir}/%{name}/plugins/TFile/P040_TDCacheFile.C
 %{_datadir}/%{name}/plugins/TSystem/P020_TDCacheSystem.C
 
+%files io-gfal -f includelist-io-gfal
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libGFAL.*
+%{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
+
 %files io-rfio -f includelist-io-rfio
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libRFIO.*
@@ -2295,6 +2316,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Jun 09 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.00-1
+- Update to 5.34.00
+- New sub-package: root-io-gfal
+
 * Thu May 17 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.32.03-1
 - Update to 5.32.03
 
