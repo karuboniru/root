@@ -1,0 +1,82 @@
+diff -ur root-5.28.00h.orig/core/unix/src/TUnixSystem.cxx root-5.28.00h/core/unix/src/TUnixSystem.cxx
+--- root-5.28.00h.orig/core/unix/src/TUnixSystem.cxx	2011-11-24 17:12:39.000000000 +0100
++++ root-5.28.00h/core/unix/src/TUnixSystem.cxx	2012-06-29 07:13:37.055012978 +0200
+@@ -425,6 +425,9 @@
+ 
+    TString lib = _dyld_get_image_name(i++);
+ 
++   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
++   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
++
+ #ifndef ROOTPREFIX
+ #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+    // first loaded is the app so set ROOTSYS to app bundle
+@@ -440,7 +443,8 @@
+       }
+    }
+ #else
+-   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so")) {
++   if (lib.EndsWith("libCore.dylib") || lib.EndsWith("libCore.so") ||
++       lib.Index(sovers) != kNPOS    || lib.Index(dyvers) != kNPOS) {
+       char respath[kMAXPATHLEN];
+       if (!realpath(lib, respath)) {
+          if (!gSystem->Getenv("ROOTSYS"))
+@@ -462,9 +466,23 @@
+ 
+    // add all libs loaded before libSystem.B.dylib
+    if (!gotFirstSo && (lib.EndsWith(".dylib") || lib.EndsWith(".so"))) {
+-      if (linkedDylibs.Length())
+-         linkedDylibs += " ";
+-      linkedDylibs += lib;
++      sovers = "\\.[0-9]+\\.*[0-9]*\\.so";
++      Ssiz_t idx = lib.Index(sovers);
++      if (idx != kNPOS) {
++         lib.Remove(idx);
++         lib += ".so";
++      }
++      dyvers = "\\.[0-9]+\\.*[0-9]*\\.dylib";
++      idx = lib.Index(dyvers);
++      if (idx != kNPOS) {
++         lib.Remove(idx);
++         lib += ".dylib";
++      }
++      if (!gSystem->AccessPathName(lib, kReadPermission)) {
++         if (linkedDylibs.Length())
++            linkedDylibs += " ";
++         linkedDylibs += lib;
++      }
+    }
+ }
+ #endif
+@@ -2799,9 +2817,11 @@
+       delete [] exe;
+       exe = longerexe;
+    }
++   TRegexp sovers = "\\.so\\.[0-9]+";
+ #else
+    const char *cLDD="ldd";
+    const char *cSOEXT=".so";
++   TRegexp sovers = "\\.so\\.[0-9]+";
+ #endif
+    FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
+    TString ldd;
+@@ -2819,10 +2839,15 @@
+       }
+       if (solibName) {
+          TString solib = solibName->String();
+-         if (solib.EndsWith(cSOEXT)) {
+-            if (!linkedLibs.IsNull())
+-               linkedLibs += " ";
+-            linkedLibs += solib;
++         Ssiz_t idx = solib.Index(sovers);
++         if (solib.EndsWith(cSOEXT) || idx != kNPOS) {
++            if (idx != kNPOS)
++               solib.Remove(idx+3);
++            if (!AccessPathName(solib, kReadPermission)) {
++               if (!linkedLibs.IsNull())
++                  linkedLibs += " ";
++               linkedLibs += solib;
++            }
+          }
+       }
+       delete tok;

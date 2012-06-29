@@ -7,6 +7,16 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
+%if "%{?rhel}" == "5"
+%ifarch ppc
+%global gfal 0
+%else
+%global gfal 1
+%endif
+%else
+%global gfal 1
+%endif
+
 %{!?ruby_sitearch: %global ruby_sitearch %(ruby -rrbconfig -e 'puts Config::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %($(pkg-config emacs) ; echo $?)
@@ -20,7 +30,7 @@
 Name:		root
 Version:	5.28.00h
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -53,6 +63,11 @@ Patch3:		%{name}-cern-ppc.patch
 Patch4:		%{name}-listbox-height.patch
 #		Fixes for external xrootd
 Patch5:		%{name}-xrootd.patch
+#		Fix hardcoded include path
+#		https://savannah.cern.ch/bugs/index.php?91463
+Patch6:		%{name}-meta.patch
+#		Backport fixes for using aclic with versioned libraries
+Patch7:		%{name}-aclic-versioned-libs.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -114,6 +129,10 @@ BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
 BuildRequires:	xrootd-devel
 BuildRequires:	cfitsio-devel
+%if %{gfal}
+BuildRequires:	gfal-devel
+BuildRequires:	srm-ifce-devel
+%endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
@@ -301,7 +320,7 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
 Provides:	ruby(libRuby) = %{version}
-requires:	ruby(abi) = 1.8
+Requires:	ruby(abi) = 1.8
 
 %description ruby
 This package contains the Ruby extension for ROOT. The interface
@@ -555,6 +574,15 @@ Group:		Applications/Engineering
 
 %description io-dcache
 This package contains the dCache extension for ROOT.
+
+%if %{gfal}
+%package io-gfal
+Summary:	Grid File Access Library input/output library for ROOT
+Group:		Applications/Engineering
+
+%description io-gfal
+This package contains the Grid File Access Library extension for ROOT.
+%endif
 
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
@@ -1021,6 +1049,8 @@ fi
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
+%patch7 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1126,6 +1156,13 @@ unset QTINC
 	    --enable-fftw3 \
 	    --enable-fitsio \
 	    --enable-gdml \
+%if %{gfal}
+	    --enable-gfal \
+	      --with-gfal-incdir=%{_includedir} \
+	      --with-gfal-libdir=%{_libdir} \
+%else
+	    --disable-gfal \
+%endif
 	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
@@ -1162,8 +1199,8 @@ unset QTINC
 	    --enable-tmva \
 	    --enable-unuran \
 	    --enable-x11 \
-	    --enable-xml \
 	    --enable-xft \
+	    --enable-xml \
 	    --enable-xrootd \
 	      --with-xrootd-incdir=%{_includedir}/xrootd \
 	      --with-xrootd-libdir=%{_libdir} \
@@ -1179,7 +1216,6 @@ unset QTINC
 	    --disable-castor \
 	    --disable-chirp \
 	    --disable-cling \
-	    --disable-gfal \
 	    --disable-glite \
 	    --disable-hdfs \
 	    --disable-monalisa \
@@ -1338,7 +1374,9 @@ pushd ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
 rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TFile/P030_TCastorFile.C
+%if "%{gfal}" == "0"
 rm TFile/P050_TGFALFile.C
+%endif
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
 rm TFile/P110_THDFSFile.C
@@ -1373,6 +1411,7 @@ echo %{_libdir}/%{name} > \
 
 # Generate documentation
 echo Rint.Includes: 0 > .rootrc
+echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
@@ -1571,6 +1610,10 @@ fi
 %postun io -p /sbin/ldconfig
 %post io-dcache -p /sbin/ldconfig
 %postun io-dcache -p /sbin/ldconfig
+%if %{gfal}
+%post io-gfal -p /sbin/ldconfig
+%postun io-gfal -p /sbin/ldconfig
+%endif
 %post io-rfio -p /sbin/ldconfig
 %postun io-rfio -p /sbin/ldconfig
 %post io-sql -p /sbin/ldconfig
@@ -1998,6 +2041,13 @@ fi
 %{_datadir}/%{name}/plugins/TFile/P040_TDCacheFile.C
 %{_datadir}/%{name}/plugins/TSystem/P020_TDCacheSystem.C
 
+%if %{gfal}
+%files io-gfal -f includelist-io-gfal
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libGFAL.*
+%{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
+%endif
+
 %files io-rfio -f includelist-io-rfio
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libRFIO.*
@@ -2273,6 +2323,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Jun 29 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00h-2
+- Backport fixes for using aclic with versioned libraries
+- New sub-package: root-io-gfal
+
 * Mon Feb 13 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00h-1
 - Update to 5.28.00h
 

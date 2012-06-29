@@ -10,9 +10,9 @@
   gInterpreter->AddIncludePath("@PWD@/cint/cint/include");
   gInterpreter->AddIncludePath("@PWD@/cint/cint/stl");
   gInterpreter->AddIncludePath("@PWD@/cint/cint/lib");
+  #include <RtypesCint.h>
   #include <iostream>
   #include <string>
-  #include <RtypesCint.h>
   #include <DllImport.h>
   gROOT->GetPluginManager()->LoadHandlersFromPluginDirs("");
   gROOT->GetPluginManager()->AddHandler("TVirtualPS","image",
