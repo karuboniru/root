@@ -26,9 +26,9 @@
 %endif
 
 Name:		root
-Version:	5.34.00
+Version:	5.34.01
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -89,7 +89,6 @@ BuildRequires:	libtiff-devel
 BuildRequires:	ncurses-devel
 BuildRequires:	avahi-compat-libdns_sd-devel
 BuildRequires:	avahi-devel
-BuildRequires:	xmlrpc-c-devel
 BuildRequires:	libxml2-devel
 BuildRequires:	fftw-devel
 BuildRequires:	gsl-devel
@@ -855,6 +854,8 @@ the xrootd server.
 %package proof
 Summary:	PROOF extension for ROOT
 Group:		Applications/Engineering
+Obsoletes:	%{name}-clarens < 5.34.01
+Obsoletes:	%{name}-peac < 5.34.01
 
 %description proof
 This package contains the proof extension for ROOT. This provides a
@@ -881,31 +882,6 @@ Group:		Applications/Engineering
 %description proof-sessionviewer
 This package contains a library for browsing an interactive PROOF
 session in ROOT.
-
-%package clarens
-Summary:	Clarens extension for ROOT
-Group:		Applications/Engineering
-
-%description clarens
-This package contains the Clarens extension for ROOT, for use in a
-GRID enabled analysis environment.
-
-The Clarens Grid-Enabled Web Services Framework is an open source,
-secure, high-performance "portal" for ubiquitous access to data and
-computational resources provided by computing grids.
-
-%package peac
-Summary:	PEAC extension for ROOT - run-time libraries
-Group:		Applications/Engineering
-
-%description peac
-This package contains the PEAC (Proof Enabled Analysis Center)
-extension for ROOT.
-
-PEAC is an interactive distributed analysis framework that uses
-Clarens as a "glue" protocol to advertise and communicate amongst
-SAM, Global Manager (GM), Local Manager (LM), DCache, and PROOF
-services.
 
 %package xproof
 Summary:	XPROOF extension for ROOT
@@ -1148,7 +1124,6 @@ unset QTINC
 	    --enable-asimage \
 	    --enable-astiff \
 	    --enable-bonjour \
-	    --enable-clarens \
 	    --enable-dcache \
 	    --enable-explicitlink \
 	    --enable-fftw3 \
@@ -1169,7 +1144,6 @@ unset QTINC
 	    --enable-mysql \
 	    --enable-odbc \
 	    --enable-opengl \
-	    --enable-peac \
 	    --enable-pgsql \
 	    --enable-python \
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
@@ -1664,10 +1638,6 @@ fi
 %postun proof -p /sbin/ldconfig
 %post proof-sessionviewer -p /sbin/ldconfig
 %postun proof-sessionviewer -p /sbin/ldconfig
-%post clarens -p /sbin/ldconfig
-%postun clarens -p /sbin/ldconfig
-%post peac -p /sbin/ldconfig
-%postun peac -p /sbin/ldconfig
 %post xproof -p /sbin/ldconfig
 %postun xproof -p /sbin/ldconfig
 %post roofit -p /sbin/ldconfig
@@ -1735,6 +1705,8 @@ fi
 %{_datadir}/%{name}/system.rootdaemonrc
 %{_datadir}/%{name}/system.rootrc
 %{_mandir}/man1/system.rootdaemonrc.1*
+%dir %{_datadir}/%{name}/cmake
+%{_datadir}/%{name}/cmake/FindROOT.cmake
 %dir %{_datadir}/%{name}/macros
 %{_datadir}/%{name}/macros/Dialogs.C
 %dir %{_datadir}/%{name}/plugins
@@ -2244,16 +2216,6 @@ fi
 %{_datadir}/%{name}/plugins/TProofProgressLog/P010_TProofProgressLog.C
 %{_datadir}/%{name}/plugins/TSessionViewer/P010_TSessionViewer.C
 
-%files clarens -f includelist-proof-clarens
-%defattr(-,root,root,-)
-%{_libdir}/%{name}/libClarens.*
-
-%files peac -f includelist-proof-peac
-%defattr(-,root,root,-)
-%{_libdir}/%{name}/libPeac.*
-%{_libdir}/%{name}/libPeacGui.*
-%{_datadir}/%{name}/plugins/TProof/P030_TProofPEAC.C
-
 %files xproof -f includelist-proof-proofx
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libProofx.*
@@ -2316,6 +2278,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Jul 17 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.01-1
+- Update to 5.34.01
+- Remove sub-packages root-clarens and root-peac (dropped by upstream)
+
 * Thu Jul 05 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.00-2
 - Do the glibc 2.16 patch properly
 
