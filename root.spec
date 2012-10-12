@@ -26,9 +26,9 @@
 %endif
 
 Name:		root
-Version:	5.34.01
+Version:	5.34.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2278,6 +2278,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Oct 12 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.02-1
+- Update to 5.34.02
+
 * Sat Jul 28 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.01-2
 - Rebuild for glew 1.7
 
