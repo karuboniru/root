@@ -1,0 +1,24 @@
+--- v5-34-00-patches/core/meta/src/TClass.cxx	2012/08/24 14:30:19	45695
++++ v5-34-00-patches/core/meta/src/TClass.cxx	2012/10/05 21:03:30	46365
+@@ -2544,7 +2544,10 @@
+          if (objType) {
+             const char *typdfName = objType->GetTypeName();
+             if (typdfName && strcmp(typdfName, name)) {
+-               cl = TClass::GetClass(typdfName, load);
++               TString alternateName(typdfName);
++               // TClass::GetClass might get call GetTypeName and thus
++               // re-use the static storage use by GetTypeName!
++               cl = TClass::GetClass(alternateName, load);
+                return cl;
+             }
+          }
+@@ -3206,9 +3209,6 @@
+          fRealData->Delete();
+       delete fRealData;  fRealData=0;
+       
+-      if (fStreamerInfo)
+-         fStreamerInfo->Delete();
+-      delete fStreamerInfo; fStreamerInfo=0;
+    }
+ }
+ 

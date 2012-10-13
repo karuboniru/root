@@ -1,0 +1,15 @@
+diff -ur root-5.34.02.orig/io/gfal/src/TGFALFile.cxx root-5.34.02/io/gfal/src/TGFALFile.cxx
+--- root-5.34.02.orig/io/gfal/src/TGFALFile.cxx	2012-09-21 16:29:07.000000000 +0200
++++ root-5.34.02/io/gfal/src/TGFALFile.cxx	2012-10-12 22:59:42.785689152 +0200
+@@ -60,6 +60,11 @@
+ //                                                                      //
+ //////////////////////////////////////////////////////////////////////////
+ 
++#ifdef _FILE_OFFSET_BITS
++#undef _FILE_OFFSET_BITS
++#endif
++#define _FILE_OFFSET_BITS 64
++
+ #include "TGFALFile.h"
+ #include "TROOT.h"
+ #include "TUrl.h"

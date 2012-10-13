@@ -62,6 +62,12 @@ Patch3:		%{name}-xrootd.patch
 Patch4:		%{name}-meta.patch
 #		Fixes for latest glibc headers
 Patch5:		%{name}-glibc.patch
+#		Missing Include
+Patch6:		%{name}-gfal-bits.patch
+#		Backport meta fixes
+Patch7:		%{name}-tclass-fix.patch
+#		Revert THtml change
+Patch8:		%{name}-thtml-revert.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1024,6 +1030,9 @@ fi
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
+%patch7 -p1
+%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
