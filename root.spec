@@ -28,7 +28,7 @@
 Name:		root
 Version:	5.34.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2287,6 +2287,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.02-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
+
 * Thu Dec 13 2012 Adam Jackson <ajax@redhat.com> - 5.34.02-2
 - Rebuild for glew 1.9.0
 
