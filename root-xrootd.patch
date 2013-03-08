@@ -1,10 +1,402 @@
-diff -ur root-5.28.00c.orig/configure root-5.28.00c/configure
---- root-5.28.00c.orig/configure	2011-04-15 17:34:20.000000000 +0200
-+++ root-5.28.00c/configure	2011-04-23 13:02:29.385052080 +0200
-@@ -4307,13 +4307,14 @@
-     if test "x$externalxrd" = "xyes"; then
-        buildxrd="no"
-        # Check if bonjour is available for code potentially using it ...
+diff -Nur root-5.28.00h.orig/config/Makefile.in root-5.28.00h/config/Makefile.in
+--- root-5.28.00h.orig/config/Makefile.in	2011-11-24 17:12:55.000000000 +0100
++++ root-5.28.00h/config/Makefile.in	2013-03-08 11:54:45.058375695 +0100
+@@ -241,12 +241,12 @@
+ XMLINCDIR      := $(filter-out /usr/include, @xmlincdir@)
+ 
+ HASXRD         := @hasxrd@
+-BUILDXRD       := @buildxrd@
+ XRDINCDIR      := @xrdincdir@
+ XRDLIBDIR      := @xrdlibdir@
+-XRDADDOPTS     := @xrdaddopts@
+ EXTRA_XRDFLAGS := @extraxrdflags@
+ XRDVERSION     := @xrdversion@
++HASXRDUTILS    := @hasxrdutils@
++XRDINCPRIVATE  := @xrdincprivate@
+ 
+ SRPLIBDIR      := @srplibdir@
+ SRPLIB         := @srplib@
+@@ -284,7 +284,6 @@
+ GLOBUSLIB      := @globuslib@
+ GLOBUSLIBDIR   := @globuslibdir@
+ GLOBUSINCDIR   := $(filter-out /usr/include, @globusincdir@)
+-BUILDXRDGSI    := @buildxrdgsi@
+ 
+ BUILDMONALISA  := @buildmonalisa@
+ MONALISALIBDIR := @monalisalibdir@
+diff -Nur root-5.28.00h.orig/configure root-5.28.00h/configure
+--- root-5.28.00h.orig/configure	2011-11-24 17:12:57.000000000 +0100
++++ root-5.28.00h/configure	2013-03-08 11:54:41.987349372 +0100
+@@ -1385,7 +1385,7 @@
+   winrtdebug         Link against the Windows debug runtime library
+   x11                X11 support
+   xml                XML parser interface
+-  xrootd             Build xrootd file server and its client (if supported)
++  xrootd             Build xrootd-dependent plugins for remote file access and PROOF (if supported)
+   xft                Xft support (X11 antialiased fonts)
+ 
+ minimal set of libraries, can be combined with above --enable-... options
+@@ -1484,10 +1484,9 @@
+   xpm-libdir         XPM support, path to libXpm
+   xft-libdir         Xft support, path to libXft
+   xext-libdir        Xext support, path to libXext
+-  xrootd             XROOTD support, path to external XROOTD distribution
+-  xrootd-incdir      XROOTD support, path to external XROOTD header files (XrdVersion.hh, ...)
+-  xrootd-libdir      XROOTD support, path to external XROOTD libraries
+-  xrootd-opts        XROOTD support, additional options to be passed to XROOTD-configure
++  xrootd             XROOTD support, path to XROOTD distribution
++  xrootd-incdir      XROOTD support, path to XROOTD header files (XrdVersion.hh, ...)
++  xrootd-libdir      XROOTD support, path to XROOTD libraries (libXrdClient, ...)
+ 
+ with compiler options, prefix with --with-, overrides default value
+ 
+@@ -1792,7 +1791,6 @@
+       --with-xft-libdir=*)     xftlibdir=$optarg     ;;
+       --with-xext-libdir=*)    xextlibdir=$optarg    ;;
+       --with-xrootd=*)         xrootddir=$optarg     ; enable_xrootd="yes"  ;;
+-      --with-xrootd-opts=*)    xrdaddopts=$optarg    ; enable_xrootd="yes"  ;;
+       --with-xrootd-incdir=*)  xrdincdir=$optarg     ; enable_xrootd="yes"  ;;
+       --with-xrootd-libdir=*)  xrdlibdir=$optarg     ; enable_xrootd="yes"  ;;
+       --with-cc=*)             altcc=$optarg         ;;
+@@ -4138,81 +4136,97 @@
+ #
+ ### echo %%% Check for xrootd support
+ #
+-message "Checking whether to build xrootd"
+-xrdcomm=""
+-vercomm=
+-
+-# If we are required to use an external XROOTD distribution
+-# we just define the pointers
+-extraxrdflags="-DUSENEWHDRS"
+-
+-# Check if we are asked to use an external XROOTD; priority to specific
+-# inc and lib settings
+-externalxrd="no"
+-if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
+-   externalxrd="yes"
+-   xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
+-   if test ! -f "$xrdincdir/XrdVersion.hh" ; then
+-      enable_xrootd="no"
+-      xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
+-      xrdincdir=""
+-      xrdlibdir=""
+-   fi
+-elif test ! "x$xrootddir" = "x"; then
+-   externalxrd="yes"
++if test "x$enable_xrootd" = "xyes" ; then
++   xrdcomm=""
++   vercomm=""
++   extraxrdflags=""
++   
++   # Localize the version header; priority to specific inc and lib settings,
++   # followed by global dir setting and standard paths
++   xrdincone=""
++   xrdinctwoa=""
++   xrdinctwob=""
++   xrdinctmp=""
+    if test ! "x$xrdlibdir" = "x" && test ! "x$xrdincdir" = "x"; then
+-      xrdcomm="no, using xrootd at $xrdlibdir, $xrdincdir"
+-      if test ! -f "$xrdincdir/XrdVersion.hh" ; then
+-         enable_xrootd="no"
+-         xrdcomm="no, asked to use installation at $xrdincdir, but version file missing: disabling"
+-         xrdincdir=""
+-         xrdlibdir=""
+-      fi
++      xrdincone="$xrdincdir/XrdVersion.hh"
++      xrdlibone="$xrdlibdir"
++      xrdinctmp="$xrdincdir $xrdinctmp"
+    elif test ! "x$xrootddir" = "x"; then
+-      xrdlibdir="$xrootddir/lib"
+-      xrdcomm="no, using xrootd at $xrootddir"
+-      if test -f "$xrootddir/include/xrootd/XrdVersion.hh" ; then
+-         xrdincdir="$xrootddir/include/xrootd"
+-      elif test -f "$xrootddir/src/XrdVersion.hh" ; then
+-         xrdincdir="$xrootddir/src"
++      xrdlibtwo="$xrootddir"
++      xrdinctwoa="$xrootddir/include/xrootd/XrdVersion.hh"
++      xrdinctwob="$xrootddir/src/XrdVersion.hh"
++      xrdinctmp="$xrootddir/include/xrootd $xrootddir/src $xrdinctmp"
++   else
++      # Standard paths
++      xrdpaths="$XRDSYS /opt/xrootd /usr/local /usr"
++      for stdp in $xrdpaths ; do
++         if test -d "$stdp/lib" || test -d "$stdp/lib64" ; then
++            xrdlibthree="$xrdlibthree $stdp/lib"
++            xrdinctmp="$xrdinctmp $stdp/include/xrootd $stdp/include"
++         fi
++      done
++   fi
++   # Run the search now
++   check_header "XrdVersion.hh" "" "$xrdinctmp"
++   if test ! "x$found_hdr" = "x" ; then
++      xrdinc="$found_dir/$found_hdr"
++      # Find out which path was the good one
++      if test "x$xrdinc" = "x$xrdincone" ; then 
++         xrdincdir="$found_dir"
++         xrdlibdir="$xrdlibone"
++      elif test "x$xrdinc" = "x$xrdinctwoa" ; then 
++         xrdincdir="$xrdlibtwo/include/xrootd"
++         xrdlibdir="$xrdlibtwo/lib"
++      elif test "x$xrdinc" = "x$xrdinctwob" ; then 
++         xrdincdir="$xrdlibtwo/src"
++         xrdlibdir="$xrdlibtwo/lib"
+       else
+-         enable_xrootd="no"
+-         xrdcomm="no, asked to use installation at $xrootddir, but version file missing: disabling"
+-         xrdincdir=""
+-         xrdlibdir=""
++         for ll in $xrdlibthree ; do
++            rdir=`dirname $ll`
++            xinca="$rdir/include/xrootd/XrdVersion.hh"
++            xincb="$rdir/include/XrdVersion.hh"
++            if test "x$xrdinc" = "x$xinca" ; then 
++               xrdincdir="$rdir/include/xrootd"
++               xrdlibdir="$ll"
++            elif test "x$xrdinc" = "x$xincb" ; then 
++               xrdincdir="$rdir/include"
++               xrdlibdir="$ll"
++            fi
++            if test ! "x$xrdincdir" = "x" ; then
++               break
++            fi
++         done
++         # Only here if something inconsistent was found
++         if test "x$xrdincdir" = "x" ; then
++            enable_xrootd="no"
++            xrdincdir=""
++            xrdlibdir=""
++         fi
+       fi
++   else
++      enable_xrootd="no"
++      xrdincdir=""
++      xrdlibdir=""
+    fi
+ fi
++
+ # Decode version
+ xrdver=
+ decver=0
+-if test ! "x$enable_xrootd" = "xno" ; then
++if test "x$enable_xrootd" = "xyes" ; then
+ 
+-   newver="no"
+-   if test "x$externalxrd" = "xyes"; then
+-      verh=$xrdincdir/XrdVersion.hh
+-   else
+-      newver="yes"
+-      verh=$top_srcdir/net/xrootd/src/xrootd/VERSION_INFO
+-      if test ! -f $verh ; then
+-         newver="no"
+-         verh=$top_srcdir/net/xrootd/src/xrootd/src/XrdVersion.hh
+-      fi
+-   fi
+-   xrdver="unknown"
+-   if test "x$newver" = "xyes" ; then
+-      xrdver=`grep RefNames $verh`
+-      if test $? -eq 0 ; then
+-         set $xrdver
+-         xrdver=`echo $4 | sed -e 's|,||'`
+-      fi
++   message "Checking for xrootd version"
++
++   verh=$xrdincdir/XrdVersion.hh
++
++   xrdver=`grep XrdVERSION $verh`
++   if test $? -eq 0 ; then
++      set $xrdver
++      xrdver=$3
+    else
+-      xrdver=`grep XrdVERSION $verh`
+-      if test $? -eq 0 ; then
+-         set $xrdver
+-         xrdver=$3
+-      fi
++      xrdver="unknown"
+    fi
++
+    if test ! "x$xrdver" = "xunknown"; then
+       tmpver=`echo $xrdver | sed -e 's|"\(.*\)"|\1|' -e 's|^v||' -e 's|-.*||'`
+       if test "x$tmpver" = "xuntagged" ; then
+@@ -4241,117 +4255,96 @@
+ 	 fi
+       fi
+    fi
++   # Protect against 3.3.0, first version with 'include/xrootd/private'
++   if [ $decver -eq 300030000 ] ; then
++      echo "Cannot build against version $xrdver (missing headers)"
++      enable_xrootd="no"
++   else
++      echo "$xrdver"
++   fi
+ fi
+-bjrcomm=
+-if test "x$enable_xrootd" = "xyes" && test "x$externalxrd" = "xyes"; then
+ 
+-   if test "x$enable_xrootd" = "xyes" ; then
++xrdincprivate="no"
++if test "x$enable_xrootd" = "xyes" ; then
+ 
+-      # Check version
+-      decrefone=20070628
+-      decreftwo=20070723
+-      decrefthree=20071004
+-      if [ $decver -gt $decrefone ] ; then
+-         if [ $decver -gt $decrefthree ] ; then
+-            xrdcomm="$xrdcomm"
+-            extraxrdflags="$extraxrdflags"
+-         elif [ $decver -gt $decreftwo ] ; then
+-            vercomm=" (>$decreftwo, <=$decrefthree: setting -DOLDXRDLOCATE)"
+-            extraxrdflags="-DOLDXRDLOCATE $extraxrdflags"
+-         else
+-            vercomm=" (>$decrefone, <=$decreftwo: setting -DOLDXRDLOCATE -DOLDXRDOUC)"
+-            extraxrdflags="-DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
+-         fi
++   extraxrdflags="-DROOTXRDVERS=$decver"
++   vercomm="setting $extraxrdflags"
++
++   #
++   # Check libraries now
++   hasxrdutils="no"
++   libxrdoucbjr=""
++   # 
++   # Release date of version 3.1.0 containing the new lib packaging
++   decreftre=300000000
++   decrefutils=300010000
++   if [ $decver -lt $decreftre ] ; then
++      decrefutils=20111021
++   fi
++   decrefnetut=20100729
++   if [ $decver -ge $decrefutils ] ; then
++      xrdlibs="libXrdMain libXrdUtils libXrdClient" 
++      hasxrdutils="yes"
++   elif [ $decver -ge $decrefnetut ] ; then
++      xrdlibs="libXrdNet libXrdNetUtil libXrdOuc libXrdSys libXrdClient libXrd" 
++   else
++      xrdlibs="libXrdNet libXrdOuc libXrdSys libXrdClient libXrd" 
++   fi
++   tmpxrdlibdir=""
++   xrdlibext=""
++   for ll in $xrdlibs ; do 
++      #
++      # Check if packaging has libXrdUtils or the old libXrdOuc, libXrdSys, ...
++      check_library $ll "$enable_shared" "$xrdlibdir" "$xrdlibdir"
++      if test "x$found_lib" = "x" ; then
++         enable_xrootd="no"
++         xrdincdir=""
++         xrdlibdir=""
++         break
+       else
+-         vercomm=" (<= $decrefone: setting -DOLDXRDLOCATE -DOLDXRDOUC -DOLDXRCPHYCONN)"
+-         extraxrdflags="-DOLDXRCPHYCONN -DOLDXRDOUC -DOLDXRDLOCATE $extraxrdflags"
++         xrdlibext="$found_ext"
++         tmpxrdlibdir="$found_dir"
++         if test "x$ll" = "xlibXrdUtils" || test "x$ll" = "xlibXrdOuc"; then
++            libxrdoucbjr="$found_lib"
++         fi
+       fi
++   done
++
++   #
++   # If not 'so' or 'a', comunicate the extension for the library loadings
++   # in XrdProofd. This may be temporary, as xrootd may do it automatically,
++   # one day ...
++   if test ! "x$xrdlibext" = "x" && test ! "x$xrdlibext" = "xso" && test ! "x$xrdlibext" = "xa"; then
++      # The \'s are needed to produce -DLT_MODULE_EXT=\".ext\" in Makefile.config
++      extraxrdflags="$extraxrdflags -DLT_MODULE_EXT=\\\\\".$xrdlibext\\\\\""
+    fi
+ 
+-else
+-   if test "x$enable_xrootd" = "x" && test "x$DEFAULTENABLE" = "xno"; then
+-       enable_xrootd="no"
+-       xrdincdir=""
+-       xrdlibdir=""
+-   else
+-       # Xrootd and its client need thread support
+-       if test "x$enable_thread" = "xyes"; then
+-           # Ok, now check the architecture
+-           case $arch in
+-           # xrootd does not build on all platforms yet
+-           linux*)
+-               if test "x$enable_xrootd" = "x"; then
+-                   enable_xrootd="yes"
+-               fi
+-               ;;
+-           macos*)
+-               if test "x$enable_xrootd" = "x"; then
+-                   enable_xrootd="yes"
+-               fi
+-               ;;
+-           solaris*)
+-               if test "x$enable_xrootd" = "x"; then
+-                   enable_xrootd="yes"
+-               fi
+-               ;;
+-           win32)
+-               if test "x$enable_xrootd" = "x"; then
+-                   enable_xrootd="yes"
+-               fi
+-               ;;
+-           *)
+-               if test "x$enable_xrootd" = "xyes"; then
+-                   enable_xrootd="yes"
+-                   xrdcomm=", but not officially supported"
+-               else
+-                   enable_xrootd="no"
+-               fi
+-               xrdincdir=""
+-               xrdlibdir=""
+-               ;;
+-           esac
+-       else
+-           if test "x$enable_xrootd" = "xyes"; then
+-               enable_xrootd="no"
+-               xrdcomm=", needs thread support (make sure pthread lib is found)"
+-           else
+-               enable_xrootd="no"
+-           fi
+-           xrdincdir=""
+-           xrdlibdir=""
+-       fi
++   #
++   # Check also if 'include/private' exists: we need to signal this to the build modules
++   # for correct location of some headers available form the dlevel packages for version >= 3.3.x
++   if test "x$enable_xrootd" = "xyes"; then
++      if test -d "$xrdincdir/private"; then
++         xrdincprivate="yes"
++      fi
+    fi
+ 
+-   xrdcomm="$enable_xrootd$xrdcomm"
++   #
++   # Check if bonjour is available for code potentially using it ...
++   if test "x$enable_xrootd" = "xyes"; then
++      xrdlibdir="$tmpxrdlibdir"
++      if test "x$enable_bonjour" = "xyes"; then
++         # This check is broken. The xrootd libraries are C++ hence their
++         # symbol names are mangled. The check_symbol macro is designed
++         # to check for unmangled symbol names in C libraries.
++         # check_symbol XrdOucBonjour "$libxrdoucbjr" "$xrdlibdir"
++         # if test  $found_symbol -eq 0 ; then
++         #    bonjourcppflags=
++         # fi
++         bonjourcppflags=
++      fi
++   fi
+ fi
+ 
+-xrdcomm="$xrdcomm"
+-result $xrdcomm
+-if test "x$enable_xrootd" = "xyes"; then
+-    hasxrd=""
+-    hasnotxrd="#"
+-    message "Checking for xrootd version"
+-    result "$xrdver $vercomm"
+-    buildxrd="yes"
+-    if test "x$externalxrd" = "xyes"; then
+-       buildxrd="no"
+-       # Check if bonjour is available for code potentially using it ...
 -       if test "x$enable_bonjour" = "xyes"; then
 -          check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
 -          if test  $found_symbol -eq 0 ; then
@@ -12,21 +404,291 @@ diff -ur root-5.28.00c.orig/configure root-5.28.00c/configure
 -             bonjourcppflags=
 -          fi
 -       fi
-+       ## This test is broken and will always fail.
-+       ##if test "x$enable_bonjour" = "xyes"; then
-+       ##   check_symbol XrdOucBonjour "libXrdOuc.a" "$xrdlibdir"
-+       ##   if test  $found_symbol -eq 0 ; then
-+       ##      bjrcomm="External xrootd has no bonjour support: disabling bonjour in XrdProofd"
-+       ##      bonjourcppflags=
-+       ##   fi
-+       ##fi
-     fi
+-    fi
+-else
+-    buildxrd="no"
+-    hasxrd="#"
+-    hasnotxrd=""
+-fi
+-if test ! "x$bjrcomm" = "x"; then
+-   echo "$bjrcomm"
+-fi
+ check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
+      "Explicitly required Xrootd dependencies not fulfilled"
+ 
+@@ -4364,11 +4357,6 @@
+ # If the user has set the flags "--disable-globus", we don't check for
+ # Globus at all.
+ #
+-# By default, always try to build the XRD GSI plug-in; this can be
+-# disabled with
+-#                  --with-xrootd-opts="--disable-gsi"
+-buildxrdgsi="yes"
+-#
+ glbextracflags=""
+ glbpatchcflags=""
+ haveglobus=""
+@@ -6282,7 +6270,6 @@
+     -e "s|@buildglew@|$enable_builtin_glew|"    \
+     -e "s|@builtinfreetype@|$enable_builtin_freetype|"      \
+     -e "s|@builtinpcre@|$enable_builtin_pcre|"  \
+-    -e "s|@buildxrd@|$buildxrd|"                \
+     -e "s|@hasxrd@|$enable_xrootd|"             \
+     -e "s|@castorincdir@|$castorincdir|"        \
+     -e "s|@castorlib@|$castorlib|"              \
+@@ -6467,10 +6454,11 @@
+     -e "s|@x11libdir@|$x11libdir|"              \
+     -e "s|@xpmlib@|$xpmlib|"                    \
+     -e "s|@xpmlibdir@|$xpmlibdir|"              \
+-    -e "s|@xrdaddopts@|$xrdaddopts|"            \
+     -e "s|@xrdlibdir@|$xrdlibdir|"              \
+     -e "s|@xrdincdir@|$xrdincdir|"              \
++    -e "s|@xrdincprivate@|$xrdincprivate|"      \
+     -e "s|@xrdversion@|$decver|"                \
++    -e "s|@hasxrdutils@|$hasxrdutils|"          \
+     -e "s|@cursesincdir@|$cursesincdir|"        \
+     -e "s|@curseshdr@|$curseshdr|"              \
+     -e "s|@curseslib@|$curseslib|"              \
+@@ -6508,7 +6496,6 @@
+     -e "s|@buildsrputil@|$enable_srputil|"      \
+     -e "s|@buildkrb5@|$enable_krb5|"            \
+     -e "s|@buildglobus@|$enable_globus|"        \
+-    -e "s|@buildxrdgsi@|$buildxrdgsi|"          \
+     -e "s|@buildclarens@|$enable_clarens|"      \
+     -e "s|@buildpeac@|$buildpeac|"              \
+     -e "s|@buildafdsmgrd@|$enable_afdsmgrd|"    \
+diff -Nur root-5.28.00h.orig/net/netx/Module.mk root-5.28.00h/net/netx/Module.mk
+--- root-5.28.00h.orig/net/netx/Module.mk	2011-11-24 17:12:53.000000000 +0100
++++ root-5.28.00h/net/netx/Module.mk	2013-03-08 11:54:43.607363254 +0100
+@@ -51,15 +51,21 @@
+ # Xrootd includes
+ NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
+ ifneq ($(EXTRA_XRDFLAGS),)
+-NETXINCEXTRA += -Iproof/proofd/inc
++NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
++endif
++ifeq ($(XRDINCPRIVATE),yes)
++NETXINCEXTRA += -I$(XRDINCDIR)/private
+ endif
+ 
+ # Xrootd client libs
+ ifeq ($(PLATFORM),win32)
+ NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
  else
-     buildxrd="no"
-diff -ur root-5.28.00c.orig/proof/proofd/Module.mk root-5.28.00c/proof/proofd/Module.mk
---- root-5.28.00c.orig/proof/proofd/Module.mk	2011-04-15 17:33:43.000000000 +0200
-+++ root-5.28.00c/proof/proofd/Module.mk	2011-04-23 13:51:01.294607207 +0200
-@@ -115,12 +115,10 @@
+-NETXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys \
+-                -lXrdClient
++ifeq ($(HASXRDUTILS),no)
++NETXLIBEXTRA += $(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdClient
++else
++NETXLIBEXTRA += $(XROOTDDIRL) -lXrdUtils -lXrdClient
++endif
+ endif
+ 
+ ##### local rules #####
+diff -Nur root-5.28.00h.orig/net/netx/src/TXNetFile.cxx root-5.28.00h/net/netx/src/TXNetFile.cxx
+--- root-5.28.00h.orig/net/netx/src/TXNetFile.cxx	2011-11-24 17:12:53.000000000 +0100
++++ root-5.28.00h/net/netx/src/TXNetFile.cxx	2013-03-08 11:54:22.638183476 +0100
+@@ -56,6 +56,7 @@
+ #include "TVirtualPerfStats.h"
+ 
+ #include <XrdClient/XrdClient.hh>
++#include <XrdClient/XrdClientConn.hh>
+ #include <XrdClient/XrdClientConst.hh>
+ #include <XrdClient/XrdClientEnv.hh>
+ #include <XProtocol/XProtocol.hh>
+diff -Nur root-5.28.00h.orig/proof/proofd/inc/XpdObject.h root-5.28.00h/proof/proofd/inc/XpdObject.h
+--- root-5.28.00h.orig/proof/proofd/inc/XpdObject.h	1970-01-01 01:00:00.000000000 +0100
++++ root-5.28.00h/proof/proofd/inc/XpdObject.h	2013-03-08 11:54:41.991349396 +0100
+@@ -0,0 +1,100 @@
++// @(#)root/proofd:$Id$
++// Author: Gerardo Ganis  Feb 2013
++
++/*************************************************************************
++ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
++ * All rights reserved.                                                  *
++ *                                                                       *
++ * For the licensing terms see $ROOTSYS/LICENSE.                         *
++ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
++ *************************************************************************/
++
++//////////////////////////////////////////////////////////////////////////
++//                                                                      //
++// XpdObject                                                            //
++//                                                                      //
++// Authors: G. Ganis, CERN, 2013                                        //
++//                                                                      //
++// Auxilliary class to stack protocols.                                 //
++// Adapted version of XrdObject.                                        //
++//                                                                      //
++//////////////////////////////////////////////////////////////////////////
++
++#ifndef ROOT_XpdObject
++#define ROOT_XpdObject
++
++#include <string.h>
++#include <strings.h>
++#include <time.h>
++#include <sys/types.h>
++#include "Xrd/XrdJob.hh"
++#include "XrdOuc/XrdOucTrace.hh"
++#include "XrdSys/XrdSysPthread.hh"
++
++class XpdObjectQ;
++class XrdProofdProtocol;
++class XrdScheduler;
++  
++class XpdObject {
++public:
++   friend class XpdObjectQ;
++
++   // Item() supplies the item value associated with itself (used with Next()).
++   XrdProofdProtocol  *objectItem() { return fItem; }
++
++   // Next() supplies the next list node.
++   XpdObject          *nextObject() { return fNext; }
++
++   // Set the item pointer
++   void                setItem(XrdProofdProtocol *ival) { fItem = ival; }
++
++   XpdObject(XrdProofdProtocol *ival=0) { fNext = 0; fItem = ival; fQTime = 0; }
++   ~XpdObject() {}
++
++private:
++   XpdObject         *fNext;
++   XrdProofdProtocol *fItem;
++   time_t             fQTime;  // Only used for time-managed objects
++};
++
++/******************************************************************************/
++/*                           x r d _ O b j e c t Q                            */
++/******************************************************************************/
++  
++// Note to properly cleanup this type of queue you must call Set() at least
++// once to cause the time element to be sceduled.
++
++class XrdOucTrace;
++  
++class XpdObjectQ : public XrdJob {
++public:
++
++   XrdProofdProtocol *Pop();
++   void Push(XpdObject *Node);
++   void Set(int inQMax, time_t agemax=1800);
++   void Set(XrdScheduler *sp, XrdOucTrace *tp, int traceChk = 0)
++            {fSched = sp; fTrace = tp; fTraceON = traceChk;}
++   void DoIt();
++
++   XpdObjectQ(const char *id, const char *desc) : XrdJob(desc) 
++          {fCurage = fCount = 0; fMaxage = 0; fTraceID = id;
++           fMaxinQ = 32; fMininQ = 16; fFirst = 0; }
++
++   ~XpdObjectQ() {}
++
++private:
++
++   XrdSysMutex    fQMutex;
++   XpdObject     *fFirst;
++   int            fCount;
++   int            fCurage;
++   int            fMininQ;
++   int            fMaxinQ;
++   time_t         fMaxage;
++   XrdOucTrace   *fTrace;
++   XrdScheduler  *fSched;
++   int            fTraceON;
++   const char    *fTraceID;
++};
++
++#endif
+diff -Nur root-5.28.00h.orig/proof/proofd/inc/XrdProofdProofServMgr.h root-5.28.00h/proof/proofd/inc/XrdProofdProofServMgr.h
+--- root-5.28.00h.orig/proof/proofd/inc/XrdProofdProofServMgr.h	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/inc/XrdProofdProofServMgr.h	2013-03-08 11:54:29.736244390 +0100
+@@ -46,6 +46,9 @@
+ #define PSMMAXCNTS  3
+ #define PSMCNTOK(t) (t >= 0 && t < PSMMAXCNTS)
+ 
++// Security handle
++typedef int (*XrdSecCredsSaver_t)(XrdSecCredentials *, const char *fn, const XrdProofUI &ui);
++
+ // Aux structure for session set env inputs
+ typedef struct {
+    XrdProofdProofServ *fPS;
+@@ -159,6 +162,8 @@
+    std::list<XrdProofdProofServ *> fActiveSessions;     // List of active sessions (non-idle)
+    std::list<XpdClientSessions *> *fRecoverClients; // List of client potentially recovering
+ 
++   XrdSecCredsSaver_t fCredsSaver; // If defined, function to be used to save the credentials
++
+    int                DoDirectiveProofServMgr(char *, XrdOucStream *, bool);
+    int                DoDirectivePutEnv(char *, XrdOucStream *, bool);
+    int                DoDirectivePutRc(char *, XrdOucStream *, bool);
+@@ -252,8 +257,6 @@
+ 
+    int               SetProofServEnv(XrdProofdProtocol *p, void *in);
+    int               SetProofServEnvOld(XrdProofdProtocol *p, void *in);
+-
+-   int               SaveAFSkey(XrdSecCredentials *c, const char *fn, XrdProofUI ui);
+    int               SetUserEnvironment(XrdProofdProtocol *p);
+ 
+    static int        SetProofServEnv(XrdProofdManager *m, XrdROOT *r);
+diff -Nur root-5.28.00h.orig/proof/proofd/inc/XrdProofdProtocol.h root-5.28.00h/proof/proofd/inc/XrdProofdProtocol.h
+--- root-5.28.00h.orig/proof/proofd/inc/XrdProofdProtocol.h	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/inc/XrdProofdProtocol.h	2013-03-08 11:54:41.991349396 +0100
+@@ -41,10 +41,10 @@
+ #  include "XrdSys/XrdSysPthread.hh"
+ #endif
+ #include "Xrd/XrdLink.hh"
+-#include "Xrd/XrdObject.hh"
+ #include "Xrd/XrdProtocol.hh"
+ #include "XrdOuc/XrdOucString.hh"
+ #include "XrdSec/XrdSecInterface.hh"
++#include "XpdObject.h"
+ #include "XProofProtocol.h"
+ 
+ class XrdBuffer;
+@@ -133,7 +133,7 @@
+    //
+    // Protocol variables
+ 
+-   XrdObject<XrdProofdProtocol>  fProtLink;
++   XpdObject                     fProtLink;
+    XrdBuffer                    *fArgp;
+ 
+    XrdLink                      *fLink;
+@@ -178,7 +178,7 @@
+    //
+    static bool                   fgConfigDone;
+    static int                    fgCount;
+-   static XrdObjectQ<XrdProofdProtocol> fgProtStack;
++   static XpdObjectQ             fgProtStack;
+    static XrdBuffManager        *fgBPool;        // Buffer manager
+    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
+    static XrdSysRecMutex         fgBMutex;       // Buffer management mutex
+diff -Nur root-5.28.00h.orig/proof/proofd/Module.mk root-5.28.00h/proof/proofd/Module.mk
+--- root-5.28.00h.orig/proof/proofd/Module.mk	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/Module.mk	2013-03-08 11:54:41.992349404 +0100
+@@ -46,10 +46,10 @@
+ XPDLIB       := $(LPATH)/libXrdProofd.$(SOEXT)
+ 
+ # Extra include paths and libs
+-XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
+-XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
++XPDINCEXTRA  := $(XROOTDDIRI:%=-I%)
++XPDINCEXTRA  += $(PROOFDDIRI:%=-I%)
+ 
+-XPDLIBEXTRA  += $(XROOTDDIRL)/libXrdClient.lib
++XPDLIBEXTRA  := $(XROOTDDIRL)/libXrdClient.lib
+ 
+ # used in the main Makefile
+ PROOFDEXEH   := $(MODDIRI)/proofdp.h
+@@ -110,18 +110,24 @@
+ 
+ # Extra include paths and libs
+ XPROOFDEXELIBS :=
+-XPROOFDEXESYSLIBS := $(DNSSDLIB)
+-XPROOFDEXE     :=
++XPROOFDEXESYSLIBS :=
++XPROOFDEXE     := bin/xproofd
  ifeq ($(HASXRD),yes)
  XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
  XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
@@ -36,14 +698,24 @@ diff -ur root-5.28.00c.orig/proof/proofd/Module.mk root-5.28.00c/proof/proofd/Mo
 -                  $(XROOTDDIRL)/libXrdNet.a \
 -                  $(XROOTDDIRL)/libXrdOuc.a \
 -                  $(XROOTDDIRL)/libXrdSys.a $(XROOTDDIRL)/libXrdSut.a
-+XPDLIBEXTRA    += -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
-+                  -lXrdNet -lXrdOuc -lXrdSys $(DNSSDLIB)
-+XPROOFDEXELIBS := -L$(XROOTDDIRL) -lXrd -lXrdClient -lXrdSut \
-+                  -lXrdNet -lXrdOuc -lXrdSys
- # Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
+-# Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
++ifeq ($(XRDINCPRIVATE),yes)
++XPDINCEXTRA    += -I$(XRDINCDIR)/private
++endif
++
++
++ifeq ($(HASXRDUTILS),no)
++
++XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
++                  -lXrdSys -lXrdSut
++XPROOFDEXELIBS := $(XROOTDDIRL) -lXrd -lXrdClient -lXrdNet -lXrdOuc \
++                  -lXrdSys -lXrdSut
++# Starting from Jul 2010 XrdNet has been split in two libs:
++#    XrdNet and XrdNetUtil
  # both are needed
  XRDNETUTIL     :=
-@@ -130,8 +128,8 @@
+ ifneq ($(XRDVERSION),)
+@@ -130,15 +136,22 @@
                            fi)
  endif
  ifeq ($(XRDNETUTIL),yes)
@@ -51,15 +723,601 @@ diff -ur root-5.28.00c.orig/proof/proofd/Module.mk root-5.28.00c/proof/proofd/Mo
 -XPROOFDEXELIBS += $(XROOTDDIRL)/libXrdNetUtil.a
 +XPDLIBEXTRA    += -lXrdNetUtil
 +XPROOFDEXELIBS += -lXrdNetUtil
++endif
++
++else
++
++XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdUtils
++XPROOFDEXELIBS := $(XROOTDDIRL) -lXrdMain -lXrdClient -lXrdUtils
++
  endif
  XPDLIBEXTRA    +=  $(DNSSDLIB)
++XPROOFDEXELIBS +=  $(DNSSDLIB)
  
-@@ -166,7 +164,7 @@
+ ifeq ($(PLATFORM),solaris)
+ XPROOFDEXESYSLIBS := -lsendfile
+ endif
+-XPROOFDEXE     := bin/xproofd
+ endif
+ 
+ # used in the main Makefile
+@@ -162,12 +175,15 @@
+ include/%.h:    $(PROOFDDIRI)/%.h
+ 		cp $< $@
+ 
+-$(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) $(STRLCPYO)
++$(PROOFDEXE):   $(PROOFDEXEO) $(RSAO) $(SNPRINTFO) $(GLBPATCHO) $(RPDUTILO) \
++                $(STRLCPYO)
  		$(LD) $(LDFLAGS) -o $@ $(PROOFDEXEO) $(RPDUTILO) $(GLBPATCHO) \
- 		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) $(SYSLIBS)
+-		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) $(SYSLIBS)
++		   $(RSAO) $(SNPRINTFO) $(CRYPTLIBS) $(AUTHLIBS) $(STRLCPYO) \
++		   $(SYSLIBS)
  
--$(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD)
-+$(XPROOFDEXE):  $(XPDO) $(XRDPROOFXD)
- 		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
+ $(XPROOFDEXE):  $(XPDO) $(XPROOFDEXELIBS) $(XRDPROOFXD)
+-		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) $(SYSLIBS) $(XPROOFDEXESYSLIBS)
++		$(LD) $(LDFLAGS) -o $@ $(XPDO) $(XPROOFDEXELIBS) \
++		   $(SYSLIBS) $(XPROOFDEXESYSLIBS)
  
  $(XPDLIB):      $(XPDO) $(XPDH) $(ORDER_) $(MAINLIBS) $(XRDPROOFXD)
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+@@ -182,7 +198,8 @@
+ clean::         clean-$(MODNAME)
+ 
+ distclean-$(MODNAME): clean-$(MODNAME)
+-		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPROOFDEXE) $(XPDDEP) $(XPDLIB)
++		@rm -f $(PROOFDDEP) $(PROOFDEXE) $(XPROOFDEXE) $(XPDDEP) \
++		  $(XPDLIB)
+ 
+ distclean::     distclean-$(MODNAME)
+ 
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XpdObject.cxx root-5.28.00h/proof/proofd/src/XpdObject.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XpdObject.cxx	1970-01-01 01:00:00.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XpdObject.cxx	2013-03-08 11:54:41.989349384 +0100
+@@ -0,0 +1,125 @@
++// @(#)root/proofd:$Id$
++// Author: Gerardo Ganis  Feb 2013
++
++/*************************************************************************
++ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
++ * All rights reserved.                                                  *
++ *                                                                       *
++ * For the licensing terms see $ROOTSYS/LICENSE.                         *
++ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
++ *************************************************************************/
++
++//////////////////////////////////////////////////////////////////////////
++//                                                                      //
++// XpdObject                                                            //
++//                                                                      //
++// Authors: G. Ganis, CERN, 2013                                        //
++//                                                                      //
++// Auxilliary class to stack protocols.                                 //
++//                                                                      //
++//////////////////////////////////////////////////////////////////////////
++
++#include "XpdObject.h"
++#include "XrdProofdAux.h"
++#include "XrdProofdProtocol.h"
++#include "Xrd/XrdScheduler.hh"
++#include "XrdOuc/XrdOucTrace.hh"
++
++//_______________________________________________________________________
++XrdProofdProtocol *XpdObjectQ::Pop()
++{
++   // Pop up a protocol object 
++
++   XpdObject *node;
++   fQMutex.Lock();
++   if ((node = fFirst)) {
++      fFirst = fFirst->fNext;
++      fCount--;
++   }
++   fQMutex.UnLock();
++   if (node) return node->fItem;
++   return (XrdProofdProtocol *)0;
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::Push(XpdObject *node)
++{
++   // Push back a protocol
++
++   node->fQTime = fCurage;
++   fQMutex.Lock();
++   if (fCount >= fMaxinQ) {
++      delete node->fItem;
++   } else {
++      node->fNext = fFirst;
++      fFirst = node;
++      fCount++;
++   }
++   fQMutex.UnLock();
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::Set(int inQMax, time_t agemax)
++{
++   // Lock the data area and set the values
++
++   fQMutex.Lock();
++   fMaxinQ = inQMax; fMaxage = agemax;
++   if (!(fMininQ = inQMax/2)) fMininQ = 1;
++   fQMutex.UnLock();
++
++   // Schedule ourselves using the new values
++   if (agemax > 0)
++      fSched->Schedule((XrdJob *)this, agemax + time(0));
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::DoIt()
++{
++   // Process method
++
++   XpdObject *pp, *p;
++   int oldcnt, agemax;
++
++   // Lock the anchor and see if we met the threshold for deletion
++   //
++   fQMutex.Lock();
++   agemax = fMaxage;
++   if ((oldcnt = fCount) > fMininQ) {
++
++      // Prepare to scan down the queue.
++      if ((pp = fFirst)) {
++         p = pp->fNext;
++      } else { p = 0; }
++
++      // Find the first object that's been idle for too long
++      while(p && (p->fQTime >= fCurage)) { pp = p; p = p->fNext;}
++
++      // Now delete half of the idle objects. The object queue element must be
++      // part of the actual object being deleted for this to properly work.
++      if (pp) {
++         while (p) {
++            pp->fNext = p->fNext;
++            delete p->fItem;
++            fCount--;
++            p = ((pp = pp->fNext) ? pp->fNext : 0);
++         }
++      }
++   }
++
++   // Increase the age and unlock the queue
++   fCurage++;
++   fQMutex.UnLock();
++
++   // Trace as needed
++   if (fTraceON && fTrace->Tracing(fTraceON))
++      {fTrace->Beg(fTraceID);
++       cerr <<Comment <<" trim done; " <<fCount <<" of " <<oldcnt <<" kept";
++       fTrace->End();
++      }
++
++   // Reschedule ourselves if we must do so
++   if (agemax > 0)
++      fSched->Schedule((XrdJob *)this, agemax+time(0));
++}
++
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofConn.cxx root-5.28.00h/proof/proofd/src/XrdProofConn.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofConn.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofConn.cxx	2013-03-08 11:55:39.849845443 +0100
+@@ -35,16 +35,16 @@
+ 
+ #include "XrdClient/XrdClientConnMgr.hh"
+ #include "XrdClient/XrdClientConst.hh"
+-#include "XrdClient/XrdClientDebug.hh"
+ #include "XrdClient/XrdClientEnv.hh"
+ #include "XrdClient/XrdClientLogConnection.hh"
+ #include "XrdClient/XrdClientPhyConnection.hh"
+ #include "XrdClient/XrdClientMessage.hh"
+ #include "XrdClient/XrdClientUrlInfo.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdOuc/XrdOucErrInfo.hh"
+ #include "XrdOuc/XrdOucString.hh"
+ #include "XrdSec/XrdSecInterface.hh"
++#include "XrdSys/XrdSysLogger.hh"
+ 
+ // Dynamic libs
+ // Bypass Solaris ELF madness
+@@ -334,7 +334,7 @@
+ 
+    // Resolve the DNS information
+    char *haddr[10] = {0}, *hname[10] = {0};
+-   int naddr = XrdNetDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
++   int naddr = XrdSysDNS::getAddrName(fUrl.Host.c_str(), 10, haddr, hname);
+ 
+    int i = 0;
+    for (; i < naddr; i++ ) {
+@@ -1223,7 +1223,7 @@
+    // for the authentication.
+    struct sockaddr_in netaddr;
+    char **hosterrmsg = 0;
+-   if (XrdNetDNS::getHostAddr((char *)fUrl.HostAddr.c_str(),
++   if (XrdSysDNS::getHostAddr((char *)fUrl.HostAddr.c_str(),
+                                 (struct sockaddr &)netaddr, hosterrmsg) <= 0) {
+       TRACE(XERR, "getHostAddr: "<< *hosterrmsg);
+       return protocol;
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofdConfig.cxx root-5.28.00h/proof/proofd/src/XrdProofdConfig.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofdConfig.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofdConfig.cxx	2013-03-08 11:54:22.639183484 +0100
+@@ -28,7 +28,7 @@
+ #  include "XrdSys/XrdSysError.hh"
+ #  include "XrdSys/XrdSysLogger.hh"
+ #endif
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdOuc/XrdOucEnv.hh"
+ #include "XrdOuc/XrdOucStream.hh"
+ #include "XrdOuc/XrdOucString.hh"
+@@ -115,7 +115,7 @@
+ 
+    // Local FQDN
+    if (fgHost.length() <= 0) {
+-      char *host = XrdNetDNS::getHostName();
++      char *host = XrdSysDNS::getHostName();
+       fgHost = host ? host : "";
+       SafeFree(host);
+    }
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofdManager.cxx root-5.28.00h/proof/proofd/src/XrdProofdManager.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofdManager.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofdManager.cxx	2013-03-08 11:54:22.640183493 +0100
+@@ -32,7 +32,7 @@
+ #  include "XrdSys/XrdSysPlugin.hh"
+ #  include "XrdSys/XrdSysTimer.hh"
+ #endif
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdOuc/XrdOucEnv.hh"
+ #include "XrdOuc/XrdOucStream.hh"
+ #include "XrdSys/XrdSysPriv.hh"
+@@ -653,7 +653,7 @@
+       }
+ 
+       // Local FQDN
+-      char *host = XrdNetDNS::getHostName();
++      char *host = XrdSysDNS::getHostName();
+       fHost = host ? host : "";
+       SafeFree(host);
+ 
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofdNetMgr.cxx root-5.28.00h/proof/proofd/src/XrdProofdNetMgr.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofdNetMgr.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofdNetMgr.cxx	2013-03-08 11:54:22.642183510 +0100
+@@ -27,7 +27,7 @@
+ #include "XrdClient/XrdClientEnv.hh"
+ #include "XrdClient/XrdClientMessage.hh"
+ #include "XrdClient/XrdClientUrlInfo.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdOuc/XrdOucStream.hh"
+ #include "XrdSys/XrdSysPlatform.hh"
+ 
+@@ -77,7 +77,7 @@
+    fRequestTO = 30;
+    fBonjourEnabled = false;
+ #if defined(BUILD_BONJOUR)
+-   char *host = XrdNetDNS::getHostName();
++   char *host = XrdSysDNS::getHostName();
+    fBonjourName = host ? host : "";
+    SafeFree(host);
+    fBonjourCores = XrdProofdAux::GetNumCPUs();
+@@ -1042,7 +1042,7 @@
+       XrdClientUrlInfo uu(host);
+       if (uu.Port <= 0) uu.Port = 1093;
+       // Fully qualified name
+-      char *fqn = XrdNetDNS::getHostName(uu.Host.c_str());
++      char *fqn = XrdSysDNS::getHostName(uu.Host.c_str());
+       if (fqn && (strstr(fqn, "localhost") || !strcmp(fqn, "127.0.0.1") ||
+                   !strcmp(fMgr->Host(), fqn))) {
+          if (!checkport || (uu.Port == fMgr->Port()))
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofdProofServMgr.cxx root-5.28.00h/proof/proofd/src/XrdProofdProofServMgr.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofdProofServMgr.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofdProofServMgr.cxx	2013-03-08 11:54:29.740244376 +0100
+@@ -32,13 +32,12 @@
+ #include "Xrd/XrdPoll.hh"
+ #include "Xrd/XrdScheduler.hh"
+ #include "XrdNet/XrdNet.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdNet/XrdNetPeer.hh"
+ #include "XrdOuc/XrdOucRash.hh"
+ #include "XrdOuc/XrdOucStream.hh"
+ #include "XrdSys/XrdSysPriv.hh"
+-#include "XrdSut/XrdSutAux.hh"
+-
++#include "XrdSys/XrdSysPlugin.hh"
+ #include "XrdProofdClient.h"
+ #include "XrdProofdClientMgr.h"
+ #include "XrdProofdManager.h"
+@@ -297,6 +296,8 @@
+       fCounters[i] = 0;
+    }
+    fCurrentSessions = 0;
++   
++   fCredsSaver = 0;
+ 
+    // Defaults can be changed via 'proofservmgr'
+    fCheckFrequency = 30;
+@@ -2414,7 +2415,7 @@
+    // Make sure we have the full host name
+    if (peerpsrv.InetName) {
+       char *ptmp = peerpsrv.InetName;
+-      peerpsrv.InetName = XrdNetDNS::getHostName("localhost");
++      peerpsrv.InetName = XrdSysDNS::getHostName("localhost");
+       free(ptmp);
+    }
+ 
+@@ -2681,27 +2682,20 @@
+          ev[lev] = 0;
+          putenv(ev);
+          TRACE(DBG, "XrdSecCREDS set");
+-
+-         // If 'pwd', save AFS key, if any
+-         if (!strncmp(p->AuthProt()->Entity.prot, "pwd", 3)) {
++         if (fCredsSaver) {
+             XrdOucString credsdir = udir;
+             credsdir += "/.creds";
+             // Make sure the directory exists
+             if (!XrdProofdAux::AssertDir(credsdir.c_str(), p->Client()->UI(), fMgr->ChangeOwn())) {
+-               if (SaveAFSkey(creds, credsdir.c_str(), p->Client()->UI()) == 0) {
+-                  ev = new char[strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2];
+-                  sprintf(ev, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
+-                  putenv(ev);
+-                  fprintf(fenv, "ROOTPROOFAFSCREDS has been set\n");
+-                  TRACE(DBG, ev);
+-               } else {
+-                  TRACE(DBG, "problems in saving AFS key");
++               if ((*fCredsSaver)(creds, credsdir.c_str(), p->Client()->UI()) != 0) {
++                  TRACE(DBG, "problems in saving authentication creds under "<<credsdir);
+                }
+             } else {
+                TRACE(XERR, "unable to create creds dir: "<<credsdir);
+                return -1;
+             }
+          }
++         fclose(fenv);
+       }
+    }
+ 
+@@ -3298,26 +3292,20 @@
+          putenv(ev);
+          TRACE(DBG, "XrdSecCREDS set");
+ 
+-         // If 'pwd', save AFS key, if any
+-         if (!strncmp(p->AuthProt()->Entity.prot, "pwd", 3)) {
++         if (fCredsSaver) {
+             XrdOucString credsdir = udir;
+             credsdir += "/.creds";
+             // Make sure the directory exists
+             if (!XrdProofdAux::AssertDir(credsdir.c_str(), p->Client()->UI(), fMgr->ChangeOwn())) {
+-               if (SaveAFSkey(creds, credsdir.c_str(), p->Client()->UI()) == 0) {
+-                  ev = new char[strlen("ROOTPROOFAFSCREDS=")+credsdir.length()+strlen("/.afs")+2];
+-                  sprintf(ev, "ROOTPROOFAFSCREDS=%s/.afs", credsdir.c_str());
+-                  putenv(ev);
+-                  fprintf(fenv, "ROOTPROOFAFSCREDS has been set\n");
+-                  TRACE(DBG, ev);
+-               } else {
+-                  TRACE(DBG, "problems in saving AFS key");
++               if ((*fCredsSaver)(creds, credsdir.c_str(), p->Client()->UI()) != 0) {
++                  TRACE(DBG, "problems in saving authentication creds under "<<credsdir);
+                }
+             } else {
+                TRACE(XERR, "unable to create creds dir: "<<credsdir);
+                return -1;
+             }
+          }
++         fclose(fenv);
+       }
+    }
+ 
+@@ -4040,84 +4028,6 @@
+    return 0;
+ }
+ 
+-//______________________________________________________________________________
+-int XrdProofdProofServMgr::SaveAFSkey(XrdSecCredentials *c,
+-                                      const char *dir, XrdProofUI ui)
+-{
+-   // Save the AFS key, if any, for usage in proofserv in file 'dir'/.afs .
+-   // Return 0 on success, -1 on error.
+-   XPDLOC(SMGR, "ProofServMgr::SaveAFSkey")
+-
+-   // Check file name
+-   if (!dir || strlen(dir) <= 0) {
+-      TRACE(XERR, "dir name undefined");
+-      return -1;
+-   }
+-
+-   // Check credentials
+-   if (!c) {
+-      TRACE(XERR, "credentials undefined");
+-      return -1;
+-   }
+-   TRACE(REQ, "dir: "<<dir);
+-
+-   // Decode credentials
+-   int lout = 0;
+-   char *out = new char[c->size];
+-   if (XrdSutFromHex(c->buffer, out, lout) != 0) {
+-      TRACE(XERR, "problems unparsing hex string");
+-      delete [] out;
+-      return -1;
+-   }
+-
+-   // Locate the key
+-   char *key = out + 5;
+-   if (strncmp(key, "afs:", 4)) {
+-      TRACE(DBG, "string does not contain an AFS key");
+-      delete [] out;
+-      return 0;
+-   }
+-   key += 4;
+-
+-   // Save to file, if not existing already
+-   XrdOucString fn = dir;
+-   fn += "/.afs";
+-
+-   int rc = 0;
+-   struct stat st;
+-   if (stat(fn.c_str(), &st) != 0 && errno == ENOENT) {
+-
+-      // Open the file, truncating if already existing
+-      int fd = open(fn.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+-      if (fd <= 0) {
+-         TRACE(XERR, "problems creating file - errno: " << errno);
+-         delete [] out;
+-         return -1;
+-      }
+-      // Write out the key
+-      int lkey = lout - 9;
+-      if (XrdProofdAux::Write(fd, key, lkey) != lkey) {
+-         TRACE(XERR, "problems writing to file - errno: " << errno);
+-         rc = -1;
+-      }
+-
+-      // Cleanup
+-      delete [] out;
+-      close(fd);
+-   } else {
+-      TRACE(XERR, "cannot stat existing file "<<fn<<" - errno: " << errno);
+-      delete [] out;
+-      return -1;
+-   }
+-
+-   // Make sure the file is owned by the user
+-   if (XrdProofdAux::ChangeOwn(fn.c_str(), ui) != 0) {
+-      TRACE(XERR, "can't change ownership of "<<fn);
+-   }
+-
+-   return rc;
+-}
+-
+ //__________________________________________________________________________
+ XrdProofdProofServ *XrdProofdProofServMgr::GetActiveSession(int pid)
+ {
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofdProtocol.cxx root-5.28.00h/proof/proofd/src/XrdProofdProtocol.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofdProtocol.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofdProtocol.cxx	2013-03-08 11:56:59.867531468 +0100
+@@ -33,7 +33,7 @@
+ 
+ #include "XrdVersion.hh"
+ #include "Xrd/XrdBuffer.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "Xrd/XrdScheduler.hh"
+ 
+ #include "XrdProofdClient.h"
+ #include "XrdProofdClientMgr.h"
+@@ -57,8 +57,7 @@
+ //
+ // Static area: general protocol managing section
+ int                   XrdProofdProtocol::fgCount    = 0;
+-XrdObjectQ<XrdProofdProtocol>
+-                      XrdProofdProtocol::fgProtStack("ProtStack",
++XpdObjectQ            XrdProofdProtocol::fgProtStack("ProtStack",
+                                                      "xproofd protocol anchor");
+ XrdSysRecMutex        XrdProofdProtocol::fgBMutex;    // Buffer management mutex
+ XrdBuffManager       *XrdProofdProtocol::fgBPool    = 0;
+@@ -460,8 +459,12 @@
+    // Schedule protocol object cleanup; the maximum number of objects
+    // and the max age are taken from XrdXrootdProtocol: this may need
+    // some optimization in the future.
++#if 1
+    fgProtStack.Set(pi->Sched, XrdProofdTrace, TRACE_MEM);
+    fgProtStack.Set((pi->ConnMax/3 ? pi->ConnMax/3 : 30), 60*60);
++#else
++   fgProtStack.Set(pi->Sched, 3600);
++#endif
+ 
+    // Default tracing options: always trace logins and errors for all
+    // domains; if the '-d' option was specified on the command line then
+@@ -683,6 +686,13 @@
+ 
+    // Push ourselves on the stack
+    fgProtStack.Push(&fProtLink);
++#if 0
++   if(fgProtStack.Push(&fProtLink) != 0) {
++      XrdProofdProtocol *xp = fProtLink.objectItem();
++      fProtLink.setItem(0);
++      delete xp;
++   }
++#endif
+ }
+ 
+ //______________________________________________________________________________
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofPhyConn.cxx root-5.28.00h/proof/proofd/src/XrdProofPhyConn.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofPhyConn.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofPhyConn.cxx	2013-03-08 11:54:22.645183535 +0100
+@@ -27,7 +27,7 @@
+ #include "XrdClient/XrdClientConst.hh"
+ #include "XrdClient/XrdClientLogConnection.hh"
+ #include "XrdClient/XrdClientMessage.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XrdSec/XrdSecInterface.hh"
+ 
+ #ifndef WIN32
+@@ -91,7 +91,7 @@
+ 
+    // Host and Port
+    if (!fTcp) {
+-      fHost = XrdNetDNS::getHostName(((fUrl.Host.length() > 0) ?
++      fHost = XrdSysDNS::getHostName(((fUrl.Host.length() > 0) ?
+                                        fUrl.Host.c_str() : "localhost"));
+       fPort = -1;
+       fUrl.Host = "";
+diff -Nur root-5.28.00h.orig/proof/proofd/src/XrdProofWorker.cxx root-5.28.00h/proof/proofd/src/XrdProofWorker.cxx
+--- root-5.28.00h.orig/proof/proofd/src/XrdProofWorker.cxx	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofd/src/XrdProofWorker.cxx	2013-03-08 11:54:22.645183535 +0100
+@@ -27,7 +27,7 @@
+ #include "XrdProofWorker.h"
+ #include "XrdProofdProofServ.h"
+ #include "XrdClient/XrdClientUrlInfo.hh"
+-#include "XrdNet/XrdNetDNS.hh"
++#include "XrdSys/XrdSysDNS.hh"
+ #include "XProofProtocol.h"
+ 
+ // Tracing utilities
+@@ -99,7 +99,7 @@
+    // Take the user name, if specified
+    fUser = ui.User;
+    char *err;
+-   char *fullHostName = XrdNetDNS::getHostName((char *)ui.Host.c_str(), &err);
++   char *fullHostName = XrdSysDNS::getHostName((char *)ui.Host.c_str(), &err);
+    if (!fullHostName || !strcmp(fullHostName, "0.0.0.0")) {
+       TRACE(XERR, "DNS could not resolve '" << ui.Host << "'");
+       return;
+diff -Nur root-5.28.00h.orig/proof/proofx/Module.mk root-5.28.00h/proof/proofx/Module.mk
+--- root-5.28.00h.orig/proof/proofx/Module.mk	2011-11-24 17:12:38.000000000 +0100
++++ root-5.28.00h/proof/proofx/Module.mk	2013-03-08 11:54:42.795356301 +0100
+@@ -61,13 +61,18 @@
+ PROOFXINCEXTRA := $(PROOFXDIRI:%=-I%)
+ PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
+ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
++ifeq ($(XRDINCPRIVATE),yes)
++PROOFXINCEXTRA += -I$(XRDINCDIR)/private
++endif
+ 
+ # Xrootd client libs
+ ifeq ($(PLATFORM),win32)
+ PROOFXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
+ else
+-PROOFXLIBEXTRA += -L$(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient
+-# Starting from Jul 2010 XrdNet has been split in two libs: XrdNet and XrdNetUtil;
++ifeq ($(HASXRDUTILS),no)
++PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdNet -lXrdClient
++# Starting from Jul 2010 XrdNet has been split in two libs:
++#    XrdNet and XrdNetUtil
+ # both are needed
+ XRDNETUTIL     :=
+ ifneq ($(XRDVERSION),)
+@@ -78,6 +83,9 @@
+ ifeq ($(XRDNETUTIL),yes)
+ PROOFXLIBEXTRA += -lXrdNetUtil
+ endif
++else
++PROOFXLIBEXTRA += $(XROOTDDIRL) -lXrdUtils -lXrdClient
++endif
+ endif
+ 
+ ##### local rules #####

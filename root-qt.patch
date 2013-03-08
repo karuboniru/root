@@ -1,0 +1,25 @@
+diff -ur root-5.28.00h.orig/configure root-5.28.00h/configure
+--- root-5.28.00h.orig/configure	2011-11-24 17:12:57.000000000 +0100
++++ root-5.28.00h/configure	2013-03-02 12:52:21.823338782 +0100
+@@ -2955,21 +2955,6 @@
+             check_library "libQt3Support Qt3Support Qt3Support$qt4suffix Qt3Support4" \
+                 "$enable_shared" "$found_raw_dir" ""
+             qtlib="$qtlib $found_lib"
+-            check_library "libQtOpenGL QtOpenGL QtOpenGL$qt4suffix QtOpenGL4" \
+-                "$enable_shared" "$found_raw_dir" ""
+-            qtlib="$qtlib $found_lib"
+-            check_library "libQtSvg QtSvg QtSvg$qt4suffix QtSvg4" \
+-                "$enable_shared" "$found_raw_dir" ""
+-            qtlib="$qtlib $found_lib"
+-            check_library "libQtXml QtXml QtXml$qt4suffix QtXml4" \
+-                "$enable_shared" "$found_raw_dir" ""
+-            qtlib="$qtlib $found_lib"
+-            check_library "libQtWebKit QtWebKit QtWebKit$qt4suffix QtWebKit4" \
+-                "$enable_shared" "$found_raw_dir" ""
+-            qtlib="$qtlib $found_lib"
+-            check_library "libQtNetwork QtNetwork QtNetwork$qt4suffix QtNetwork4" \
+-                "$enable_shared" "$found_raw_dir" ""
+-            qtlib="$qtlib $found_lib"
+         else
+             qtinc=
+             qtmainincdir=

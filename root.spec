@@ -30,7 +30,7 @@
 Name:		root
 Version:	5.28.00h
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -57,17 +57,21 @@ Patch0:		%{name}-ftgl.patch
 Patch1:		%{name}-fontconfig.patch
 #		Use system unuran:
 Patch2:		%{name}-unuran.patch
-#		Workaround for broken Form() on ppc
+#		Workaround for broken Form() on ppc:
 Patch3:		%{name}-cern-ppc.patch
-#		Fix an issue with the TGListBox height (backported from trunk)
+#		Fix an issue with the TGListBox height (backported from trunk):
 Patch4:		%{name}-listbox-height.patch
-#		Fixes for external xrootd
+#		Fixes for new xrootd (backported from trunk):
 Patch5:		%{name}-xrootd.patch
-#		Fix hardcoded include path
+#		Fix hardcoded include path:
 #		https://savannah.cern.ch/bugs/index.php?91463
 Patch6:		%{name}-meta.patch
-#		Backport fixes for using aclic with versioned libraries
+#		Backport fixes for using aclic with versioned libraries:
 Patch7:		%{name}-aclic-versioned-libs.patch
+#		Fixes for gfal (mostly backported from trunk):
+Patch8:		%{name}-gfal-bits.patch
+#		Remove unnecessary Qt linkage (backported from trunk):
+Patch9:		%{name}-qt.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -113,9 +117,6 @@ BuildRequires:	python26-devel
 %endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	qt4-devel
-%if %{?fedora}%{!?fedora:0} >= 14
-BuildRequires:	qt4-webkit-devel
-%endif
 %endif
 BuildRequires:	ruby
 BuildRequires:	ruby-devel
@@ -127,7 +128,8 @@ BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
-BuildRequires:	xrootd-devel
+BuildRequires:	xrootd-client-devel
+BuildRequires:	xrootd-private-devel
 BuildRequires:	cfitsio-devel
 %if %{gfal}
 BuildRequires:	gfal-devel
@@ -1051,6 +1053,8 @@ fi
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
+%patch9 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1123,7 +1127,8 @@ sed s/c1/c1simp/g -i tutorials/hsimple.C
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 cp -pr bindings/pyroot bindings/pyroot26
-sed 's/python /python26 /' -i bindings/pyroot26/Module.mk
+sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
+    -i bindings/pyroot26/Module.mk
 %endif
 
 %build
@@ -1156,6 +1161,7 @@ unset QTINC
 	    --enable-fftw3 \
 	    --enable-fitsio \
 	    --enable-gdml \
+	    --enable-genvector \
 %if %{gfal}
 	    --enable-gfal \
 	      --with-gfal-incdir=%{_includedir} \
@@ -1163,7 +1169,6 @@ unset QTINC
 %else
 	    --disable-gfal \
 %endif
-	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
@@ -2323,6 +2328,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Mar 02 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00h-3
+- Rebuild for xrootd 3.3
+- Backport gfal fixes
+
 * Fri Jun 29 2012 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.28.00h-2
 - Backport fixes for using aclic with versioned libraries
 - New sub-package: root-io-gfal
