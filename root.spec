@@ -26,9 +26,9 @@
 %endif
 
 Name:		root
-Version:	5.34.02
+Version:	5.34.05
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -55,19 +55,22 @@ Patch0:		%{name}-ftgl.patch
 Patch1:		%{name}-fontconfig.patch
 #		Use system unuran:
 Patch2:		%{name}-unuran.patch
-#		Fixes for xrootd bonjour
+#		Remove broken xrootd test:
 Patch3:		%{name}-xrootd.patch
-#		Fix hardcoded include path
+#		Fix hardcoded include path:
 #		https://savannah.cern.ch/bugs/index.php?91463
 Patch4:		%{name}-meta.patch
-#		Fixes for latest glibc headers
-Patch5:		%{name}-glibc.patch
-#		Missing Include
-Patch6:		%{name}-gfal-bits.patch
-#		Backport meta fixes
-Patch7:		%{name}-tclass-fix.patch
-#		Revert THtml change
-Patch8:		%{name}-thtml-revert.patch
+#		Missing include path:
+Patch5:		%{name}-gfal-bits.patch
+#		Revert THtml change:
+Patch6:		%{name}-thtml-revert.patch
+#		Don't save in all image formats:
+Patch7:		%{name}-no-extra-formats.patch
+#		Graphviz libgraph deprecated:
+Patch8:		%%{name}-gviz.patch
+#		Backport xrootd 3.3 support:
+Patch9:		%{name}-rev48681.patch
+Patch10:	%{name}-rev48831.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -113,9 +116,6 @@ BuildRequires:	python26-devel
 %endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	qt4-devel
-%if %{?fedora}%{!?fedora:0} >= 14
-BuildRequires:	qt4-webkit-devel
-%endif
 %endif
 BuildRequires:	ruby
 BuildRequires:	ruby-devel
@@ -127,7 +127,8 @@ BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
-BuildRequires:	xrootd-devel
+BuildRequires:	xrootd-client-devel
+BuildRequires:	xrootd-private-devel
 BuildRequires:	cfitsio-devel
 BuildRequires:	gfal-devel
 BuildRequires:	srm-ifce-devel
@@ -148,6 +149,22 @@ BuildRequires:	liberation-fonts
 %endif
 #		This contains a Symbol font that can be used by fontconfig
 BuildRequires:	urw-fonts
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+BuildRequires:	font(droidsansfallback)
+%endif
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+BuildRequires:	font(stix)
+%else
+%if %{?fedora}%{!?fedora:0} >= 14
+BuildRequires:	font(stixgeneral)
+BuildRequires:	font(stixsizeonesym)
+%else
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+BuildRequires:	font(stixgeneral)
+BuildRequires:	font(stixsize1)
+%endif
+%endif
+%endif
 Requires:	hicolor-icon-theme
 
 %description
@@ -227,6 +244,22 @@ Requires:	liberation-fonts
 %endif
 #		This contains a Symbol font that can be used by fontconfig
 Requires:	urw-fonts
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+Requires:	font(droidsansfallback)
+%endif
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+Requires:	font(stix)
+%else
+%if %{?fedora}%{!?fedora:0} >= 14
+Requires:	font(stixgeneral)
+Requires:	font(stixsizeonesym)
+%else
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+Requires:	font(stixgeneral)
+Requires:	font(stixsize1)
+%endif
+%endif
+%endif
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -1033,6 +1066,8 @@ fi
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p0
+%patch10 -p0
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1107,7 +1142,8 @@ sed s/c1/c1simp/g -i tutorials/hsimple.C
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 cp -pr bindings/pyroot bindings/pyroot26
-sed 's/python /python26 /' -i bindings/pyroot26/Module.mk
+sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
+    -i bindings/pyroot26/Module.mk
 %endif
 
 %build
@@ -1138,10 +1174,10 @@ unset QTINC
 	    --enable-fftw3 \
 	    --enable-fitsio \
 	    --enable-gdml \
+	    --enable-genvector \
 	    --enable-gfal \
 	      --with-gfal-incdir=%{_includedir} \
 	      --with-gfal-libdir=%{_libdir} \
-	    --enable-genvector \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
@@ -1315,6 +1351,7 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
 %if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
 rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
 %endif
+rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libmathtext.a
 rm ${RPM_BUILD_ROOT}%{_bindir}/setxrd*
 rm ${RPM_BUILD_ROOT}%{_bindir}/thisroot*
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cint.1
@@ -1345,6 +1382,7 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/macros/fileopen.C
 pushd ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
 rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
+rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P030_TCastorFile.C
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
@@ -1403,6 +1441,7 @@ cat includelist-geom-geom* > includelist-geom
 cat includelist-roofit-roo* > includelist-roofit
 cat includelist-gui-qt* > includelist-gui-qt
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
+cat includelist-graf2d-mathtext >> includelist-graf2d-x11
 cat includelist-gui-guihtml >> includelist-gui-gui
 cat includelist-io-xmlparser >> includelist-io-xml
 cat includelist-proof-proofplayer >> includelist-proof-proof
@@ -1781,9 +1820,11 @@ fi
 %{_bindir}/proofserv
 %{_bindir}/proofserv.exe
 %{_bindir}/xproofd
+%{_bindir}/xpdtest
 %{_mandir}/man1/proofd.1*
 %{_mandir}/man1/proofserv.1*
 %{_mandir}/man1/xproofd.1*
+%{_mandir}/man1/xpdtest.1*
 %{_initrddir}/proofd
 
 %files rootd
@@ -2287,6 +2328,12 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Feb 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-1
+- Update to 5.34.05
+- Rebuild for xrootd 3.3
+- Patch for latest graphviz (libcgraph)
+- Drop patches root-glibc.patch and root-tclass-fix.patch
+
 * Thu Feb 14 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.02-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_19_Mass_Rebuild
 

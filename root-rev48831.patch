@@ -1,0 +1,619 @@
+Index: cmake/modules/FindXROOTD.cmake
+===================================================================
+--- cmake/modules/FindXROOTD.cmake	(revision 48830)
++++ cmake/modules/FindXROOTD.cmake	(revision 48831)
+@@ -28,32 +28,37 @@
+ )
+ 
+ if (XROOTD_INCLUDE_DIR)
+-  file(STRINGS ${XROOTD_INCLUDE_DIR}/XrdVersion.hh xrdvers REGEX "^#define XrdVERSION")
++  file(STRINGS ${XROOTD_INCLUDE_DIR}/XrdVersion.hh xrdvers REGEX "^#define XrdVERSION ")
+   string(REGEX REPLACE "#define[ ]+XrdVERSION[ ]+" "" xrdvers ${xrdvers})
+   string(REGEX REPLACE "[^v\\.]+" "" xrdversdots ${xrdvers})
+   if (${xrdversdots} STREQUAL "v..")
+     # Regular version string; parse it out
+     string(REGEX MATCH "[0-9\\.]+" xrdvers ${xrdvers})
+-    string(REGEX MATCH "[0-9]" xrdversmajor ${xrdvers})
+-    string(REPLACE "${xrdversmajor}." "" xrdversminor ${xrdvers})
+-    string(REGEX MATCH "[0-9]" xrdversminor ${xrdversminor})
+-    string(REPLACE "${xrdversmajor}.${xrdversminor}." "" xrdverspatch ${xrdvers})
+-    string(REGEX MATCH "[0-9]+" xrdverspatch ${xrdverspatch})
++    string(REGEX REPLACE "^([^.]*)\\.(.*)\\.(.*)" "\\1" xrdversmajor ${xrdvers})
++    string(REGEX REPLACE "^([^.]*)\\.(.*)\\.(.*)" "\\2" xrdversminor ${xrdvers})
++    string(REGEX REPLACE "^([^.]*)\\.(.*)\\.(.*)" "\\3" xrdverspatch ${xrdvers})
+     math(EXPR xrdversnum ${xrdversmajor}*100000000+${xrdversminor}*10000+${xrdverspatch})
+   else ()
+     # Old version string: we keep only the first numerics, i.e. the date
+     string(REGEX REPLACE "[v\"]" "" xrdvers ${xrdvers})
+-    message(STATUS "Found Xrootd version ${xrdvers}")
+-    string(REGEX REPLACE "[^0-9-]+" " " xrdvers ${xrdvers})
+     string(SUBSTRING ${xrdvers} 0 8 xrdversnum)
+   endif ()
++  if ( ${xrdversnum} EQUAL 300030000 )
++     SET(XROOTD_FOUND FALSE)
++     message(WARNING " >>> Cannot build with XRootD version 3.3.0: please install >=3.3.1 or <= 3.2.x")
++  else()
++     SET(XROOTD_FOUND TRUE)
++  endif ()
++endif()
++
++if(XROOTD_FOUND)
+   # This we used as a compiler macro variable
+   if(NOT XROOTD_FIND_QUIETLY )
+-    message(STATUS "Found Xrootd version num: ${xrdvers}")
++    message(STATUS "Found Xrootd version num: ${xrdvers} (setting -DROOTXRDVERS=${xrdversnum})")
+   endif()
+   SET(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
+ 
+-  if ( ${xrdversnum} LESS 300010000 )
++  if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
+      SET(XROOTD_OLDPACK TRUE)
+      message(STATUS "Setting OLDPACK TRUE")
+   else()
+@@ -72,14 +77,16 @@
+         XrdOuc/XrdOucPthread.hh
+         XrdOuc/XrdOucSemWait.hh
+         XrdOuc/XrdOucTimer.hh
++        PATHS 
+         ${XROOTD_INCLUDE_DIR}
+      )
+   else()
+-     if ( ${xrdversnum} LESS 300010000 )
++     if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
+         # DNS stuff was under XrdNet
+         find_path(XROOTD_INCLUDE_DIR
+            NAMES
+            XrdNet/XrdNetDNS.hh
++           PATHS 
+            ${XROOTD_INCLUDE_DIR}
+         )
+      else ()
+@@ -87,6 +94,7 @@
+         find_path(XROOTD_INCLUDE_DIR
+            NAMES
+            XrdSys/XrdSysDNS.hh
++           PATHS 
+            ${XROOTD_INCLUDE_DIR}
+         )
+      endif ()
+@@ -101,9 +109,20 @@
+             XrdSys/XrdSysPthread.hh
+             XrdSys/XrdSysSemWait.hh
+             XrdSys/XrdSysTimer.hh
++            PATHS 
+             ${XROOTD_INCLUDE_DIR}
+         )
+      endif()
++     
++     if (XROOTD_INCLUDE_DIR)
++        # Check for additional headers in new directories
++        find_path(XROOTD_PRIVATE_INCLUDE_DIR
++            NAMES
++            XrdSys/XrdSysPriv.hh
++            PATHS 
++            ${XROOTD_INCLUDE_DIR}/private
++        )
++     endif()
+   endif()
+   if (XROOTD_INCLUDE_DIR)
+      SET(XROOTD_FOUND TRUE)
+@@ -152,7 +171,7 @@
+   if(XROOTD_LIBRARIES)
+     set(XROOTD_FOUND TRUE)
+     if(NOT XROOTD_FIND_QUIETLY )
+-      message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR}")
++      message(STATUS "             include_dir: ${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR}")
+       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
+     endif() 
+   else ()
+@@ -160,7 +179,8 @@
+   endif ()
+ endif()
+ 
+-mark_as_advanced(XROOTD_INCLUDE_DIR 
++mark_as_advanced(XROOTD_INCLUDE_DIR
++                 XROOTD_PRIVATE_INCLUDE_DIR
+                  XROOTD_XrdMain_LIBRARY
+                  XROOTD_XrdUtils_LIBRARY
+                  XROOTD_XrdClient_LIBRARY
+Index: configure
+===================================================================
+--- configure	(revision 48830)
++++ configure	(revision 48831)
+@@ -4577,9 +4577,16 @@
+ 	 fi
+       fi
+    fi
+-   echo "$xrdver"
++   # Protect against 3.3.0, first version with 'include/xrootd/private'
++   if [ $decver -eq 300030000 ] ; then
++      echo "Cannot build against version $xrdver (missing headers)"
++      enable_xrootd="no"
++   else
++      echo "$xrdver"
++   fi
+ fi
+ 
++xrdincprivate="no"
+ if test "x$enable_xrootd" = "xyes" ; then
+ 
+    extraxrdflags="-DROOTXRDVERS=$decver"
+@@ -4635,6 +4642,15 @@
+    fi
+ 
+    #
++   # Check also if 'include/private' exists: we need to signal this to the build modules
++   # for correct location of some headers available form the dlevel packages for version >= 3.3.x
++   if test "x$enable_xrootd" = "xyes"; then
++      if test -d "$xrdincdir/private"; then
++         xrdincprivate="yes"
++      fi
++   fi
++
++   #
+    # Check if bonjour is available for code potentially using it ...
+    if test "x$enable_xrootd" = "xyes"; then
+       xrdlibdir="$tmpxrdlibdir"
+@@ -6730,6 +6746,7 @@
+     -e "s|@xpmlibdir@|$xpmlibdir|"              \
+     -e "s|@xrdlibdir@|$xrdlibdir|"              \
+     -e "s|@xrdincdir@|$xrdincdir|"              \
++    -e "s|@xrdincprivate@|$xrdincprivate|"      \
+     -e "s|@xrdversion@|$decver|"                \
+     -e "s|@hasxrdutils@|$hasxrdutils|"          \
+     -e "s|@cfitsioincdir@|$cfitsioincdir|"      \
+Index: proof/proofd/src/XrdProofConn.cxx
+===================================================================
+--- proof/proofd/src/XrdProofConn.cxx	(revision 48830)
++++ proof/proofd/src/XrdProofConn.cxx	(revision 48831)
+@@ -32,7 +32,6 @@
+ 
+ #include "XrdClient/XrdClientConnMgr.hh"
+ #include "XrdClient/XrdClientConst.hh"
+-#include "XrdClient/XrdClientDebug.hh"
+ #include "XrdClient/XrdClientEnv.hh"
+ #include "XrdClient/XrdClientLogConnection.hh"
+ #include "XrdClient/XrdClientPhyConnection.hh"
+@@ -41,6 +40,7 @@
+ #include "XrdOuc/XrdOucErrInfo.hh"
+ #include "XrdOuc/XrdOucString.hh"
+ #include "XrdSec/XrdSecInterface.hh"
++#include "XrdSys/XrdSysLogger.hh"
+ #include "XrdSys/XrdSysPlatform.hh"
+ 
+ // Dynamic libs
+Index: proof/proofd/src/XpdObject.cxx
+===================================================================
+--- proof/proofd/src/XpdObject.cxx	(revision 0)
++++ proof/proofd/src/XpdObject.cxx	(revision 48831)
+@@ -0,0 +1,125 @@
++// @(#)root/proofd:$Id$
++// Author: Gerardo Ganis  Feb 2013
++
++/*************************************************************************
++ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
++ * All rights reserved.                                                  *
++ *                                                                       *
++ * For the licensing terms see $ROOTSYS/LICENSE.                         *
++ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
++ *************************************************************************/
++
++//////////////////////////////////////////////////////////////////////////
++//                                                                      //
++// XpdObject                                                            //
++//                                                                      //
++// Authors: G. Ganis, CERN, 2013                                        //
++//                                                                      //
++// Auxilliary class to stack protocols.                                 //
++//                                                                      //
++//////////////////////////////////////////////////////////////////////////
++
++#include "XpdObject.h"
++#include "XrdProofdAux.h"
++#include "XrdProofdProtocol.h"
++#include "Xrd/XrdScheduler.hh"
++#include "XrdOuc/XrdOucTrace.hh"
++
++//_______________________________________________________________________
++XrdProofdProtocol *XpdObjectQ::Pop()
++{
++   // Pop up a protocol object 
++
++   XpdObject *node;
++   fQMutex.Lock();
++   if ((node = fFirst)) {
++      fFirst = fFirst->fNext;
++      fCount--;
++   }
++   fQMutex.UnLock();
++   if (node) return node->fItem;
++   return (XrdProofdProtocol *)0;
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::Push(XpdObject *node)
++{
++   // Push back a protocol
++
++   node->fQTime = fCurage;
++   fQMutex.Lock();
++   if (fCount >= fMaxinQ) {
++      delete node->fItem;
++   } else {
++      node->fNext = fFirst;
++      fFirst = node;
++      fCount++;
++   }
++   fQMutex.UnLock();
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::Set(int inQMax, time_t agemax)
++{
++   // Lock the data area and set the values
++
++   fQMutex.Lock();
++   fMaxinQ = inQMax; fMaxage = agemax;
++   if (!(fMininQ = inQMax/2)) fMininQ = 1;
++   fQMutex.UnLock();
++
++   // Schedule ourselves using the new values
++   if (agemax > 0)
++      fSched->Schedule((XrdJob *)this, agemax + time(0));
++}
++
++//_______________________________________________________________________
++void XpdObjectQ::DoIt()
++{
++   // Process method
++
++   XpdObject *pp, *p;
++   int oldcnt, agemax;
++
++   // Lock the anchor and see if we met the threshold for deletion
++   //
++   fQMutex.Lock();
++   agemax = fMaxage;
++   if ((oldcnt = fCount) > fMininQ) {
++
++      // Prepare to scan down the queue.
++      if ((pp = fFirst)) {
++         p = pp->fNext;
++      } else { p = 0; }
++
++      // Find the first object that's been idle for too long
++      while(p && (p->fQTime >= fCurage)) { pp = p; p = p->fNext;}
++
++      // Now delete half of the idle objects. The object queue element must be
++      // part of the actual object being deleted for this to properly work.
++      if (pp) {
++         while (p) {
++            pp->fNext = p->fNext;
++            delete p->fItem;
++            fCount--;
++            p = ((pp = pp->fNext) ? pp->fNext : 0);
++         }
++      }
++   }
++
++   // Increase the age and unlock the queue
++   fCurage++;
++   fQMutex.UnLock();
++
++   // Trace as needed
++   if (fTraceON && fTrace->Tracing(fTraceON))
++      {fTrace->Beg(fTraceID);
++       cerr <<Comment <<" trim done; " <<fCount <<" of " <<oldcnt <<" kept";
++       fTrace->End();
++      }
++
++   // Reschedule ourselves if we must do so
++   if (agemax > 0)
++      fSched->Schedule((XrdJob *)this, agemax+time(0));
++}
++
+
+Egenskapsändringar för: proof/proofd/src/XpdObject.cxx
+___________________________________________________________________
+Added: svn:eol-style
+## -0,0 +1 ##
++LF
+\ No newline at end of property
+Added: svn:keywords
+## -0,0 +1 ##
++Id
+\ No newline at end of property
+Index: proof/proofd/src/XrdProofdProtocol.cxx
+===================================================================
+--- proof/proofd/src/XrdProofdProtocol.cxx	(revision 48830)
++++ proof/proofd/src/XrdProofdProtocol.cxx	(revision 48831)
+@@ -29,6 +29,7 @@
+ 
+ #include "XrdVersion.hh"
+ #include "Xrd/XrdBuffer.hh"
++#include "Xrd/XrdScheduler.hh"
+ 
+ #include "XrdProofdClient.h"
+ #include "XrdProofdClientMgr.h"
+@@ -54,8 +55,7 @@
+ //
+ // Static area: general protocol managing section
+ int                   XrdProofdProtocol::fgCount    = 0;
+-XrdObjectQ<XrdProofdProtocol>
+-                      XrdProofdProtocol::fgProtStack("ProtStack",
++XpdObjectQ            XrdProofdProtocol::fgProtStack("ProtStack",
+                                                      "xproofd protocol anchor");
+ XrdSysRecMutex        XrdProofdProtocol::fgBMutex;    // Buffer management mutex
+ XrdBuffManager       *XrdProofdProtocol::fgBPool    = 0;
+@@ -542,8 +542,12 @@
+    // Schedule protocol object cleanup; the maximum number of objects
+    // and the max age are taken from XrdXrootdProtocol: this may need
+    // some optimization in the future.
++#if 1
+    fgProtStack.Set(pi->Sched, XrdProofdTrace, TRACE_MEM);
+    fgProtStack.Set((pi->ConnMax/3 ? pi->ConnMax/3 : 30), 60*60);
++#else
++   fgProtStack.Set(pi->Sched, 3600);
++#endif
+ 
+    // Default tracing options: always trace logins and errors for all
+    // domains; if the '-d' option was specified on the command line then
+@@ -789,6 +793,13 @@
+ 
+    // Push ourselves on the stack
+    fgProtStack.Push(&fProtLink);
++#if 0
++   if(fgProtStack.Push(&fProtLink) != 0) {
++      XrdProofdProtocol *xp = fProtLink.objectItem();
++      fProtLink.setItem(0);
++      delete xp;
++   }
++#endif
+ }
+ 
+ //______________________________________________________________________________
+Index: proof/proofd/inc/XrdProofdProtocol.h
+===================================================================
+--- proof/proofd/inc/XrdProofdProtocol.h	(revision 48830)
++++ proof/proofd/inc/XrdProofdProtocol.h	(revision 48831)
+@@ -38,10 +38,10 @@
+ #include "XpdSysPthread.h"
+ 
+ #include "Xrd/XrdLink.hh"
+-#include "Xrd/XrdObject.hh"
+ #include "Xrd/XrdProtocol.hh"
+ #include "XrdOuc/XrdOucString.hh"
+ #include "XrdSec/XrdSecInterface.hh"
++#include "XpdObject.h"
+ #include "XProofProtocol.h"
+ 
+ class XrdBuffer;
+@@ -131,7 +131,7 @@
+    //
+    // Protocol variables
+ 
+-   XrdObject<XrdProofdProtocol>  fProtLink;
++   XpdObject                     fProtLink;
+    XrdBuffer                    *fArgp;
+ 
+    XrdLink                      *fLink;
+@@ -176,7 +176,7 @@
+    //
+    static bool                   fgConfigDone;
+    static int                    fgCount;
+-   static XrdObjectQ<XrdProofdProtocol> fgProtStack;
++   static XpdObjectQ             fgProtStack;
+    static XrdBuffManager        *fgBPool;        // Buffer manager
+    static int                    fgMaxBuffsz;    // Maximum buffer size we can have
+    static XrdSysRecMutex         fgBMutex;       // Buffer management mutex
+Index: proof/proofd/inc/XpdObject.h
+===================================================================
+--- proof/proofd/inc/XpdObject.h	(revision 0)
++++ proof/proofd/inc/XpdObject.h	(revision 48831)
+@@ -0,0 +1,100 @@
++// @(#)root/proofd:$Id$
++// Author: Gerardo Ganis  Feb 2013
++
++/*************************************************************************
++ * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
++ * All rights reserved.                                                  *
++ *                                                                       *
++ * For the licensing terms see $ROOTSYS/LICENSE.                         *
++ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
++ *************************************************************************/
++
++//////////////////////////////////////////////////////////////////////////
++//                                                                      //
++// XpdObject                                                            //
++//                                                                      //
++// Authors: G. Ganis, CERN, 2013                                        //
++//                                                                      //
++// Auxilliary class to stack protocols.                                 //
++// Adapted version of XrdObject.                                        //
++//                                                                      //
++//////////////////////////////////////////////////////////////////////////
++
++#ifndef ROOT_XpdObject
++#define ROOT_XpdObject
++
++#include <string.h>
++#include <strings.h>
++#include <time.h>
++#include <sys/types.h>
++#include "Xrd/XrdJob.hh"
++#include "XrdOuc/XrdOucTrace.hh"
++#include "XrdSys/XrdSysPthread.hh"
++
++class XpdObjectQ;
++class XrdProofdProtocol;
++class XrdScheduler;
++  
++class XpdObject {
++public:
++   friend class XpdObjectQ;
++
++   // Item() supplies the item value associated with itself (used with Next()).
++   XrdProofdProtocol  *objectItem() { return fItem; }
++
++   // Next() supplies the next list node.
++   XpdObject          *nextObject() { return fNext; }
++
++   // Set the item pointer
++   void                setItem(XrdProofdProtocol *ival) { fItem = ival; }
++
++   XpdObject(XrdProofdProtocol *ival=0) { fNext = 0; fItem = ival; fQTime = 0; }
++   ~XpdObject() {}
++
++private:
++   XpdObject         *fNext;
++   XrdProofdProtocol *fItem;
++   time_t             fQTime;  // Only used for time-managed objects
++};
++
++/******************************************************************************/
++/*                           x r d _ O b j e c t Q                            */
++/******************************************************************************/
++  
++// Note to properly cleanup this type of queue you must call Set() at least
++// once to cause the time element to be sceduled.
++
++class XrdOucTrace;
++  
++class XpdObjectQ : public XrdJob {
++public:
++
++   XrdProofdProtocol *Pop();
++   void Push(XpdObject *Node);
++   void Set(int inQMax, time_t agemax=1800);
++   void Set(XrdScheduler *sp, XrdOucTrace *tp, int traceChk = 0)
++            {fSched = sp; fTrace = tp; fTraceON = traceChk;}
++   void DoIt();
++
++   XpdObjectQ(const char *id, const char *desc) : XrdJob(desc) 
++          {fCurage = fCount = 0; fMaxage = 0; fTraceID = id;
++           fMaxinQ = 32; fMininQ = 16; fFirst = 0; }
++
++   ~XpdObjectQ() {}
++
++private:
++
++   XrdSysMutex    fQMutex;
++   XpdObject     *fFirst;
++   int            fCount;
++   int            fCurage;
++   int            fMininQ;
++   int            fMaxinQ;
++   time_t         fMaxage;
++   XrdOucTrace   *fTrace;
++   XrdScheduler  *fSched;
++   int            fTraceON;
++   const char    *fTraceID;
++};
++
++#endif
+
+Egenskapsändringar för: proof/proofd/inc/XpdObject.h
+___________________________________________________________________
+Added: svn:keywords
+## -0,0 +1 ##
++Id
+\ No newline at end of property
+Added: svn:eol-style
+## -0,0 +1 ##
++LF
+\ No newline at end of property
+Index: proof/proofd/Module.mk
+===================================================================
+--- proof/proofd/Module.mk	(revision 48830)
++++ proof/proofd/Module.mk	(revision 48831)
+@@ -127,7 +127,11 @@
+ ifeq ($(HASXRD),yes)
+ XPDINCEXTRA    := $(XROOTDDIRI:%=-I%)
+ XPDINCEXTRA    += $(PROOFDDIRI:%=-I%)
++ifeq ($(XRDINCPRIVATE),yes)
++XPDINCEXTRA    += -I$(XRDINCDIR)/private
++endif
+ 
++
+ ifeq ($(HASXRDUTILS),no)
+ 
+ XPDLIBEXTRA    += $(XROOTDDIRL) -lXrdClient -lXrdNet -lXrdOuc \
+Index: proof/proofd/CMakeLists.txt
+===================================================================
+--- proof/proofd/CMakeLists.txt	(revision 48830)
++++ proof/proofd/CMakeLists.txt	(revision 48831)
+@@ -7,7 +7,7 @@
+ ROOT_USE_PACKAGE(net/rpdutils)
+ ROOT_USE_PACKAGE(net/auth)
+ 
+-include_directories(${XROOTD_INCLUDE_DIR})
++include_directories(${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR})
+ add_definitions(${XROOTD_CFLAGS})
+ 
+ if(WIN32)
+Index: proof/proofx/Module.mk
+===================================================================
+--- proof/proofx/Module.mk	(revision 48830)
++++ proof/proofx/Module.mk	(revision 48831)
+@@ -63,6 +63,9 @@
+ PROOFXINCEXTRA := $(PROOFXDIRI:%=-I%)
+ PROOFXINCEXTRA += $(XROOTDDIRI:%=-I%)
+ PROOFXINCEXTRA += $(PROOFDDIRI:%=-I%)
++ifeq ($(XRDINCPRIVATE),yes)
++PROOFXINCEXTRA += -I$(XRDINCDIR)/private
++endif
+ 
+ # Xrootd client libs
+ ifeq ($(PLATFORM),win32)
+Index: proof/proofx/CMakeLists.txt
+===================================================================
+--- proof/proofx/CMakeLists.txt	(revision 48830)
++++ proof/proofx/CMakeLists.txt	(revision 48831)
+@@ -16,7 +16,7 @@
+   ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ endif()
+ 
+-include_directories(${XROOTD_INCLUDE_DIR})
++include_directories(${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR})
+ link_directories(${XROOTD_LIBRARY_DIR})
+ add_definitions(${XROOTD_CFLAGS})
+ 
+Index: net/netx/Module.mk
+===================================================================
+--- net/netx/Module.mk	(revision 48830)
++++ net/netx/Module.mk	(revision 48831)
+@@ -55,6 +55,9 @@
+ ifneq ($(EXTRA_XRDFLAGS),)
+ NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
+ endif
++ifeq ($(XRDINCPRIVATE),yes)
++NETXINCEXTRA += -I$(XRDINCDIR)/private
++endif
+ 
+ # Xrootd client libs
+ ifeq ($(PLATFORM),win32)
+Index: net/netx/CMakeLists.txt
+===================================================================
+--- net/netx/CMakeLists.txt	(revision 48830)
++++ net/netx/CMakeLists.txt	(revision 48831)
+@@ -6,7 +6,7 @@
+ ROOT_USE_PACKAGE(net/net)
+ ROOT_USE_PACKAGE(proof/proofd)
+ 
+-include_directories(${XROOTD_INCLUDE_DIR})
++include_directories(${XROOTD_INCLUDE_DIR} ${XROOTD_PRIVATE_INCLUDE_DIR})
+ add_definitions(${XROOTD_CFLAGS})
+ #---------------------------------------------------------------------------
+ 
+Index: config/Makefile.in
+===================================================================
+--- config/Makefile.in	(revision 48830)
++++ config/Makefile.in	(revision 48831)
+@@ -255,6 +255,7 @@
+ EXTRA_XRDFLAGS := @extraxrdflags@
+ XRDVERSION     := @xrdversion@
+ HASXRDUTILS    := @hasxrdutils@
++XRDINCPRIVATE  := @xrdincprivate@
+ 
+ SRPLIBDIR      := @srplibdir@
+ SRPLIB         := @srplib@
