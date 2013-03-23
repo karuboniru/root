@@ -531,9 +531,8 @@ diff -ur root-5.34.05.orig/graf2d/graf/src/TTF.cxx root-5.34.05/graf2d/graf/src/
     fgCharMap[fgCurFontIdx] = 0;
     fgFontCount++;
  
--   if (italic) {
+    if (italic) {
 -      fgSymbItaFontIdx = fgCurFontIdx;
-+   if (fontid == 15) {
        FT_Matrix slantMat;
        slantMat.xx = (1 << 16);
        slantMat.xy = ((1 << 16) >> 2);

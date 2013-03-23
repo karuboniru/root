@@ -9,12 +9,16 @@
 
 %{!?ruby_sitearchdir: %global ruby_sitearchdir %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
 
-%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 19 || %{?rhel}%{!?rhel:0} >= 7
+%global ruby_installdir %{ruby_vendorarchdir}
+%else
+%if %{?fedora}%{!?fedora:0} >= 17
 %global ruby_installdir %{ruby_vendorarchdir}
 %global ruby_abi 1.9.1
 %else
 %global ruby_installdir %{ruby_sitearchdir}
 %global ruby_abi 1.8
+%endif
 %endif
 
 %if %($(pkg-config emacs) ; echo $?)
@@ -28,7 +32,7 @@
 Name:		root
 Version:	5.34.05
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -67,10 +71,12 @@ Patch6:		%{name}-thtml-revert.patch
 #		Don't save in all image formats:
 Patch7:		%{name}-no-extra-formats.patch
 #		Graphviz libgraph deprecated:
-Patch8:		%%{name}-gviz.patch
+Patch8:		%{name}-gviz.patch
+#		Don't use ruby_version - it is not portable 
+Patch9:		%{name}-ruby-version.patch
 #		Backport xrootd 3.3 support:
-Patch9:		%{name}-rev48681.patch
-Patch10:	%{name}-rev48831.patch
+Patch10:	%{name}-rev48681.patch
+Patch11:	%{name}-rev48831.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -352,7 +358,9 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
 Provides:	ruby(libRuby) = %{version}
+%if %{?ruby_abi:1}%{!?ruby_abi:0}
 Requires:	ruby(abi) = %{ruby_abi}
+%endif
 
 %description ruby
 This package contains the Ruby extension for ROOT. The interface
@@ -1066,8 +1074,9 @@ fi
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
-%patch9 -p0
+%patch9 -p1
 %patch10 -p0
+%patch11 -p0
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2328,6 +2337,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Wed Mar 20 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-2
+- Rebuild for ruby 2.0
+- Rebuild for cfitsio 3.330
+
 * Wed Feb 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-1
 - Update to 5.34.05
 - Rebuild for xrootd 3.3
