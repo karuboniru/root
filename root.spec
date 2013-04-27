@@ -30,7 +30,7 @@
 %endif
 
 Name:		root
-Version:	5.34.06
+Version:	5.34.07
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -1066,10 +1066,6 @@ fi
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-#%patch8 -p1
-#%patch9 -p1
-#%patch10 -p0
-#%patch11 -p0
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2329,6 +2325,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Apr 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.07-1
+- Update to 5.34.07
+
 * Sat Apr 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.06-1
 - Update to 5.34.06
 - Drop patches root-gviz.patch, root-ruby-version.patch,
