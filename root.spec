@@ -30,9 +30,9 @@
 %endif
 
 Name:		root
-Version:	5.34.05
+Version:	5.34.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -70,13 +70,6 @@ Patch5:		%{name}-gfal-bits.patch
 Patch6:		%{name}-thtml-revert.patch
 #		Don't save in all image formats:
 Patch7:		%{name}-no-extra-formats.patch
-#		Graphviz libgraph deprecated:
-Patch8:		%{name}-gviz.patch
-#		Don't use ruby_version - it is not portable 
-Patch9:		%{name}-ruby-version.patch
-#		Backport xrootd 3.3 support:
-Patch10:	%{name}-rev48681.patch
-Patch11:	%{name}-rev48831.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1073,10 +1066,10 @@ fi
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p0
-%patch11 -p0
+#%patch8 -p1
+#%patch9 -p1
+#%patch10 -p0
+#%patch11 -p0
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2196,8 +2189,7 @@ fi
 %{_datadir}/%{name}/plugins/TApplication/P020_TApplicationServer.C
 %{_datadir}/%{name}/plugins/TFile/P010_TWebFile.C
 %{_datadir}/%{name}/plugins/TFile/P120_TNetFile.C
-%{_datadir}/%{name}/plugins/TFile/P130_TAS3File.C
-%{_datadir}/%{name}/plugins/TFile/P140_TGSFile.C
+%{_datadir}/%{name}/plugins/TFile/P150_TS3WebFile.C
 %{_datadir}/%{name}/plugins/TFileStager/P020_TNetFileStager.C
 %{_datadir}/%{name}/plugins/TSystem/P050_TWebSystem.C
 %{_datadir}/%{name}/plugins/TSystem/P070_TNetSystem.C
@@ -2337,6 +2329,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Apr 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.06-1
+- Update to 5.34.06
+- Drop patches root-gviz.patch, root-ruby-version.patch,
+  root-rev48681.patch and root-rev48831.patch
+
 * Wed Mar 20 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-2
 - Rebuild for ruby 2.0
 - Rebuild for cfitsio 3.330
