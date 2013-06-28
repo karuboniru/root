@@ -7,6 +7,16 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
+%if "%{?rhel}" == "5"
+%ifarch ppc
+%global gfal 0
+%else
+%global gfal 1
+%endif
+%else
+%global gfal 1
+%endif
+
 %{!?ruby_sitearchdir: %global ruby_sitearchdir %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %{?fedora}%{!?fedora:0} >= 19 || %{?rhel}%{!?rhel:0} >= 7
@@ -129,8 +139,10 @@ BuildRequires:	dpm-devel
 BuildRequires:	xrootd-client-devel
 BuildRequires:	xrootd-private-devel
 BuildRequires:	cfitsio-devel
+%if %{gfal}
 BuildRequires:	gfal-devel
 BuildRequires:	srm-ifce-devel
+%endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
@@ -608,12 +620,14 @@ Group:		Applications/Engineering
 %description io-dcache
 This package contains the dCache extension for ROOT.
 
+%if %{gfal}
 %package io-gfal
 Summary:	Grid File Access Library input/output library for ROOT
 Group:		Applications/Engineering
 
 %description io-gfal
 This package contains the Grid File Access Library extension for ROOT.
+%endif
 
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
@@ -1173,9 +1187,13 @@ unset QTINC
 	    --enable-fitsio \
 	    --enable-gdml \
 	    --enable-genvector \
+%if %{gfal}
 	    --enable-gfal \
 	      --with-gfal-incdir=%{_includedir} \
 	      --with-gfal-libdir=%{_libdir} \
+%else
+	    --disable-gfal \
+%endif
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
@@ -1382,6 +1400,9 @@ rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P030_TCastorFile.C
+%if "%{gfal}" == "0"
+rm TFile/P050_TGFALFile.C
+%endif
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
 rm TFile/P110_THDFSFile.C
@@ -1618,8 +1639,10 @@ fi
 %postun io -p /sbin/ldconfig
 %post io-dcache -p /sbin/ldconfig
 %postun io-dcache -p /sbin/ldconfig
+%if %{gfal}
 %post io-gfal -p /sbin/ldconfig
 %postun io-gfal -p /sbin/ldconfig
+%endif
 %post io-rfio -p /sbin/ldconfig
 %postun io-rfio -p /sbin/ldconfig
 %post io-sql -p /sbin/ldconfig
@@ -2049,10 +2072,12 @@ fi
 %{_datadir}/%{name}/plugins/TFile/P040_TDCacheFile.C
 %{_datadir}/%{name}/plugins/TSystem/P020_TDCacheSystem.C
 
+%if %{gfal}
 %files io-gfal -f includelist-io-gfal
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGFAL.*
 %{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
+%endif
 
 %files io-rfio -f includelist-io-rfio
 %defattr(-,root,root,-)
