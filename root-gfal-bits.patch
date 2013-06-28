@@ -1,9 +1,0 @@
-diff -ur root-5.34.05.orig/io/gfal/Module.mk root-5.34.05/io/gfal/Module.mk
---- root-5.34.05.orig/io/gfal/Module.mk	2013-02-14 23:27:54.000000000 +0100
-+++ root-5.34.05/io/gfal/Module.mk	2013-02-26 20:58:00.150088502 +0100
-@@ -71,4 +71,5 @@
- $(GFALO) $(GFALDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
- $(GFALO): CXXFLAGS += $(GFALINCDIR:%=-I%)
- $(GFALO): CXXFLAGS += $(SRMIFCEINCDIR:%=-I%)
-+$(GFALO): CXXFLAGS += $(shell pkg-config --cflags glib-2.0)
- $(GFALO): CXXFLAGS += -D_FILE_OFFSET_BITS=64

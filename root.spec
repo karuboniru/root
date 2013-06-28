@@ -40,7 +40,7 @@
 %endif
 
 Name:		root
-Version:	5.34.07
+Version:	5.34.09
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -53,8 +53,8 @@ URL:		http://root.cern.ch/
 #		tar -z -x -f root_v%{version}.source.tar.gz
 #		rm -rf root/fonts
 #		mv root root-%{version}
-#		tar -z -c -f root-%{version}.tar.gz root-%{version}
-Source0:	%{name}-%{version}.tar.gz
+#		tar -J -c -f root-%{version}.tar.xz root-%{version}
+Source0:	%{name}-%{version}.tar.xz
 #		Script to extract the list of include files in a subpackage
 Source1:	root-includelist
 #		Documentation generation script
@@ -74,8 +74,8 @@ Patch3:		%{name}-xrootd.patch
 #		Fix hardcoded include path:
 #		https://savannah.cern.ch/bugs/index.php?91463
 Patch4:		%{name}-meta.patch
-#		Missing include path:
-Patch5:		%{name}-gfal-bits.patch
+#		Use TLatex in doc generation:
+Patch5:		%{name}-doc-latex.patch
 #		Revert THtml change:
 Patch6:		%{name}-thtml-revert.patch
 #		Don't save in all image formats:
@@ -151,6 +151,9 @@ BuildRequires:	graphviz-devel
 BuildRequires:	graphviz-gd
 %endif
 BuildRequires:	expat-devel
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
+BuildRequires:	pythia8-devel
+%endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(liberationsans)
 BuildRequires:	font(liberationserif)
@@ -158,8 +161,20 @@ BuildRequires:	font(liberationmono)
 %else
 BuildRequires:	liberation-fonts
 %endif
-#		This contains a Symbol font that can be used by fontconfig
+%if %{?fedora}%{!?fedora:0} >= 12 || %{?rhel}%{!?rhel:0} >= 6
+%ifarch %{ix86} x86_64
+BuildRequires:	font(symbol)
+%else
 BuildRequires:	urw-fonts
+%endif
+%else
+BuildRequires:	urw-fonts
+%endif
+%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
+%ifarch %{ix86} x86_64
+BuildRequires:	font(wingdings)
+%endif
+%endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(droidsansfallback)
 %endif
@@ -253,8 +268,20 @@ Requires:	font(liberationmono)
 %else
 Requires:	liberation-fonts
 %endif
-#		This contains a Symbol font that can be used by fontconfig
+%if %{?fedora}%{!?fedora:0} >= 12 || %{?rhel}%{!?rhel:0} >= 6
+%ifarch %{ix86} x86_64
+Requires:	font(symbol)
+%else
 Requires:	urw-fonts
+%endif
+%else
+Requires:	urw-fonts
+%endif
+%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
+%ifarch %{ix86} x86_64
+Requires:	font(wingdings)
+%endif
+%endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 Requires:	font(droidsansfallback)
 %endif
@@ -836,6 +863,18 @@ Group:		Applications/Engineering
 %description montecarlo-eg
 This package contains an event generator library for ROOT.
 
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
+%package montecarlo-pythia8
+Summary:	Pythia version 8 plugin for ROOT
+Group:		Applications/Engineering
+
+%description montecarlo-pythia8
+This package contains the Pythia version 8 plug-in for ROOT. This
+package provide the ROOT user with transparent interface to the Pythia
+(version 8) event generators for hadronic interactions. If the term
+"hadronic" does not ring any bells, this package is not for you.
+%endif
+
 %package montecarlo-vmc
 Summary:	Virtual Monte-Carlo (simulation) library for ROOT
 Group:		Applications/Engineering
@@ -1207,6 +1246,12 @@ unset QTINC
 	    --enable-opengl \
 	    --enable-pgsql \
 	    --enable-python \
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
+	    --enable-pythia8 \
+	      --with-pythia8-incdir=%{_includedir}/pythia8 \
+%else
+	    --disable-pythia8 \
+%endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 	    --enable-qt \
 	    --enable-qtgsi \
@@ -1251,7 +1296,6 @@ unset QTINC
 	    --disable-monalisa \
 	    --disable-oracle \
 	    --disable-pythia6 \
-	    --disable-pythia8 \
 	    --disable-rpath \
 	    --disable-sapdb \
 	    --disable-srp \
@@ -1363,7 +1407,7 @@ rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
 rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/root.desktop
 rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/system.plugins-ios
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/svninfo.txt
+rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/gitinfo.txt
 %if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
 rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
 %endif
@@ -1685,6 +1729,10 @@ fi
 %postun table -p /sbin/ldconfig
 %post montecarlo-eg -p /sbin/ldconfig
 %postun montecarlo-eg -p /sbin/ldconfig
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
+%post montecarlo-pythia8 -p /sbin/ldconfig
+%postun montecarlo-pythia8 -p /sbin/ldconfig
+%endif
 %post montecarlo-vmc -p /sbin/ldconfig
 %postun montecarlo-vmc -p /sbin/ldconfig
 %post net -p /sbin/ldconfig
@@ -2198,6 +2246,12 @@ fi
 %{_datadir}/%{name}/pdg_table.txt
 %doc %{_defaultdocdir}/%{name}-%{version}/cfortran.doc
 
+%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
+%files montecarlo-pythia8 -f includelist-montecarlo-pythia8
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libEGPythia8.*
+%endif
+
 %files montecarlo-vmc -f includelist-montecarlo-vmc
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libVMC.*
@@ -2350,6 +2404,13 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Jun 28 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-1
+- Update to 5.34.09
+- New sub-package: root-montecarlo-pythia8
+- Drop patch root-gfal-bits.patch
+- Use xz compression for source tarfile
+- Update ancient root version in EPEL
+
 * Sat Apr 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.07-1
 - Update to 5.34.07
 
