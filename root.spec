@@ -42,7 +42,7 @@
 Name:		root
 Version:	5.34.09
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2404,6 +2404,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Jul 16 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-2
+- Rebuild for cfitsio 3.350
+
 * Fri Jun 28 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-1
 - Update to 5.34.09
 - New sub-package: root-montecarlo-pythia8
@@ -2421,7 +2424,7 @@ fi
 
 * Wed Mar 20 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-2
 - Rebuild for ruby 2.0
-- Rebuild for cfitsio 3.330
+- Rebuild for cfitsio 3.340
 
 * Wed Feb 27 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.05-1
 - Update to 5.34.05
