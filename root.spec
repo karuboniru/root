@@ -42,7 +42,7 @@
 Name:		root
 Version:	5.34.09
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2404,6 +2404,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Jul 18 2013 Petr Pisar <ppisar@redhat.com> - 5.34.09-3
+- Perl 5.18 rebuild
+
 * Tue Jul 16 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-2
 - Rebuild for cfitsio 3.350
 
