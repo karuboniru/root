@@ -39,10 +39,12 @@
 %global emacs_lispdir %(pkg-config emacs --variable sitepkglispdir)
 %endif
 
+%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
+
 Name:		root
 Version:	5.34.09
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -84,6 +86,10 @@ BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
 ExcludeArch:	ppc64
+#		The cint interpreter is not fully ported to arm
+#		https://sft.its.cern.ch/jira/browse/ROOT-5398
+#		https://sft.its.cern.ch/jira/browse/ROOT-5399
+ExcludeArch:	armv7hl
 
 BuildRequires:	libX11-devel
 BuildRequires:	libXpm-devel
@@ -179,13 +185,17 @@ BuildRequires:	font(wingdings)
 BuildRequires:	font(droidsansfallback)
 %endif
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
-BuildRequires:	font(stix)
+# STIX font version 1.1 - not backwards compatible with earlier versions
+# We use the texlive supplied version 1.0 instead of font(stix)
+BuildRequires:	texlive-stix
 %else
 %if %{?fedora}%{!?fedora:0} >= 14
+# STIX font version 1.0
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsizeonesym)
 %else
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+# STIX font version 0.9
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsize1)
 %endif
@@ -286,13 +296,17 @@ Requires:	font(wingdings)
 Requires:	font(droidsansfallback)
 %endif
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
-Requires:	font(stix)
+# STIX font version 1.1 - not backwards compatible with earlier versions
+# We use the texlive supplied version 1.0 instead of font(stix)
+Requires:	texlive-stix
 %else
 %if %{?fedora}%{!?fedora:0} >= 14
+# STIX font version 1.0
 Requires:	font(stixgeneral)
 Requires:	font(stixsizeonesym)
 %else
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+# STIX font version 0.9
 Requires:	font(stixgeneral)
 Requires:	font(stixsize1)
 %endif
@@ -1190,6 +1204,9 @@ sed s/c1/c1c/g -i tutorials/graphics/earth.C
 sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
 sed s/c1/c1simp/g -i tutorials/hsimple.C
 
+# Directory lost in svn-git conversion - needed for THtml doc generation
+mkdir graf2d/gviz/doc
+
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 cp -pr bindings/pyroot bindings/pyroot26
@@ -1204,7 +1221,7 @@ unset QTINC
 ./configure --prefix=%{_prefix} \
 	    --libdir=%{_libdir}/%{name} \
 	    --etcdir=%{_datadir}/%{name} \
-	    --docdir=%{_defaultdocdir}/%{name}-%{version} \
+	    --docdir=%{_pkgdocdir} \
 	    --elispdir=%{emacs_lispdir}/%{name} \
 %if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
 	    --disable-builtin-afterimage \
@@ -1426,11 +1443,11 @@ rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.pri
 %endif
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/proofdp.h
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/rootdp.h
-rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/BUILDSYSTEM
-rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/ChangeLog-2-24
-rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/INSTALL
-rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/README.ALIEN
-rm ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/README.MONALISA
+rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/BUILDSYSTEM
+rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/ChangeLog-2-24
+rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/INSTALL
+rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/README.ALIEN
+rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/README.MONALISA
 
 # Remove cintdll sources - keep the prec_stl directory
 rm -rf ${RPM_BUILD_ROOT}%{_libdir}/%{name}/cint/cint/lib/{[^p],p[^r]}*
@@ -1489,7 +1506,7 @@ sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
-mv htmldoc ${RPM_BUILD_ROOT}%{_defaultdocdir}/%{name}-%{version}/html
+mv htmldoc ${RPM_BUILD_ROOT}%{_pkgdocdir}/html
 
 # Create includelist files ...
 for module in `find * -name Module.mk` ; do
@@ -1834,9 +1851,9 @@ fi
 %{_includedir}/%{name}/rmain.cxx
 %dir %{_includedir}/%{name}/Math
 %{_datadir}/aclocal/root.m4
-%doc %{_defaultdocdir}/%{name}-%{version}/CREDITS
-%doc %{_defaultdocdir}/%{name}-%{version}/LICENSE
-%doc %{_defaultdocdir}/%{name}-%{version}/README
+%doc %{_pkgdocdir}/CREDITS
+%doc %{_pkgdocdir}/LICENSE
+%doc %{_pkgdocdir}/README
 
 %files cint -f includelist-cint-cint
 %defattr(-,root,root,-)
@@ -1847,8 +1864,8 @@ fi
 %{_libdir}/%{name}/cint
 %dir %{_includedir}/%{name}
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
-%doc %dir %{_defaultdocdir}/%{name}-%{version}
-%doc %{_defaultdocdir}/%{name}-%{version}/COPYING.CINT
+%doc %dir %{_pkgdocdir}
+%doc %{_pkgdocdir}/COPYING.CINT
 
 %ifarch %{ix86} x86_64
 %files cintex -f includelist-cint-cintex
@@ -1875,12 +1892,12 @@ fi
 
 %files doc
 %defattr(-,root,root,-)
-%doc %{_defaultdocdir}/%{name}-%{version}/html
+%doc %{_pkgdocdir}/html
 
 %files tutorial
 %defattr(-,root,root,-)
-%doc %{_defaultdocdir}/%{name}-%{version}/test
-%doc %{_defaultdocdir}/%{name}-%{version}/tutorials
+%doc %{_pkgdocdir}/test
+%doc %{_pkgdocdir}/tutorials
 
 %files proofd
 %defattr(-,root,root,-)
@@ -2244,7 +2261,7 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libEG.*
 %{_datadir}/%{name}/pdg_table.txt
-%doc %{_defaultdocdir}/%{name}-%{version}/cfortran.doc
+%doc %{_pkgdocdir}/cfortran.doc
 
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
 %files montecarlo-pythia8 -f includelist-montecarlo-pythia8
@@ -2282,12 +2299,12 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libRootAuth.*
 %{_datadir}/%{name}/plugins/TVirtualAuth/P010_TRootAuth.C
-%doc %{_defaultdocdir}/%{name}-%{version}/README.AUTH
+%doc %{_pkgdocdir}/README.AUTH
 
 %files net-globus
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGlobusAuth.*
-%doc %{_defaultdocdir}/%{name}-%{version}/README.GLOBUS
+%doc %{_pkgdocdir}/README.GLOBUS
 
 %files net-krb5 -f includelist-net-krb5auth
 %defattr(-,root,root,-)
@@ -2323,7 +2340,7 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P050_TProofPlayerSuperMaster.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P060_TProofPlayerLite.C
 %{_datadir}/%{name}/valgrind-root.supp
-%doc %{_defaultdocdir}/%{name}-%{version}/README.PROOF
+%doc %{_pkgdocdir}/README.PROOF
 
 %files proof-bench -f includelist-proof-proofbench
 %defattr(-,root,root,-)
@@ -2381,7 +2398,7 @@ fi
 %files tree -f includelist-tree-tree
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libTree.*
-%doc %{_defaultdocdir}/%{name}-%{version}/README.SELECTOR
+%doc %{_pkgdocdir}/README.SELECTOR
 
 %files tree-player -f includelist-tree-treeplayer
 %defattr(-,root,root,-)
@@ -2404,6 +2421,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Aug 08 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-5
+- Exclude armv7hl - cint is not working
+- Use _pkgdocdir when defined
+- Use texlive-stix
+
 * Sun Aug 04 2013 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.09-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_20_Mass_Rebuild
 
