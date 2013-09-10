@@ -42,9 +42,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.09
+Version:	5.34.10
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -82,6 +82,8 @@ Patch5:		%{name}-doc-latex.patch
 Patch6:		%{name}-thtml-revert.patch
 #		Don't save in all image formats:
 Patch7:		%{name}-no-extra-formats.patch
+#		Fixes for HDFS module
+Patch8:		%{name}-hdfs.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -89,7 +91,7 @@ ExcludeArch:	ppc64
 #		The cint interpreter is not fully ported to arm
 #		https://sft.its.cern.ch/jira/browse/ROOT-5398
 #		https://sft.its.cern.ch/jira/browse/ROOT-5399
-ExcludeArch:	armv7hl
+ExcludeArch:	%{arm}
 
 BuildRequires:	libX11-devel
 BuildRequires:	libXpm-devel
@@ -121,6 +123,7 @@ BuildRequires:	krb5-devel
 BuildRequires:	krb5-workstation
 BuildRequires:	openldap-devel
 BuildRequires:	mysql-devel
+BuildRequires:	sqlite-devel
 BuildRequires:	unixODBC-devel
 BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
@@ -148,6 +151,10 @@ BuildRequires:	cfitsio-devel
 %if %{gfal}
 BuildRequires:	gfal-devel
 BuildRequires:	srm-ifce-devel
+%endif
+%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+BuildRequires:	hadoop-devel
+BuildRequires:	java-devel
 %endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
@@ -670,6 +677,15 @@ Group:		Applications/Engineering
 This package contains the Grid File Access Library extension for ROOT.
 %endif
 
+%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%package io-hdfs
+Summary:	Hadoop File System input/output library for ROOT
+Group:		Applications/Engineering
+
+%description io-hdfs
+This package contains the Hadoop File System extension for ROOT.
+%endif
+
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
 Group:		Applications/Engineering
@@ -1035,6 +1051,16 @@ This package contains the ODBC (Open DataBase Connectivity) plugin
 for ROOT, that allows transparent access to any kind of database that
 supports the ODBC protocol.
 
+%package sql-sqlite
+Summary:	Sqlite client plugin for ROOT
+Group:		Applications/Engineering
+
+%description sql-sqlite
+This package contains the sqlite plugin for ROOT. This plugin
+provides a thin client (interface) to sqlite servers. Using this
+client, one can obtain information from a sqlite database into the
+ROOT environment.
+
 %package sql-pgsql
 Summary:	PostgreSQL client plugin for ROOT
 Group:		Applications/Engineering
@@ -1133,6 +1159,7 @@ fi
 %patch5 -p1
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1204,9 +1231,6 @@ sed s/c1/c1c/g -i tutorials/graphics/earth.C
 sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
 sed s/c1/c1simp/g -i tutorials/hsimple.C
 
-# Directory lost in svn-git conversion - needed for THtml doc generation
-mkdir graf2d/gviz/doc
-
 %if "%{?rhel}" == "5"
 # Build PyROOT for python 2.6
 cp -pr bindings/pyroot bindings/pyroot26
@@ -1218,6 +1242,7 @@ sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
 unset QTDIR
 unset QTLIB
 unset QTINC
+export JAVA_HOME=/usr/lib/jvm/java
 ./configure --prefix=%{_prefix} \
 	    --libdir=%{_libdir}/%{name} \
 	    --etcdir=%{_datadir}/%{name} \
@@ -1253,6 +1278,13 @@ unset QTINC
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
+%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+	    --enable-hdfs \
+	      --with-hdfs-incdir=%{_includedir}/hadoop \
+	      --with-hdfs-libdir=%{_libdir}/hadoop \
+%else
+	    --disable-hdfs \
+%endif
 	    --enable-krb5 \
 	    --enable-ldap \
 	    --enable-mathmore \
@@ -1282,9 +1314,10 @@ unset QTINC
 	      --with-rfio-libdir=%{_libdir} \
 	    --enable-roofit \
 	    --enable-ruby \
-	    --enable-soversion \
 	    --enable-shadowpw \
 	    --enable-shared \
+	    --enable-soversion \
+	    --enable-sqlite \
 	    --enable-ssl \
 	    --enable-table \
 	    --enable-tmva \
@@ -1309,7 +1342,6 @@ unset QTINC
 	    --disable-cling \
 	    --disable-cxx11 \
 	    --disable-glite \
-	    --disable-hdfs \
 	    --disable-monalisa \
 	    --disable-oracle \
 	    --disable-pythia6 \
@@ -1466,7 +1498,9 @@ rm TFile/P050_TGFALFile.C
 %endif
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
+%if %{?fedora}%{!?fedora:0} < 20 && %{?rhel}%{!?rhel:0} < 7
 rm TFile/P110_THDFSFile.C
+%endif
 rm TGLManager/P020_TGWin32GLManager.C
 rm TGrid/P010_TAlien.C
 rm TGrid/P020_TGLite.C
@@ -1477,7 +1511,9 @@ rm TImagePlugin/P010_TASPluginGS.C
 rm TSQLServer/P030_TSapDBServer.C
 rm TSQLServer/P040_TOracleServer.C
 rm TSystem/P030_TAlienSystem.C
+%if %{?fedora}%{!?fedora:0} < 20 && %{?rhel}%{!?rhel:0} < 7
 rm TSystem/P060_THDFSSystem.C
+%endif
 rm TViewerX3D/P020_TQtViewerX3D.C
 rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
@@ -1503,7 +1539,7 @@ echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
-LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
+LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl:%{_libdir}/hadoop:/usr/lib/jvm/jre/lib/amd64/server:/usr/lib/jvm/jre/lib/i386/server \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
 mv htmldoc ${RPM_BUILD_ROOT}%{_pkgdocdir}/html
@@ -1704,6 +1740,10 @@ fi
 %post io-gfal -p /sbin/ldconfig
 %postun io-gfal -p /sbin/ldconfig
 %endif
+%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%post io-hdfs -p /sbin/ldconfig
+%postun io-hdfs -p /sbin/ldconfig
+%endif
 %post io-rfio -p /sbin/ldconfig
 %postun io-rfio -p /sbin/ldconfig
 %post io-sql -p /sbin/ldconfig
@@ -1780,6 +1820,8 @@ fi
 %postun sql-mysql -p /sbin/ldconfig
 %post sql-odbc -p /sbin/ldconfig
 %postun sql-odbc -p /sbin/ldconfig
+%post sql-sqlite -p /sbin/ldconfig
+%postun sql-sqlite -p /sbin/ldconfig
 %post sql-pgsql -p /sbin/ldconfig
 %postun sql-pgsql -p /sbin/ldconfig
 %post tmva -p /sbin/ldconfig
@@ -2000,6 +2042,7 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualPS/P020_TSVG.C
 %{_datadir}/%{name}/plugins/TVirtualPS/P030_TPDF.C
 %{_datadir}/%{name}/plugins/TVirtualPS/P040_TImageDump.C
+%{_datadir}/%{name}/plugins/TVirtualPS/P050_TTeXDump.C
 
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 %files graf-qt -f includelist-graf2d-qt
@@ -2142,6 +2185,14 @@ fi
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libGFAL.*
 %{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%files io-hdfs -f includelist-io-hdfs
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libHDFS.*
+%{_datadir}/%{name}/plugins/TFile/P110_THDFSFile.C
+%{_datadir}/%{name}/plugins/TSystem/P060_THDFSSystem.C
 %endif
 
 %files io-rfio -f includelist-io-rfio
@@ -2384,6 +2435,11 @@ fi
 %{_libdir}/%{name}/libRODBC.*
 %{_datadir}/%{name}/plugins/TSQLServer/P050_TODBCServer.C
 
+%files sql-sqlite -f includelist-sql-sqlite
+%defattr(-,root,root,-)
+%{_libdir}/%{name}/libSQLite.*
+%{_datadir}/%{name}/plugins/TSQLServer/P060_TSQLiteServer.C
+
 %files sql-pgsql -f includelist-sql-pgsql
 %defattr(-,root,root,-)
 %{_libdir}/%{name}/libPgSQL.*
@@ -2421,6 +2477,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Sep 09 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.10-1
+- Update to 5.34.09
+- New sub-package: root-io-hdfs (Fedora 20+)
+- New sub-package: root-sql-sqlite
+
 * Thu Aug 08 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.09-5
 - Exclude armv7hl - cint is not working
 - Use _pkgdocdir when defined
