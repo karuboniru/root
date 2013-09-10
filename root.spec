@@ -2478,7 +2478,7 @@ fi
 
 %changelog
 * Mon Sep 09 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.10-1
-- Update to 5.34.09
+- Update to 5.34.10
 - New sub-package: root-io-hdfs (Fedora 20+)
 - New sub-package: root-sql-sqlite
 
