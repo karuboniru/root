@@ -44,7 +44,7 @@
 Name:		root
 Version:	5.34.10
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2477,6 +2477,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Nov 18 2013 Dave Airlie <airlied@redhat.com> - 5.34.10-2
+- rebuilt for GLEW 1.10
+
 * Mon Sep 09 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.10-1
 - Update to 5.34.10
 - New sub-package: root-io-hdfs (Fedora 20+)
