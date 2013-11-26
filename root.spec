@@ -44,7 +44,7 @@
 Name:		root
 Version:	5.34.10
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -1281,7 +1281,7 @@ export JAVA_HOME=/usr/lib/jvm/java
 %if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
 	    --enable-hdfs \
 	      --with-hdfs-incdir=%{_includedir}/hadoop \
-	      --with-hdfs-libdir=%{_libdir}/hadoop \
+	      --with-hdfs-libdir=%{_libdir} \
 %else
 	    --disable-hdfs \
 %endif
@@ -1539,7 +1539,7 @@ echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
-LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl:%{_libdir}/hadoop:/usr/lib/jvm/jre/lib/amd64/server:/usr/lib/jvm/jre/lib/i386/server \
+LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl:/usr/lib/jvm/jre/lib/amd64/server:/usr/lib/jvm/jre/lib/i386/server \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
 mv htmldoc ${RPM_BUILD_ROOT}%{_pkgdocdir}/html
@@ -2477,6 +2477,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Nov 25 2013 Orion Poplawski <orion@cora.nwra.com> - 5.34.10-3
+- Fix hadoop lib location
+
 * Mon Nov 18 2013 Dave Airlie <airlied@redhat.com> - 5.34.10-2
 - rebuilt for GLEW 1.10
 
