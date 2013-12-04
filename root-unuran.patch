@@ -1,16 +1,16 @@
-diff -ur root-trunk.orig/math/unuran/Module.mk root-trunk/math/unuran/Module.mk
---- root-trunk.orig/math/unuran/Module.mk	2010-11-25 20:41:32.000000000 +0100
-+++ root-trunk/math/unuran/Module.mk	2010-11-25 20:51:47.190704977 +0100
-@@ -20,7 +20,7 @@
- UNURANETAG   := $(call stripsrc,$(UNURANDIRS)/headers.d)
- UNRCFG       := $(call stripsrc,$(UNURANDIRS)/$(UNRVERS)/config.h)
- 
+diff -ur root-5.34.13.orig/math/unuran/Module.mk root-5.34.13/math/unuran/Module.mk
+--- root-5.34.13.orig/math/unuran/Module.mk	2013-12-01 11:58:21.000000000 +0100
++++ root-5.34.13/math/unuran/Module.mk	2013-12-03 20:11:58.916479324 +0100
+@@ -31,7 +31,7 @@
+                 $(wildcard $(UNRDIRS)/src/uniform/*.c) \
+                 $(wildcard $(UNRDIRS)/src/urng/*.c)
+ else
 -UNRTARCONTENT:=$(subst $(UNRVERS),$(UNRDIRS),$(shell mkdir -p $(UNRDIR); cd $(UNRDIR); gunzip -c $(UNRSRCS) | tar tf -))
 +UNRTARCONTENT:=
  UNRS         := $(filter %.c, \
                  $(filter $(UNRDIRS)/src/utils/%,$(UNRTARCONTENT)) \
                  $(filter $(UNRDIRS)/src/methods/%,$(UNRTARCONTENT)) \
-@@ -69,10 +69,9 @@
+@@ -81,10 +81,9 @@
  ##### local rules #####
  .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
  
@@ -22,7 +22,7 @@ diff -ur root-trunk.orig/math/unuran/Module.mk root-trunk/math/unuran/Module.mk
  $(UNRS):        $(UNURANETAG)
  
  $(UNURANETAG):	$(UNRSRCS)
-@@ -125,12 +124,12 @@
+@@ -137,12 +136,12 @@
  		GNUMAKE=$(MAKE) ./configure  CC="$$ACC"  \
  		CFLAGS="$$ACFLAGS");
  

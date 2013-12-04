@@ -1,0 +1,24 @@
+diff -ur root-5.34.13.orig/config/Makefile.in root-5.34.13/config/Makefile.in
+--- root-5.34.13.orig/config/Makefile.in	2013-12-01 11:58:21.000000000 +0100
++++ root-5.34.13/config/Makefile.in	2013-12-04 14:50:39.291637133 +0100
+@@ -224,7 +224,7 @@
+ FPYTHIA6CPPFLAGS := @pythia6cppflags@
+ 
+ BUILDFPYTHIA8    := @buildpythia8@
+-FPYTHIA8INCDIR   := @pythia8incdir@
++FPYTHIA8INCDIR   := $(filter-out /usr/include, @pythia8incdir@)
+ FPYTHIA8LIBDIR   := @pythia8libdir@
+ FPYTHIA8LIB      := @pythia8lib@
+ 
+diff -ur root-5.34.13.orig/montecarlo/pythia8/Module.mk root-5.34.13/montecarlo/pythia8/Module.mk
+--- root-5.34.13.orig/montecarlo/pythia8/Module.mk	2013-12-01 11:58:21.000000000 +0100
++++ root-5.34.13/montecarlo/pythia8/Module.mk	2013-12-04 15:22:12.637030866 +0100
+@@ -50,7 +50,7 @@
+ $(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP)
+ 		$(MAKEDIR)
+ 		@echo "Generating dictionary $@..."
+-		$(ROOTCINTTMP) -f $@ -c -I$(FPYTHIA8INCDIR) $(PYTHIA8H) $(PYTHIA8L)
++		$(ROOTCINTTMP) -f $@ -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
+ 
+ $(PYTHIA8MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA8L)
+ 		$(RLIBMAP) -o $@ -l $(PYTHIA8LIB) \

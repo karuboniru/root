@@ -42,9 +42,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.10
+Version:	5.34.13
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -84,6 +84,10 @@ Patch6:		%{name}-thtml-revert.patch
 Patch7:		%{name}-no-extra-formats.patch
 #		Fixes for HDFS module
 Patch8:		%{name}-hdfs.patch
+#		Don't link to libjvm (handled properly inside libhdfs)
+Patch9:		%{name}-dont-link-jvm.patch
+#		Filter out /usr/include
+Patch10:	%{name}-pythia8-incdir.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -154,7 +158,6 @@ BuildRequires:	srm-ifce-devel
 %endif
 %if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:	hadoop-devel
-BuildRequires:	java-devel
 %endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
@@ -165,7 +168,7 @@ BuildRequires:	graphviz-gd
 %endif
 BuildRequires:	expat-devel
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
-BuildRequires:	pythia8-devel
+BuildRequires:	pythia8-devel >= 8.1.80
 %endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(liberationsans)
@@ -1160,6 +1163,8 @@ fi
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
+%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1242,7 +1247,6 @@ sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
 unset QTDIR
 unset QTLIB
 unset QTINC
-export JAVA_HOME=/usr/lib/jvm/java
 ./configure --prefix=%{_prefix} \
 	    --libdir=%{_libdir}/%{name} \
 	    --etcdir=%{_datadir}/%{name} \
@@ -1281,7 +1285,6 @@ export JAVA_HOME=/usr/lib/jvm/java
 %if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
 	    --enable-hdfs \
 	      --with-hdfs-incdir=%{_includedir}/hadoop \
-	      --with-hdfs-libdir=%{_libdir} \
 %else
 	    --disable-hdfs \
 %endif
@@ -1297,7 +1300,6 @@ export JAVA_HOME=/usr/lib/jvm/java
 	    --enable-python \
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
 	    --enable-pythia8 \
-	      --with-pythia8-incdir=%{_includedir}/pythia8 \
 %else
 	    --disable-pythia8 \
 %endif
@@ -1342,6 +1344,7 @@ export JAVA_HOME=/usr/lib/jvm/java
 	    --disable-cling \
 	    --disable-cxx11 \
 	    --disable-glite \
+	    --disable-libcxx \
 	    --disable-monalisa \
 	    --disable-oracle \
 	    --disable-pythia6 \
@@ -1357,11 +1360,13 @@ make OPTFLAGS="%{optflags}" \
 # Build PyROOT for python 2.6
 mkdir pyroot26
 cp bindings/pyroot26/ROOT.py pyroot26
+cp bindings/pyroot26/cppyy.py pyroot26
 make OPTFLAGS="%{optflags}" \
 	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
 	MODULES="build cint/cint core/utils bindings/pyroot26" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
-	PYROOTLIB=pyroot26/libPyROOT.so ROOTPY=pyroot26/ROOT.py
+	PYROOTLIB=pyroot26/libPyROOT.so \
+	ROOTPY="pyroot26/ROOT.py pyroot26/cppyy.py"
 %endif
 
 %install
@@ -1434,6 +1439,7 @@ mkdir -p ${RPM_BUILD_ROOT}%{python26_sitearch}
 install pyroot26/libPyROOT.so.%{libversion} \
    ${RPM_BUILD_ROOT}%{python26_sitearch}/libPyROOT.so
 install -m 644 pyroot26/ROOT.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
+install -m 644 pyroot26/cppyy.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
 %endif
 
 # Same for the Ruby interface library
@@ -1539,7 +1545,7 @@ echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
-LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl:/usr/lib/jvm/jre/lib/amd64/server:/usr/lib/jvm/jre/lib/i386/server \
+LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
 mv htmldoc ${RPM_BUILD_ROOT}%{_pkgdocdir}/html
@@ -1973,6 +1979,7 @@ fi
 %endif
 %{python_sitearch}/libPyROOT.*
 %{python_sitearch}/ROOT.py*
+%{python_sitearch}/cppyy.py*
 
 %if "%{?rhel}" == "5"
 %files python26 -f includelist-bindings-pyroot
@@ -1983,6 +1990,7 @@ fi
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %{python26_sitearch}/libPyROOT.*
 %{python26_sitearch}/ROOT.py*
+%{python26_sitearch}/cppyy.py*
 %endif
 
 %files ruby -f includelist-bindings-ruby
@@ -2477,6 +2485,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Dec 03 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.13-1
+- Update to 5.34.13
+- Remove java-devel build dependency (not needed with Fedora's libhdfs)
+- Adapt to pythia8 >= 8.1.80
+
 * Mon Nov 25 2013 Orion Poplawski <orion@cora.nwra.com> - 5.34.10-3
 - Fix hadoop lib location
 
