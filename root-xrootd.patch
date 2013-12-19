@@ -1,7 +1,7 @@
-diff -ur root-5.32.01.orig/configure root-5.32.01/configure
---- root-5.32.01.orig/configure	2012-02-29 16:46:41.000000000 +0100
-+++ root-5.32.01/configure	2012-03-17 14:14:02.822111495 +0100
-@@ -4486,10 +4486,14 @@
+diff -ur root-5.34.14.orig/configure root-5.34.14/configure
+--- root-5.34.14.orig/configure	2013-12-16 12:19:34.000000000 +0100
++++ root-5.34.14/configure	2013-12-19 03:47:25.973920954 +0100
+@@ -4926,10 +4926,14 @@
     if test "x$enable_xrootd" = "xyes"; then
        xrdlibdir="$tmpxrdlibdir"
        if test "x$enable_bonjour" = "xyes"; then
@@ -19,4 +19,4 @@ diff -ur root-5.32.01.orig/configure root-5.32.01/configure
 +         bonjourcppflags=
        fi
     fi
- fi
+ 
