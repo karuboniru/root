@@ -44,7 +44,7 @@
 Name:		root
 Version:	5.34.14
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -150,8 +150,8 @@ BuildRequires:	dpm-devel
 BuildRequires:	xrootd-client-devel >= 1:3.3.5
 BuildRequires:	xrootd-private-devel >= 1:3.3.5
 BuildRequires:	cfitsio-devel
+BuildRequires:	davix-devel >= 0.2.7
 %if %{gfal}
-BuildRequires:	davix-devel
 BuildRequires:	gfal-devel
 BuildRequires:	srm-ifce-devel
 %endif
@@ -2409,6 +2409,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Dec 19 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-2
+- Use versioned BR on davix-devel
+
 * Thu Dec 19 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-1
 - Update to 5.34.14
 - New sub-packages: root-net-davix
