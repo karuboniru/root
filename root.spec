@@ -86,6 +86,8 @@ Patch7:		%{name}-no-extra-formats.patch
 Patch8:		%{name}-hdfs.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
 Patch9:		%{name}-dont-link-jvm.patch
+#		Fix for davix 0.2.8
+Patch10:	%{name}-davix.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -150,7 +152,7 @@ BuildRequires:	dpm-devel
 BuildRequires:	xrootd-client-devel >= 1:3.3.5
 BuildRequires:	xrootd-private-devel >= 1:3.3.5
 BuildRequires:	cfitsio-devel
-BuildRequires:	davix-devel >= 0.2.7
+BuildRequires:	davix-devel >= 0.2.8
 %if %{gfal}
 BuildRequires:	gfal-devel
 BuildRequires:	srm-ifce-devel
@@ -945,6 +947,7 @@ This package contains the basic authentication algorithms used by ROOT.
 %package net-davix
 Summary:	Davix extension for ROOT
 Group:		Applications/Engineering
+Requires:	davix-libs%{?_isa} >= 0.2.8
 
 %description net-davix
 This package contains the davix extension for ROOT, that provides
@@ -1172,6 +1175,7 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2409,8 +2413,8 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
-* Thu Dec 19 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-2
-- Use versioned BR on davix-devel
+* Mon Dec 23 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-2
+- Adapt to davix >= 0.2.8
 
 * Thu Dec 19 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-1
 - Update to 5.34.14
