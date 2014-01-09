@@ -2413,12 +2413,15 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Jan 09 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-3
+- Rebuild for cfitsio 3.360
+
 * Mon Dec 23 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-2
 - Adapt to davix >= 0.2.8
 
 * Thu Dec 19 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-1
 - Update to 5.34.14
-- New sub-packages: root-net-davix
+- New sub-package: root-net-davix
 - Drop patch root-pythia8-incdir.patch
 
 * Tue Dec 03 2013 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.13-1
