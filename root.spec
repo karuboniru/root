@@ -42,9 +42,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.14
+Version:	5.34.15
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -86,8 +86,6 @@ Patch7:		%{name}-no-extra-formats.patch
 Patch8:		%{name}-hdfs.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
 Patch9:		%{name}-dont-link-jvm.patch
-#		Fix for davix 0.2.8
-Patch10:	%{name}-davix.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1175,7 +1173,6 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
-%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1520,6 +1517,7 @@ rm TFile/P070_TAlienFile.C
 rm TFile/P110_THDFSFile.C
 %endif
 rm TGLManager/P020_TGWin32GLManager.C
+rm TGLManager/P030_TGOSXGLManager.C
 rm TGrid/P010_TAlien.C
 rm TGrid/P020_TGLite.C
 %if %{?fedora}%{!?fedora:0} < 9 && %{?rhel}%{!?rhel:0} < 6
@@ -1575,7 +1573,6 @@ cat includelist-geom-geom* > includelist-geom
 cat includelist-roofit-roo* > includelist-roofit
 cat includelist-gui-qt* > includelist-gui-qt
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
-cat includelist-graf2d-mathtext >> includelist-graf2d-x11
 cat includelist-gui-guihtml >> includelist-gui-gui
 cat includelist-io-xmlparser >> includelist-io-xml
 cat includelist-proof-proofplayer >> includelist-proof-proof
@@ -2413,6 +2410,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Feb 14 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.15-1
+- Update to 5.34.15
+- Drop patch root-davix.patch
+
 * Thu Jan 09 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.14-3
 - Rebuild for cfitsio 3.360
 
