@@ -1,3 +1,4 @@
+include config/Makefile.config
 include $(MODULE)/Module.mk
 includelist:
 	@list=includelist-`tr / - <<< $(MODULE)` ; \
