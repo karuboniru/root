@@ -7,16 +7,6 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
-%if "%{?rhel}" == "5"
-%ifarch ppc
-%global gfal 0
-%else
-%global gfal 1
-%endif
-%else
-%global gfal 1
-%endif
-
 %{!?ruby_sitearchdir: %global ruby_sitearchdir %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %{?fedora}%{!?fedora:0} >= 19 || %{?rhel}%{!?rhel:0} >= 7
@@ -42,7 +32,7 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.17
+Version:	5.34.18
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -88,6 +78,8 @@ Patch8:		%{name}-hdfs.patch
 Patch9:		%{name}-dont-link-jvm.patch
 #		Avoid deprecated __USE_BSD
 Patch10:	%{name}-bsd-misc.patch
+#		Use GFAL2
+Patch11:	%{name}-gfal2.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -153,10 +145,8 @@ BuildRequires:	xrootd-client-devel >= 1:3.3.5
 BuildRequires:	xrootd-private-devel >= 1:3.3.5
 BuildRequires:	cfitsio-devel
 BuildRequires:	davix-devel >= 0.2.8
-%if %{gfal}
-BuildRequires:	gfal-devel
+BuildRequires:	gfal2-devel
 BuildRequires:	srm-ifce-devel
-%endif
 %if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
 BuildRequires:	hadoop-devel
 %endif
@@ -672,16 +662,14 @@ Group:		Applications/Engineering
 %description io-dcache
 This package contains the dCache extension for ROOT.
 
-%if %{gfal}
 %package io-gfal
 Summary:	Grid File Access Library input/output library for ROOT
 Group:		Applications/Engineering
 
 %description io-gfal
 This package contains the Grid File Access Library extension for ROOT.
-%endif
 
-%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 20
 %package io-hdfs
 Summary:	Hadoop File System input/output library for ROOT
 Group:		Applications/Engineering
@@ -874,6 +862,15 @@ of the density ...). After a user has given this information an
 init-program computes all tables and constants necessary for the
 random variate generation. The sample program can then generate
 variates from the desired distribution.
+
+%package vdt
+Summary:	VDT mathematical library
+Group:		Applications/Engineering
+
+%description vdt
+VDT is a library of mathematical functions, implemented in double and
+single precision. The implementation is fast and with the aid of
+modern compilers (e.g. gcc 4.7) vectorisable.
 
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
@@ -1176,6 +1173,7 @@ fi
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
+%patch11 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1284,17 +1282,13 @@ unset QTINC
 	    --enable-fitsio \
 	    --enable-gdml \
 	    --enable-genvector \
-%if %{gfal}
 	    --enable-gfal \
-	      --with-gfal-incdir=%{_includedir} \
+	      --with-gfal-incdir=%{_includedir}/gfal2 \
 	      --with-gfal-libdir=%{_libdir} \
-%else
-	    --disable-gfal \
-%endif
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
-%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 20
 	    --enable-hdfs \
 	      --with-hdfs-incdir=%{_includedir}/hadoop \
 %else
@@ -1336,6 +1330,7 @@ unset QTINC
 	    --enable-table \
 	    --enable-tmva \
 	    --enable-unuran \
+	    --enable-vdt \
 	    --enable-x11 \
 	    --enable-xft \
 	    --enable-xml \
@@ -1363,6 +1358,7 @@ unset QTINC
 	    --disable-rpath \
 	    --disable-sapdb \
 	    --disable-srp \
+	    --disable-vc \
 	    --fail-on-missing
 
 make OPTFLAGS="%{optflags}" \
@@ -1511,12 +1507,9 @@ rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P030_TCastorFile.C
-%if "%{gfal}" == "0"
-rm TFile/P050_TGFALFile.C
-%endif
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
-%if %{?fedora}%{!?fedora:0} < 20 && %{?rhel}%{!?rhel:0} < 7
+%if %{?fedora}%{!?fedora:0} < 20
 rm TFile/P110_THDFSFile.C
 %endif
 rm TGLManager/P020_TGWin32GLManager.C
@@ -1530,7 +1523,7 @@ rm TImagePlugin/P010_TASPluginGS.C
 rm TSQLServer/P030_TSapDBServer.C
 rm TSQLServer/P040_TOracleServer.C
 rm TSystem/P030_TAlienSystem.C
-%if %{?fedora}%{!?fedora:0} < 20 && %{?rhel}%{!?rhel:0} < 7
+%if %{?fedora}%{!?fedora:0} < 20
 rm TSystem/P060_THDFSSystem.C
 %endif
 rm TViewerX3D/P020_TQtViewerX3D.C
@@ -1754,11 +1747,9 @@ fi
 %postun io -p /sbin/ldconfig
 %post io-dcache -p /sbin/ldconfig
 %postun io-dcache -p /sbin/ldconfig
-%if %{gfal}
 %post io-gfal -p /sbin/ldconfig
 %postun io-gfal -p /sbin/ldconfig
-%endif
-%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 20
 %post io-hdfs -p /sbin/ldconfig
 %postun io-hdfs -p /sbin/ldconfig
 %endif
@@ -2158,13 +2149,11 @@ fi
 %{_datadir}/%{name}/plugins/TFile/P040_TDCacheFile.C
 %{_datadir}/%{name}/plugins/TSystem/P020_TDCacheSystem.C
 
-%if %{gfal}
 %files io-gfal -f includelist-io-gfal
 %{_libdir}/%{name}/libGFAL.*
 %{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
-%endif
 
-%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 20
 %files io-hdfs -f includelist-io-hdfs
 %{_libdir}/%{name}/libHDFS.*
 %{_datadir}/%{name}/plugins/TFile/P110_THDFSFile.C
@@ -2257,6 +2246,10 @@ fi
 %files unuran -f includelist-math-unuran
 %{_libdir}/%{name}/libUnuran.*
 %{_datadir}/%{name}/plugins/ROOT@@Math@@DistSampler/P010_TUnuranSampler.C
+
+%files vdt -f includelist-math-vdt
+%dir %{_includedir}/%{name}/vdt
+%doc math/vdt/Licence.md math/vdt/ReadMe.md math/vdt/ReleaseNotes.txt
 
 %files memstat -f includelist-misc-memstat
 %{_libdir}/%{name}/libMemStat.*
@@ -2412,6 +2405,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Mar 22 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-1
+- Update to 5.34.18
+- Build GFAL module using libgfal2
+- New sub-package: root-vdt
+
 * Wed Feb 26 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.17-1
 - Update to 5.34.17
 

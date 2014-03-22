@@ -1,0 +1,72 @@
+--- root-5.34.18.orig/configure	2014-03-14 16:21:52.000000000 +0100
++++ root-5.34.18/configure	2014-03-19 09:56:58.943322923 +0100
+@@ -1630,7 +1630,7 @@
+   fitsio             Read images and data from FITS files, requires cfitsio
+   gviz               Graphs visualization support, requires graphviz
+   gdml               GDML writer and reader
+-  gfal               GFAL support, requires libgfal
++  gfal               GFAL support, requires libgfal or libgfal2
+   globus             Globus authentication support, requires Globus toolkit
+   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
+   gsl-shared         Enable linking against shared libraries for GSL (default no)
+@@ -1719,7 +1719,7 @@
+   gfal-incdir        GFAL support, location of gfal_api.h
+   srm-ifce-incdir    GFAL support, location of gfal_srm_ifce_types.h
+   glib2-incdir       GFAL support, location of glib-2.0 headers
+-  gfal-libdir        GFAL support, location of libgfal
++  gfal-libdir        GFAL support, location of libgfal or libgfal2
+   glew-incdir        GLEW support, location of glew.h
+   glew-libdir        GLEW support, location of libGLEW
+   gsl-incdir         GSL support, location of gsl/gsl_version.h
+@@ -3759,10 +3759,17 @@
+     gfalinc=$found_hdr
+     gfalincdir=$found_dir
+ 
+-    check_library "libgfal" "$enable_shared" "$gfallibdir" \
+-        $GFAL ${GFAL:+$GFAL/lib} \
+-        /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+-        /usr/local/gfal/lib
++    if grep -q "GFAL2" $gfalincdir/gfal_api.h ; then
++        check_library "libgfal2" "$enable_shared" "$gfallibdir" \
++            $GFAL ${GFAL:+$GFAL/lib} \
++            /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
++            /usr/local/gfal2/lib
++    else
++        check_library "libgfal" "$enable_shared" "$gfallibdir" \
++            $GFAL ${GFAL:+$GFAL/lib} \
++            /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
++            /usr/local/gfal/lib
++    fi
+     gfallib=$found_lib
+     gfallibdir=$found_dir
+ 
+diff -ur root-5.34.18.orig/io/gfal/src/TGFALFile.cxx root-5.34.18/io/gfal/src/TGFALFile.cxx
+--- root-5.34.18.orig/io/gfal/src/TGFALFile.cxx	2014-03-14 16:21:52.000000000 +0100
++++ root-5.34.18/io/gfal/src/TGFALFile.cxx	2014-03-19 11:48:13.762930884 +0100
+@@ -60,7 +60,6 @@
+ //                                                                      //
+ //////////////////////////////////////////////////////////////////////////
+ 
+-#include "TGFALFile.h"
+ #include "TROOT.h"
+ #include "TUrl.h"
+ 
+@@ -68,6 +67,18 @@
+ #include <gfal_api.h>
+ }
+ 
++// GFAL2 doesn't use special names for 64 bit versions
++#ifdef _GFAL2_API_
++#define gfal_lseek64   gfal_lseek
++#define gfal_open64    gfal_open
++#define gfal_readdir64 gfal_readdir
++#define gfal_stat64    gfal_stat
++#define dirent64       dirent
++#define stat64         stat
++#endif
++
++#include "TGFALFile.h"
++
+ ClassImp(TGFALFile)
+ ClassImp(TGFALSystem)
+ 
