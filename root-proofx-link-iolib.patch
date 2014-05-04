@@ -1,0 +1,31 @@
+diff -ur root-5.34.18.orig/config/Makefile.depend root-5.34.18/config/Makefile.depend
+--- root-5.34.18.orig/config/Makefile.depend	2014-03-14 16:21:52.000000000 +0100
++++ root-5.34.18/config/Makefile.depend	2014-05-04 07:52:08.144211940 +0200
+@@ -38,7 +38,7 @@
+                          $(THREADLIB) $(MATHCORELIB)
+ PROOFDRAWLIBDEPM       = $(TREEPLAYERLIB) $(G3DLIB) $(GRAFLIB) $(GPADLIB) \
+                          $(PROOFPLAYERLIB) $(HISTLIB) $(TREELIB) $(PROOFLIB)
+-PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB)
++PROOFXLIBDEPM          = $(NETLIB) $(PROOFLIB) $(THREADLIB) $(IOLIB)
+ PROOFBENCHLIBDEPM      = $(PROOFLIB) $(PROOFDRAWLIB) $(PROOFPLAYERLIB) \
+                          $(TREELIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) $(IOLIB)
+ SESSIONVIEWERLIBDEPM   = $(PROOFLIB) $(GUILIB) $(HISTLIB) $(GPADLIB) \
+@@ -291,7 +291,8 @@
+                           lib/libGraf.lib lib/libGpad.lib \
+                           lib/libProofPlayer.lib lib/libHist.lib \
+                           lib/libTree.lib lib/libProof.lib
+-PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib
++PROOFXLIBEXTRA          = lib/libNet.lib lib/libProof.lib lib/libThread.lib \
++                          lib/libRIO.lib
+ PROOFBENCHLIBEXTRA      = lib/libProof.lib lib/libProofDraw.lib \
+                           lib/libProofPlayer.lib lib/libTree.lib lib/libGraf.lib \
+                           lib/libHist.lib lib/libGpad.lib lib/libRIO.lib
+@@ -448,7 +449,7 @@
+                           -lMathCore
+ PROOFDRAWLIBEXTRA       = -Llib -lTreePlayer -lGraf3d -lGraf -lGpad \
+                           -lProofPlayer -lHist -lTree -lProof
+-PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread
++PROOFXLIBEXTRA          = -Llib -lNet -lProof -lThread -lRIO
+ PROOFBENCHLIBEXTRA      = -Llib -lProof -lProofDraw -lProofPlayer -lTree \
+                           -lGraf -lHist -lGpad -lRIO
+ SESSIONVIEWERLIBEXTRA   = -Llib -lProof -lGui -lHist -lGpad -lGraf -lTree \

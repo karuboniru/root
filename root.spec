@@ -34,7 +34,7 @@
 Name:		root
 Version:	5.34.18
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -80,6 +80,8 @@ Patch9:		%{name}-dont-link-jvm.patch
 Patch10:	%{name}-bsd-misc.patch
 #		Use GFAL2
 Patch11:	%{name}-gfal2.patch
+#		Link failure on Fedora 21
+Patch12:	%{name}-proofx-link-iolib.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -147,7 +149,7 @@ BuildRequires:	cfitsio-devel
 BuildRequires:	davix-devel >= 0.2.8
 BuildRequires:	gfal2-devel
 BuildRequires:	srm-ifce-devel
-%if %{?fedora}%{!?fedora:0} >= 20 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 20
 BuildRequires:	hadoop-devel
 %endif
 BuildRequires:	emacs
@@ -1174,6 +1176,7 @@ fi
 %patch9 -p1
 %patch10 -p1
 %patch11 -p1
+%patch12 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2405,6 +2408,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sun May 04 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-2
+- Rebuild for ruby 2.1
+- Fix build failure on F21 (missing symbol in libProofx linking)
+
 * Sat Mar 22 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-1
 - Update to 5.34.18
 - Build GFAL module using libgfal2
