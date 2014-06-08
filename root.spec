@@ -34,7 +34,7 @@
 Name:		root
 Version:	5.34.18
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2408,6 +2408,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sun Jun 08 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.18-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
+
 * Sun May 04 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-2
 - Rebuild for ruby 2.1
 - Fix build failure on F21 (missing symbol in libProofx linking)
