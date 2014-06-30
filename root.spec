@@ -34,7 +34,7 @@
 Name:		root
 Version:	5.34.18
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -563,6 +563,7 @@ various kinds of data.
 %package gui-ged
 Summary:	GUI element for editing various ROOT objects
 Group:		Applications/Engineering
+Requires:	%{name}-tree-player = %{version}-%{release}
 
 %description gui-ged
 This package contains a library to show a pop-up window for editing
@@ -2408,6 +2409,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Jun 30 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-4
+- Add Requires on root-tree-player to root-gui-ged
+
 * Sun Jun 08 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.18-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_21_Mass_Rebuild
 
