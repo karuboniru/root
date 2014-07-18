@@ -29,12 +29,19 @@
 %global emacs_lispdir %(pkg-config emacs --variable sitepkglispdir)
 %endif
 
+# Disable xrootd support for F21+ and EPEL7 (root not yet ported to xrootd 4)
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
+%global xrootd 0
+%else
+%global xrootd 1
+%endif
+
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.18
+Version:	5.34.19
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -68,20 +75,14 @@ Patch3:		%{name}-xrootd.patch
 Patch4:		%{name}-meta.patch
 #		Use TLatex in doc generation:
 Patch5:		%{name}-doc-latex.patch
-#		Revert THtml change:
-Patch6:		%{name}-thtml-revert.patch
 #		Don't save in all image formats:
-Patch7:		%{name}-no-extra-formats.patch
+Patch6:		%{name}-no-extra-formats.patch
 #		Fixes for HDFS module
-Patch8:		%{name}-hdfs.patch
+Patch7:		%{name}-hdfs.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
-Patch9:		%{name}-dont-link-jvm.patch
+Patch8:		%{name}-dont-link-jvm.patch
 #		Avoid deprecated __USE_BSD
-Patch10:	%{name}-bsd-misc.patch
-#		Use GFAL2
-Patch11:	%{name}-gfal2.patch
-#		Link failure on Fedora 21
-Patch12:	%{name}-proofx-link-iolib.patch
+Patch9:		%{name}-bsd-misc.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -97,6 +98,7 @@ BuildRequires:	libXft-devel
 BuildRequires:	libXext-devel
 BuildRequires:	fontconfig-devel
 BuildRequires:	freetype-devel
+BuildRequires:	fcgi-devel
 BuildRequires:	ftgl-devel
 BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
@@ -143,8 +145,10 @@ BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
+%if %{xrootd}
 BuildRequires:	xrootd-client-devel >= 1:3.3.5
 BuildRequires:	xrootd-private-devel >= 1:3.3.5
+%endif
 BuildRequires:	cfitsio-devel
 BuildRequires:	davix-devel >= 0.2.8
 BuildRequires:	gfal2-devel
@@ -979,6 +983,15 @@ Group:		Applications/Engineering
 This package contains the LDAP extension for ROOT. This gives you
 access to LDAP directories via ROOT.
 
+%package net-http
+Summary:	HTTP server extension for ROOT
+Group:		Applications/Engineering
+
+%description net-http
+This package contains the HTTP server extension for ROOT. It provides
+an http interface to arbitrary ROOT applications.
+
+%if %{xrootd}
 %package netx
 Summary:	NetX extension for ROOT
 Group:		Applications/Engineering
@@ -987,6 +1000,7 @@ Group:		Applications/Engineering
 This package contains the NetX extension for ROOT, i.e. a client for
 the xrootd server. Both the old (NetX) and the new (NetXNG) version are
 provided.
+%endif
 
 %package proof
 Summary:	PROOF extension for ROOT
@@ -1020,6 +1034,7 @@ Group:		Applications/Engineering
 This package contains a library for browsing an interactive PROOF
 session in ROOT.
 
+%if %{xrootd}
 %package xproof
 Summary:	XPROOF extension for ROOT
 Group:		Applications/Engineering
@@ -1027,6 +1042,7 @@ Group:		Applications/Engineering
 %description xproof
 This package contains the xproof extension for ROOT. This provides a
 client to be used in a PROOF environment.
+%endif
 
 %package roofit
 Summary:	ROOT extension for modeling expected distributions
@@ -1175,9 +1191,6 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1225,8 +1238,6 @@ rm graf3d/gl/src/gl2ps.cxx graf3d/gl/inc/gl2ps.h
 sed 's/^GLLIBS *:= .* $(OPENGLLIB)/& -lgl2ps/' -i graf3d/gl/Module.mk
 #  * unuran
 rm -rf math/unuran/src/*.tar.gz
-#  * xrootd
-rm -rf net/xrootd/src
 
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
@@ -1298,6 +1309,7 @@ unset QTINC
 %else
 	    --disable-hdfs \
 %endif
+	    --enable-http \
 	    --enable-krb5 \
 	    --enable-ldap \
 	    --enable-mathmore \
@@ -1338,9 +1350,13 @@ unset QTINC
 	    --enable-x11 \
 	    --enable-xft \
 	    --enable-xml \
+%if %{xrootd}
 	    --enable-xrootd \
 	      --with-xrootd-incdir=%{_includedir}/xrootd \
 	      --with-xrootd-libdir=%{_libdir} \
+%else
+	    --disable-xrootd \
+%endif
 %ifarch %{ix86} x86_64
 	    --enable-cintex \
 %else
@@ -1363,6 +1379,7 @@ unset QTINC
 	    --disable-sapdb \
 	    --disable-srp \
 	    --disable-vc \
+	    --disable-werror \
 	    --fail-on-missing
 
 make OPTFLAGS="%{optflags}" \
@@ -1487,6 +1504,9 @@ rm ${RPM_BUILD_ROOT}%{_mandir}/man1/makecint.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/proofserva.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/roota.1
 rm ${RPM_BUILD_ROOT}%{_mandir}/man1/setup-pq2.1
+%if %{xrootd} == 0
+rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xproofd.1
+%endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.cw
 rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.pri
@@ -1538,6 +1558,14 @@ rm TVirtualX/P030_TGWin32.C
 rm TVirtualX/P040_TGQt.C
 %endif
 rm TVirtualX/P050_TGQuartz.C
+%if %{xrootd} == 0
+rm TFile/P100_TXNetFile.C
+rm TFileStager/P010_TXNetFileStager.C
+rm TProofMgr/P010_TXProofMgr.C
+rm TProofServ/P010_TXProofServ.C
+rm TSlave/P010_TXSlave.C
+rm TSystem/P040_TXNetSystem.C
+%endif
 rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
@@ -1821,14 +1849,20 @@ fi
 %postun net-krb5 -p /sbin/ldconfig
 %post net-ldap -p /sbin/ldconfig
 %postun net-ldap -p /sbin/ldconfig
+%post net-http -p /sbin/ldconfig
+%postun net-http -p /sbin/ldconfig
+%if %{xrootd}
 %post netx -p /sbin/ldconfig
 %postun netx -p /sbin/ldconfig
+%endif
 %post proof -p /sbin/ldconfig
 %postun proof -p /sbin/ldconfig
 %post proof-sessionviewer -p /sbin/ldconfig
 %postun proof-sessionviewer -p /sbin/ldconfig
+%if %{xrootd}
 %post xproof -p /sbin/ldconfig
 %postun xproof -p /sbin/ldconfig
+%endif
 %post roofit -p /sbin/ldconfig
 %postun roofit -p /sbin/ldconfig
 %post sql-mysql -p /sbin/ldconfig
@@ -1950,15 +1984,19 @@ fi
 
 %files proofd
 %{_bindir}/proofd
-%{_bindir}/proofexecv
 %{_bindir}/proofserv
 %{_bindir}/proofserv.exe
-%{_bindir}/xproofd
 %{_bindir}/xpdtest
+%if %{xrootd}
+%{_bindir}/proofexecv
+%{_bindir}/xproofd
+%endif
 %{_mandir}/man1/proofd.1*
 %{_mandir}/man1/proofserv.1*
-%{_mandir}/man1/xproofd.1*
 %{_mandir}/man1/xpdtest.1*
+%if %{xrootd}
+%{_mandir}/man1/xproofd.1*
+%endif
 %{_initrddir}/proofd
 
 %files rootd
@@ -2313,12 +2351,19 @@ fi
 %files net-ldap -f includelist-net-ldap
 %{_libdir}/%{name}/libRLDAP.*
 
+%files net-http -f includelist-net-http
+%{_libdir}/%{name}/libRHTTP.*
+%{_datadir}/%{name}/http
+%doc net/http/README.txt net/http/civetweb/*.md
+
+%if %{xrootd}
 %files netx -f includelist-netx
 %{_libdir}/%{name}/libNetx.*
 %{_libdir}/%{name}/libNetxNG.*
 %{_datadir}/%{name}/plugins/TFile/P100_TXNetFile.C
 %{_datadir}/%{name}/plugins/TFileStager/P010_TXNetFileStager.C
 %{_datadir}/%{name}/plugins/TSystem/P040_TXNetSystem.C
+%endif
 
 %files proof -f includelist-proof-proof
 %{_libdir}/%{name}/libProof.*
@@ -2354,12 +2399,14 @@ fi
 %{_datadir}/%{name}/plugins/TProofProgressLog/P010_TProofProgressLog.C
 %{_datadir}/%{name}/plugins/TSessionViewer/P010_TSessionViewer.C
 
+%if %{xrootd}
 %files xproof -f includelist-proof-proofx
 %{_libdir}/%{name}/libProofx.*
 %{_libdir}/%{name}/libXrdProofd.*
 %{_datadir}/%{name}/plugins/TProofMgr/P010_TXProofMgr.C
 %{_datadir}/%{name}/plugins/TProofServ/P010_TXProofServ.C
 %{_datadir}/%{name}/plugins/TSlave/P010_TXSlave.C
+%endif
 
 %files roofit -f includelist-roofit
 %{_libdir}/%{name}/libRooFit.*
@@ -2409,6 +2456,13 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Mon Jul 14 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.19-1
+- Update to 5.34.19
+- Disable xrootd support for F21+ and EPEL7 (root not yet ported to xrootd 4)
+- New sub-package: root-net-http
+- Drop patches root-thtml-revert.patch, root-gfal2.patch and
+  root-proofx-link-iolib.patch
+
 * Mon Jun 30 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.18-4
 - Add Requires on root-tree-player to root-gui-ged
 
