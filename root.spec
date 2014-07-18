@@ -83,6 +83,8 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Avoid deprecated __USE_BSD
 Patch9:		%{name}-bsd-misc.patch
+#		Don't use new gcc options for old gcc versions
+Patch10:	%{name}-gccopt.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1191,6 +1193,7 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
