@@ -2441,6 +2441,9 @@ fi
 - Do not depend on wine's fonts
 - Drop patch root-gccopt.patch
 
+* Mon Aug 18 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.19-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Mon Jul 14 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.19-1
 - Update to 5.34.19
 - Disable xrootd support for F21+ and EPEL7 (root not yet ported to xrootd 4)
