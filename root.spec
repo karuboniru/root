@@ -2435,7 +2435,7 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
-* Sat Aug 16 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-1
+* Wed Aug 20 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-1
 - Update to 5.34.20
 - Re-enable xrootd support for F21+ and EPEL7 (now ported to xrootd 4)
 - Do not depend on wine's fonts
