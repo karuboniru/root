@@ -29,17 +29,12 @@
 %global emacs_lispdir %(pkg-config emacs --variable sitepkglispdir)
 %endif
 
-# Disable xrootd support for F21+ and EPEL7 (root not yet ported to xrootd 4)
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 7
-%global xrootd 0
-%else
 %global xrootd 1
-%endif
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.19
+Version:	5.34.20
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -62,6 +57,8 @@ Source2:	root-html.C
 Source3:	http://root.cern.ch/drupal/sites/default/files/rootdrawing-logo.png
 Source4:	http://root.cern.ch/drupal/sites/all/themes/newsflash/images/blue/root-banner.png
 Source5:	http://root.cern.ch/drupal/sites/all/themes/newsflash/images/info.png
+#		Use local copy of input file during documentation generation
+Source6:	http://root.cern.ch/files/usa.root
 #		Patch for ftgl older than version 2.1.3:
 Patch0:		%{name}-ftgl.patch
 #		Use system fonts:
@@ -83,8 +80,8 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Avoid deprecated __USE_BSD
 Patch9:		%{name}-bsd-misc.patch
-#		Don't use new gcc options for old gcc versions
-Patch10:	%{name}-gccopt.patch
+#		Use local copy of input file during documentation generation
+Patch10:	%{name}-usa.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -176,20 +173,7 @@ BuildRequires:	font(liberationmono)
 %else
 BuildRequires:	liberation-fonts
 %endif
-%if %{?fedora}%{!?fedora:0} >= 12 || %{?rhel}%{!?rhel:0} >= 6
-%ifarch %{ix86} x86_64
-BuildRequires:	font(symbol)
-%else
 BuildRequires:	urw-fonts
-%endif
-%else
-BuildRequires:	urw-fonts
-%endif
-%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
-%ifarch %{ix86} x86_64
-BuildRequires:	font(wingdings)
-%endif
-%endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	font(droidsansfallback)
 %endif
@@ -278,7 +262,7 @@ Summary:	ROOT core libraries
 Group:		Applications/Engineering
 License:	LGPLv2+ and BSD
 Requires:	%{name}-icons = %{version}-%{release}
-Requires:	%{name}-graf-asimage = %{version}-%{release}
+Requires:	%{name}-graf-asimage%{?_isa} = %{version}-%{release}
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 Requires:	font(liberationsans)
@@ -287,20 +271,7 @@ Requires:	font(liberationmono)
 %else
 Requires:	liberation-fonts
 %endif
-%if %{?fedora}%{!?fedora:0} >= 12 || %{?rhel}%{!?rhel:0} >= 6
-%ifarch %{ix86} x86_64
-Requires:	font(symbol)
-%else
 Requires:	urw-fonts
-%endif
-%else
-Requires:	urw-fonts
-%endif
-%if %{?fedora}%{!?fedora:0} >= 17 || %{?rhel}%{!?rhel:0} >= 7
-%ifarch %{ix86} x86_64
-Requires:	font(wingdings)
-%endif
-%endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
 Requires:	font(droidsansfallback)
 %endif
@@ -361,8 +332,11 @@ with CINT with any class for which a Reflex dictionary is provided.
 %package proofd
 Summary:	Parallel ROOT Facility - distributed, parallel computing
 Group:		Applications/Engineering
-Requires:	%{name}-net-rpdutils = %{version}-%{release}
-Requires:	%{name}-proof = %{version}-%{release}
+Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+%if %{xrootd}
+Requires:	xrootd-server%{?_isa}
+%endif
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
 Requires(post):		chkconfig
@@ -379,7 +353,7 @@ transparent interface.
 %package rootd
 Summary:	ROOT remote file server
 Group:		Applications/Engineering
-Requires:	%{name}-net-rpdutils = %{version}-%{release}
+Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
 Requires(post):		chkconfig
@@ -471,7 +445,7 @@ System (FITS) data format in root.
 %package graf-gpad
 Summary:	Canvas and pad library for ROOT
 Group:		Applications/Engineering
-Requires:	%{name}-graf-postscript = %{version}-%{release}
+Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
 
 %description graf-gpad
 This package contains a library for canvas and pad manipulations.
@@ -552,8 +526,8 @@ a low quality 3D viewer for ROOT defined geometries.
 %package gui
 Summary:	GUI library for ROOT
 Group:		Applications/Engineering
-Requires:	%{name}-graf-x11 = %{version}-%{release}
-Requires:	%{name}-gui-ged = %{version}-%{release}
+Requires:	%{name}-graf-x11%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
 
 %description gui
 This package contains a library for defining graphical user interfaces.
@@ -569,7 +543,7 @@ various kinds of data.
 %package gui-ged
 Summary:	GUI element for editing various ROOT objects
 Group:		Applications/Engineering
-Requires:	%{name}-tree-player = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description gui-ged
 This package contains a library to show a pop-up window for editing
@@ -615,7 +589,7 @@ access legacy Hbook files (NTuples and Histograms from PAW).
 %package hist
 Summary:	Histogram library for ROOT
 Group:		Applications/Engineering
-Requires:	%{name}-hist-painter = %{version}-%{release}
+Requires:	%{name}-hist-painter%{?_isa} = %{version}-%{release}
 
 %description hist
 This package contains a library for histogramming in ROOT.
@@ -749,7 +723,7 @@ a generalized vector library.
 %package mathcore
 Summary:	Core mathematics library for ROOT
 Group:		Applications/Engineering
-Requires:	%{name}-minuit = %{version}-%{release}
+Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
 
 %description mathcore
 This package contains the MathCore library for ROOT.
@@ -1402,8 +1376,8 @@ make OPTFLAGS="%{optflags}" \
 %endif
 
 %install
-rm -rf $RPM_BUILD_ROOT
-make install DESTDIR=$RPM_BUILD_ROOT
+rm -rf %{buildroot}
+make install DESTDIR=%{buildroot}
 
 # Move python modules to the sitelib
 mkdir -p ${RPM_BUILD_ROOT}%{python_sitearch}
@@ -1586,6 +1560,7 @@ echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
+install -m 644 -p %{SOURCE6} tutorials/hist/usa.root
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
@@ -1610,16 +1585,16 @@ cat includelist-net-netx* > includelist-netx
 
 %if "%{?rhel}" == "5"
 # Python byte code compilation
-%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/%{name}/python"'", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
-%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{_libdir}/%{name}/python"'", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
-%{__python} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitearch}"'", 10, "%{python_sitearch}", 1)' > /dev/null
-%{__python} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python_sitearch}"'", 10, "%{python_sitearch}", 1)' > /dev/null
-%{__python26} -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python26_sitearch}"'", 10, "%{python26_sitearch}", 1)' > /dev/null
-%{__python26} -O -c 'import compileall; compileall.compile_dir("'"$RPM_BUILD_ROOT%{python26_sitearch}"'", 10, "%{python26_sitearch}", 1)' > /dev/null
+%{__python} -c 'import compileall; compileall.compile_dir("%{buildroot}%{_libdir}/%{name}/python", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
+%{__python} -O -c 'import compileall; compileall.compile_dir("%{buildroot}%{_libdir}/%{name}/python", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
+%{__python} -c 'import compileall; compileall.compile_dir("%{buildroot}%{python_sitearch}", 10, "%{python_sitearch}", 1)' > /dev/null
+%{__python} -O -c 'import compileall; compileall.compile_dir("%{buildroot}%{python_sitearch}", 10, "%{python_sitearch}", 1)' > /dev/null
+%{__python26} -c 'import compileall; compileall.compile_dir("%{buildroot}%{python26_sitearch}", 10, "%{python26_sitearch}", 1)' > /dev/null
+%{__python26} -O -c 'import compileall; compileall.compile_dir("%{buildroot}%{python26_sitearch}", 10, "%{python26_sitearch}", 1)' > /dev/null
 %endif
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %post
 touch --no-create %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
@@ -1924,6 +1899,7 @@ fi
 %dir %{_datadir}/%{name}
 %{_datadir}/%{name}/class.rules
 %{_datadir}/%{name}/gdb-backtrace.sh
+%{_datadir}/%{name}/helgrind-root.supp
 %{_datadir}/%{name}/Makefile.arch
 %{_datadir}/%{name}/root.mimes
 %{_datadir}/%{name}/system.rootauthrc
@@ -2459,6 +2435,12 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Sat Aug 16 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-1
+- Update to 5.34.20
+- Re-enable xrootd support for F21+ and EPEL7 (now ported to xrootd 4)
+- Do not depend on wine's fonts
+- Drop patch root-gccopt.patch
+
 * Mon Jul 14 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.19-1
 - Update to 5.34.19
 - Disable xrootd support for F21+ and EPEL7 (root not yet ported to xrootd 4)

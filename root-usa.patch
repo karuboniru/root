@@ -1,0 +1,13 @@
+diff -ur root-5.34.19.orig/hist/histpainter/src/THistPainter.cxx root-5.34.19/hist/histpainter/src/THistPainter.cxx
+--- root-5.34.19.orig/hist/histpainter/src/THistPainter.cxx	2014-07-09 16:50:16.000000000 +0200
++++ root-5.34.19/hist/histpainter/src/THistPainter.cxx	2014-07-26 23:01:20.083002118 +0200
+@@ -2305,7 +2305,8 @@
+    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
+ 
+    TFile *f;
+-   f = TFile::Open("http://root.cern.ch/files/usa.root");
++   // f = TFile::Open("http://root.cern.ch/files/usa.root");
++   f = TFile::Open("$(ROOTSYS)/tutorials/hist/usa.root");
+ 
+    TMultiGraph *mg;
+    TKey *key;

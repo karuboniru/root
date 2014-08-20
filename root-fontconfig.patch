@@ -1,6 +1,6 @@
-diff -ur root-5.34.18.orig/core/base/src/TApplication.cxx root-5.34.18/core/base/src/TApplication.cxx
---- root-5.34.18.orig/core/base/src/TApplication.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/core/base/src/TApplication.cxx	2014-03-15 18:15:22.756445235 +0100
+diff -ur root-5.34.20.orig/core/base/src/TApplication.cxx root-5.34.20/core/base/src/TApplication.cxx
+--- root-5.34.20.orig/core/base/src/TApplication.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/core/base/src/TApplication.cxx	2014-08-16 19:24:53.337132201 +0200
 @@ -265,22 +265,11 @@
     LoadGraphicsLibs();
  
@@ -34,9 +34,9 @@ diff -ur root-5.34.18.orig/core/base/src/TApplication.cxx root-5.34.18/core/base
  
     // Create WM dependent application environment
     if (fAppImp)
-diff -ur root-5.34.18.orig/graf2d/graf/inc/TTF.h root-5.34.18/graf2d/graf/inc/TTF.h
---- root-5.34.18.orig/graf2d/graf/inc/TTF.h	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf2d/graf/inc/TTF.h	2014-03-15 18:15:22.757445223 +0100
+diff -ur root-5.34.20.orig/graf2d/graf/inc/TTF.h root-5.34.20/graf2d/graf/inc/TTF.h
+--- root-5.34.20.orig/graf2d/graf/inc/TTF.h	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf2d/graf/inc/TTF.h	2014-08-16 19:24:53.338132209 +0200
 @@ -70,9 +70,8 @@
     static FT_BBox     fgCBox;                  // string control box
     static FT_CharMap  fgCharMap[kTTMaxFonts];  // font character map
@@ -48,9 +48,9 @@ diff -ur root-5.34.18.orig/graf2d/graf/inc/TTF.h root-5.34.18/graf2d/graf/inc/TT
     static FT_Face     fgFace[kTTMaxFonts];     // font face
     static TTGlyph     fgGlyphs[kMaxGlyphs];    // glyphs
     static Bool_t      fgHinting;               // use hinting (true by default)
-diff -ur root-5.34.18.orig/graf2d/graf/Module.mk root-5.34.18/graf2d/graf/Module.mk
---- root-5.34.18.orig/graf2d/graf/Module.mk	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf2d/graf/Module.mk	2014-03-15 18:15:22.757445223 +0100
+diff -ur root-5.34.20.orig/graf2d/graf/Module.mk root-5.34.20/graf2d/graf/Module.mk
+--- root-5.34.20.orig/graf2d/graf/Module.mk	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf2d/graf/Module.mk	2014-08-16 19:24:53.338132209 +0200
 @@ -46,7 +46,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
@@ -60,9 +60,9 @@ diff -ur root-5.34.18.orig/graf2d/graf/Module.mk root-5.34.18/graf2d/graf/Module
  
  $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
  		$(MAKEDIR)
-diff -ur root-5.34.18.orig/graf2d/graf/src/TTF.cxx root-5.34.18/graf2d/graf/src/TTF.cxx
---- root-5.34.18.orig/graf2d/graf/src/TTF.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf2d/graf/src/TTF.cxx	2014-03-20 14:27:01.700346310 +0100
+diff -ur root-5.34.20.orig/graf2d/graf/src/TTF.cxx root-5.34.20/graf2d/graf/src/TTF.cxx
+--- root-5.34.20.orig/graf2d/graf/src/TTF.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf2d/graf/src/TTF.cxx	2014-08-16 20:48:07.427205257 +0200
 @@ -17,15 +17,13 @@
  //                                                                      //
  //////////////////////////////////////////////////////////////////////////
@@ -299,10 +299,11 @@ diff -ur root-5.34.18.orig/graf2d/graf/src/TTF.cxx root-5.34.18/graf2d/graf/src/
 -                                       "$(ROOTSYS)/fonts"
 -# endif
 -                                      );
+ 
+-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 +   char *ttfont = NULL;
 +   int ttindex = 0;
  
--   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 +   if (fontid >= 16 && fontid <= 28) {
 +      // Use the texlive-stix fonts if they exist
 +      // Texlive-stix not packaged correctly - can not be found through fontconfig
@@ -350,7 +351,6 @@ diff -ur root-5.34.18.orig/graf2d/graf/src/TTF.cxx root-5.34.18/graf2d/graf/src/
 +         break;
 +      }
 +   }
- 
     if (!ttfont) {
 -      Error("TTF::SetTextFont", "font file %s not found in path", fontname);
 -      if (fgFontCount) {
@@ -616,38 +616,38 @@ diff -ur root-5.34.18.orig/graf2d/graf/src/TTF.cxx root-5.34.18/graf2d/graf/src/
 -   // Table of Microsoft and (for non-MSFT operating systems) backup
 -   // FreeFont TTF fonts.
 -   static const char *fonttable[][2] = {
--	  { "Root.TTFont.0", "FreeSansBold.otf" },
--	  { "Root.TTFont.1", "FreeSerifItalic.otf" },
--	  { "Root.TTFont.2", "FreeSerifBold.otf" },
--	  { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
--	  { "Root.TTFont.4", "FreeSans.otf" },
--	  { "Root.TTFont.5", "FreeSansOblique.otf" },
--	  { "Root.TTFont.6", "FreeSansBold.otf" },
--	  { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
--	  { "Root.TTFont.8", "FreeMono.otf" },
--	  { "Root.TTFont.9", "FreeMonoOblique.otf" },
--	  { "Root.TTFont.10", "FreeMonoBold.otf" },
--	  { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
--	  { "Root.TTFont.12", "symbol.ttf" },
--	  { "Root.TTFont.13", "FreeSerif.otf" },
--	  { "Root.TTFont.14", "wingding.ttf" },
--	  { "Root.TTFont.15", "symbol.ttf" },
--	  { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
--	  { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
--	  { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
--	  { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
--	  { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
--	  { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
--	  { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
--	  { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
--	  { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
--	  { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
--	  { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
--	  { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
--	  { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
--	  { "Root.TTFont.ME", "DroidSansFallback.ttf" },
--	  { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
--	  { "Root.TTFont.CJKGothic", "DroidSansFallback.ttf" }
+-     { "Root.TTFont.0", "FreeSansBold.otf" },
+-     { "Root.TTFont.1", "FreeSerifItalic.otf" },
+-     { "Root.TTFont.2", "FreeSerifBold.otf" },
+-     { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
+-     { "Root.TTFont.4", "FreeSans.otf" },
+-     { "Root.TTFont.5", "FreeSansOblique.otf" },
+-     { "Root.TTFont.6", "FreeSansBold.otf" },
+-     { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+-     { "Root.TTFont.8", "FreeMono.otf" },
+-     { "Root.TTFont.9", "FreeMonoOblique.otf" },
+-     { "Root.TTFont.10", "FreeMonoBold.otf" },
+-     { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
+-     { "Root.TTFont.12", "symbol.ttf" },
+-     { "Root.TTFont.13", "FreeSerif.otf" },
+-     { "Root.TTFont.14", "wingding.ttf" },
+-     { "Root.TTFont.15", "symbol.ttf" },
+-     { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
+-     { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
+-     { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
+-     { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
+-     { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
+-     { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
+-     { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
+-     { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
+-     { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
+-     { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
+-     { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
+-     { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
+-     { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
+-     { "Root.TTFont.ME", "DroidSansFallback.ttf" },
+-     { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
+-     { "Root.TTFont.CJKGothic", "DroidSansFallback.ttf" }
 -   };
 -
 -   static int fontset = -1;
@@ -685,9 +685,9 @@ diff -ur root-5.34.18.orig/graf2d/graf/src/TTF.cxx root-5.34.18/graf2d/graf/src/
  }
  
  //______________________________________________________________________________
-diff -ur root-5.34.18.orig/graf2d/postscript/Module.mk root-5.34.18/graf2d/postscript/Module.mk
---- root-5.34.18.orig/graf2d/postscript/Module.mk	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf2d/postscript/Module.mk	2014-03-15 18:15:22.758445211 +0100
+diff -ur root-5.34.20.orig/graf2d/postscript/Module.mk root-5.34.20/graf2d/postscript/Module.mk
+--- root-5.34.20.orig/graf2d/postscript/Module.mk	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf2d/postscript/Module.mk	2014-08-16 19:24:53.363132437 +0200
 @@ -50,7 +50,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libPostscript.$(SOEXT) $@ \
@@ -697,9 +697,9 @@ diff -ur root-5.34.18.orig/graf2d/postscript/Module.mk root-5.34.18/graf2d/posts
  
  $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPDEP)
  		$(MAKEDIR)
-diff -ur root-5.34.18.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.18/graf2d/postscript/src/TPostScript.cxx
---- root-5.34.18.orig/graf2d/postscript/src/TPostScript.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf2d/postscript/src/TPostScript.cxx	2014-03-15 18:15:22.759445199 +0100
+diff -ur root-5.34.20.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.20/graf2d/postscript/src/TPostScript.cxx
+--- root-5.34.20.orig/graf2d/postscript/src/TPostScript.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf2d/postscript/src/TPostScript.cxx	2014-08-16 20:30:03.271041920 +0200
 @@ -238,6 +238,7 @@
  #include <string.h>
  #include <ctype.h>
@@ -708,43 +708,43 @@ diff -ur root-5.34.18.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.18/gr
  
  #include "Riostream.h"
  #include "Byteswap.h"
-@@ -1511,78 +1512,258 @@
+@@ -1511,63 +1512,244 @@
  {
     // Embed font in PS file.
  
 -   static const char *fonttable[32][2] = {
--	   { "Root.TTFont.0", "FreeSansBold.otf" },
--	   { "Root.TTFont.1", "FreeSerifItalic.otf" },
--	   { "Root.TTFont.2", "FreeSerifBold.otf" },
--	   { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
--	   { "Root.TTFont.4", "FreeSans.otf" },
--	   { "Root.TTFont.5", "FreeSansOblique.otf" },
--	   { "Root.TTFont.6", "FreeSansBold.otf" },
--	   { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
--	   { "Root.TTFont.8", "FreeMono.otf" },
--	   { "Root.TTFont.9", "FreeMonoOblique.otf" },
--	   { "Root.TTFont.10", "FreeMonoBold.otf" },
--	   { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
--	   { "Root.TTFont.12", "symbol.ttf" },
--	   { "Root.TTFont.13", "FreeSerif.otf" },
--	   { "Root.TTFont.14", "wingding.ttf" },
--	   { "Root.TTFont.15", "symbol.ttf" },
--	   { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
--	   { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
--	   { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
--	   { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
--	   { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
--	   { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
--	   { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
--	   { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
--	   { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
--	   { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
--	   { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
--	   { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
--	   { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
--	   { "Root.TTFont.ME", "DroidSansFallback.ttf" },
--	   { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
--	   { "Root.TTFont.CJKCothic", "DroidSansFallback.ttf" }
+-      { "Root.TTFont.0", "FreeSansBold.otf" },
+-      { "Root.TTFont.1", "FreeSerifItalic.otf" },
+-      { "Root.TTFont.2", "FreeSerifBold.otf" },
+-      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
+-      { "Root.TTFont.4", "FreeSans.otf" },
+-      { "Root.TTFont.5", "FreeSansOblique.otf" },
+-      { "Root.TTFont.6", "FreeSansBold.otf" },
+-      { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+-      { "Root.TTFont.8", "FreeMono.otf" },
+-      { "Root.TTFont.9", "FreeMonoOblique.otf" },
+-      { "Root.TTFont.10", "FreeMonoBold.otf" },
+-      { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
+-      { "Root.TTFont.12", "symbol.ttf" },
+-      { "Root.TTFont.13", "FreeSerif.otf" },
+-      { "Root.TTFont.14", "wingding.ttf" },
+-      { "Root.TTFont.15", "symbol.ttf" },
+-      { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
+-      { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
+-      { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
+-      { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
+-      { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
+-      { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
+-      { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
+-      { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
+-      { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
+-      { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
+-      { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
+-      { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
+-      { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
+-      { "Root.TTFont.ME", "DroidSansFallback.ttf" },
+-      { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
+-      { "Root.TTFont.CJKCothic", "DroidSansFallback.ttf" }
 -   };
 -
     PrintStr("%%IncludeResource: ProcSet (FontSetInit)@");
@@ -752,308 +752,288 @@ diff -ur root-5.34.18.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.18/gr
 -   // try to load font (font must be in Root.TTFontPath resource)
 -   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 -#ifdef TTFFONTDIR
--									   TTFFONTDIR
+-                                       TTFFONTDIR
 -#else // TTFFONTDIR
--									   "$(ROOTSYS)/fonts"
+-                                       "$(ROOTSYS)/fonts"
 -#endif // TTFFONTDIR
--									   );
+-                                       );
 -
     for (Int_t fontid = 1; fontid < 30; fontid++) {
--		if (fontid != 15) {
--			const char *filename = gEnv->GetValue(
--				fonttable[fontid][0], fonttable[fontid][1]);
--			char *ttfont = gSystem->Which(ttpath, filename,
--										  kReadPermission);
--
--			if(!ttfont) {
--				Error("TPostScript::FontEmbed",
--					  "font %d (filename `%s') not found in path",
--					  fontid, filename);
--			} else {
--				if (FontEmbedType2(ttfont)) {
--					// nothing
--				} else if(FontEmbedType1(ttfont)) {
--					// nothing
--				} else if(FontEmbedType42(ttfont)) {
--					// nothing
--				} else {
--					Error("TPostScript::FontEmbed",
--						  "failed to embed font %d (filename `%s')",
--						  fontid, filename);
--				}
--				delete [] ttfont;
--			}
--		}
-+      if (fontid != 15) {
+       if (fontid != 15) {
+-         const char *filename = gEnv->GetValue(
+-                                               fonttable[fontid][0], fonttable[fontid][1]);
+-         char *ttfont = gSystem->Which(ttpath, filename,
+-                                       kReadPermission);
 +
-+	 char *ttfont = NULL;
++         char *ttfont = NULL;
 +
-+	 if (fontid >= 16 && fontid <= 28) {
-+	    // Use the texlive-stix fonts if they exist
-+	    // Texlive-stix not packaged correctly - can not be found through fontconfig
-+	    // Use hardcoded path
-+	    const char *ttpath = "/usr/share/texlive/texmf-dist/fonts/opentype/public/stix";
-+	    switch (fontid) {
-+	    case 16:
-+	       ttfont = gSystem->Which(ttpath, "STIXGeneral.otf", kReadPermission);
-+	       break;
-+	    case 17:
-+	       ttfont = gSystem->Which(ttpath, "STIXGeneralItalic.otf", kReadPermission);
-+	       break;
-+	    case 18:
-+	       ttfont = gSystem->Which(ttpath, "STIXGeneralBol.otf", kReadPermission);
-+	       break;
-+	    case 19:
-+	       ttfont = gSystem->Which(ttpath, "STIXGeneralBolIta.otf", kReadPermission);
-+	       break;
-+	    case 20:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizOneSymReg.otf", kReadPermission);
-+	       break;
-+	    case 21:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizOneSymBol.otf", kReadPermission);
-+	       break;
-+	    case 22:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizTwoSymReg.otf", kReadPermission);
-+	       break;
-+	    case 23:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizTwoSymBol.otf", kReadPermission);
-+	       break;
-+	    case 24:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizThreeSymReg.otf", kReadPermission);
-+	       break;
-+	    case 25:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizThreeSymBol.otf", kReadPermission);
-+	       break;
-+	    case 26:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizFourSymReg.otf", kReadPermission);
-+	       break;
-+	    case 27:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizFourSymBol.otf", kReadPermission);
-+	       break;
-+	    case 28:
-+	       ttfont = gSystem->Which(ttpath, "STIXSizFiveSymReg.otf", kReadPermission);
-+	       break;
-+	    }
-+	 }
++         if (fontid >= 16 && fontid <= 28) {
++            // Use the texlive-stix fonts if they exist
++            // Texlive-stix not packaged correctly - can not be found through fontconfig
++            // Use hardcoded path
++            const char *ttpath = "/usr/share/texlive/texmf-dist/fonts/opentype/public/stix";
++            switch (fontid) {
++            case 16:
++               ttfont = gSystem->Which(ttpath, "STIXGeneral.otf", kReadPermission);
++               break;
++            case 17:
++               ttfont = gSystem->Which(ttpath, "STIXGeneralItalic.otf", kReadPermission);
++               break;
++            case 18:
++               ttfont = gSystem->Which(ttpath, "STIXGeneralBol.otf", kReadPermission);
++               break;
++            case 19:
++               ttfont = gSystem->Which(ttpath, "STIXGeneralBolIta.otf", kReadPermission);
++               break;
++            case 20:
++               ttfont = gSystem->Which(ttpath, "STIXSizOneSymReg.otf", kReadPermission);
++               break;
++            case 21:
++               ttfont = gSystem->Which(ttpath, "STIXSizOneSymBol.otf", kReadPermission);
++               break;
++            case 22:
++               ttfont = gSystem->Which(ttpath, "STIXSizTwoSymReg.otf", kReadPermission);
++               break;
++            case 23:
++               ttfont = gSystem->Which(ttpath, "STIXSizTwoSymBol.otf", kReadPermission);
++               break;
++            case 24:
++               ttfont = gSystem->Which(ttpath, "STIXSizThreeSymReg.otf", kReadPermission);
++               break;
++            case 25:
++               ttfont = gSystem->Which(ttpath, "STIXSizThreeSymBol.otf", kReadPermission);
++               break;
++            case 26:
++               ttfont = gSystem->Which(ttpath, "STIXSizFourSymReg.otf", kReadPermission);
++               break;
++            case 27:
++               ttfont = gSystem->Which(ttpath, "STIXSizFourSymBol.otf", kReadPermission);
++               break;
++            case 28:
++               ttfont = gSystem->Which(ttpath, "STIXSizFiveSymReg.otf", kReadPermission);
++               break;
++            }
++         }
 +
-+	 if (!ttfont) {
-+	    FcPattern *pat, *match;
-+	    FcCharSet *set = NULL;
-+	    FcResult result;
++         if (!ttfont) {
++            FcPattern *pat, *match;
++            FcCharSet *set = NULL;
++            FcResult result;
 +
-+	    pat = FcPatternCreate ();
++            pat = FcPatternCreate ();
 +
-+	    switch (fontid) {
-+	    case 1:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 2:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 3:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 4:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 5:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 6:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 7:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 8:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 9:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 10:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 11:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 12:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 13:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 14:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"wingdings");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 16:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 17:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 18:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 19:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
-+	       break;
-+	    case 20:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizeonesym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize1");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       // set = FcCharSetCreate ();
-+	       // FcCharSetAddChar (set, 0x239b); // Bracket pieces
-+	       // FcPatternAddCharSet (pat, FC_CHARSET, set);
-+	       break;
-+	    case 21:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizeonesym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize1");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       // set = FcCharSetCreate ();
-+	       // FcCharSetAddChar (set, 0x239b); // Bracket pieces
-+	       // FcPatternAddCharSet (pat, FC_CHARSET, set);
-+	       break;
-+	    case 22:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizetwosym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize2");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 23:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizetwosym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize2");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 24:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize13");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 25:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize3");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 26:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefoursym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize4");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 27:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefoursym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize4");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 28:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefivesym");
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize5");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       break;
-+	    case 29:
-+	       FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"droidsansfallback");
-+	       FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
-+	       FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
-+	       set = FcCharSetCreate ();
-+	       FcCharSetAddChar (set, 0x0410); // Cyrillic
-+	       FcCharSetAddChar (set, 0x4e00); // CJK
-+	       FcPatternAddCharSet (pat, FC_CHARSET, set);
-+	       break;
-+	    }
++            switch (fontid) {
++            case 1:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 2:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 3:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 4:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 5:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 6:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 7:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"arial");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 8:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 9:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 10:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 11:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"courier new");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 12:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"symbol");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 13:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"times new roman");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 14:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"wingdings");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 16:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 17:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 18:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 19:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixgeneral");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ITALIC);
++               break;
++            case 20:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizeonesym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize1");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               // set = FcCharSetCreate ();
++               // FcCharSetAddChar (set, 0x239b); // Bracket pieces
++               // FcPatternAddCharSet (pat, FC_CHARSET, set);
++               break;
++            case 21:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizeonesym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize1");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               // set = FcCharSetCreate ();
++               // FcCharSetAddChar (set, 0x239b); // Bracket pieces
++               // FcPatternAddCharSet (pat, FC_CHARSET, set);
++               break;
++            case 22:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizetwosym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize2");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 23:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizetwosym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize2");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 24:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize13");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 25:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize3");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 26:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefoursym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize4");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 27:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefoursym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize4");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_BOLD);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 28:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizefivesym");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize5");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               break;
++            case 29:
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"droidsansfallback");
++               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
++               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
++               set = FcCharSetCreate ();
++               FcCharSetAddChar (set, 0x0410); // Cyrillic
++               FcCharSetAddChar (set, 0x4e00); // CJK
++               FcPatternAddCharSet (pat, FC_CHARSET, set);
++               break;
++            }
 +
-+	    FcConfigSubstitute (NULL, pat, FcMatchPattern);
-+	    FcDefaultSubstitute (pat);
-+	    match = FcFontMatch (NULL, pat, &result);
-+	    char *ttfnt;
-+	    FcPatternGetString (match, FC_FILE, 0, (FcChar8**)&ttfnt);
-+	    ttfont = StrDup(ttfnt);
-+	    FcPatternDestroy (match);
-+	    FcPatternDestroy (pat);
-+	    if (set) FcCharSetDestroy (set);
-+	 }
-+
-+	 if(!ttfont) {
-+	    Error("TPostScript::FontEmbed", "font %d not found in path",
-+		  fontid);
-+	 } else {
-+	    if (FontEmbedType2(ttfont)) {
-+	       // nothing
-+	    } else if(FontEmbedType1(ttfont)) {
-+	       // nothing
-+	    } else if(FontEmbedType42(ttfont)) {
-+	       // nothing
-+	    } else {
-+	       Error("TPostScript::FontEmbed", "failed to embed font %d)",
-+		     fontid);
-+	    }
-+	    delete [] ttfont;
-+	 }
-+      }
-    }
-    PrintStr("%%IncludeResource: font Times-Roman@");
-    PrintStr("%%IncludeResource: font Times-Italic@");
++            FcConfigSubstitute (NULL, pat, FcMatchPattern);
++            FcDefaultSubstitute (pat);
++            match = FcFontMatch (NULL, pat, &result);
++            char *ttfnt;
++            FcPatternGetString (match, FC_FILE, 0, (FcChar8**)&ttfnt);
++            ttfont = StrDup(ttfnt);
++            FcPatternDestroy (match);
++            FcPatternDestroy (pat);
++            if (set) FcCharSetDestroy (set);
++         }
+ 
+          if(!ttfont) {
+-            Error("TPostScript::FontEmbed",
+-                  "font %d (filename `%s') not found in path",
+-                  fontid, filename);
++            Error("TPostScript::FontEmbed", "font %d not found in path",
++                  fontid);
+          } else {
+             if (FontEmbedType2(ttfont)) {
+                // nothing
+@@ -1576,9 +1758,8 @@
+             } else if(FontEmbedType42(ttfont)) {
+                // nothing
+             } else {
+-               Error("TPostScript::FontEmbed",
+-                     "failed to embed font %d (filename `%s')",
+-                     fontid, filename);
++               Error("TPostScript::FontEmbed", "failed to embed font %d)",
++                     fontid);
+             }
+             delete [] ttfont;
+          }
 @@ -2571,10 +2752,10 @@
- 	   { "Root.PSFont.5",             "/Helvetica-Oblique" },
- 	   { "Root.PSFont.6",             "/Helvetica-Bold" },
- 	   { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
--	   { "Root.PSFont.8",             "/Courrier" },
--	   { "Root.PSFont.9",             "/Courrier-Oblique" },
--	   { "Root.PSFont.10",            "/Courrier-Bold" },
--	   { "Root.PSFont.11",            "/Courrier-BoldOblique" },
-+	   { "Root.PSFont.8",             "/Courier" },
-+	   { "Root.PSFont.9",             "/Courier-Oblique" },
-+	   { "Root.PSFont.10",            "/Courier-Bold" },
-+	   { "Root.PSFont.11",            "/Courier-BoldOblique" },
- 	   { "Root.PSFont.12",            "/Symbol" },
- 	   { "Root.PSFont.13",            "/Times-Roman" },
- 	   { "Root.PSFont.14",            "/ZapfDingbats" },
-diff -ur root-5.34.18.orig/graf3d/gl/Module.mk root-5.34.18/graf3d/gl/Module.mk
---- root-5.34.18.orig/graf3d/gl/Module.mk	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf3d/gl/Module.mk	2014-03-15 18:15:22.760445187 +0100
+       { "Root.PSFont.5",             "/Helvetica-Oblique" },
+       { "Root.PSFont.6",             "/Helvetica-Bold" },
+       { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
+-      { "Root.PSFont.8",             "/Courrier" },
+-      { "Root.PSFont.9",             "/Courrier-Oblique" },
+-      { "Root.PSFont.10",            "/Courrier-Bold" },
+-      { "Root.PSFont.11",            "/Courrier-BoldOblique" },
++      { "Root.PSFont.8",             "/Courier" },
++      { "Root.PSFont.9",             "/Courier-Oblique" },
++      { "Root.PSFont.10",            "/Courier-Bold" },
++      { "Root.PSFont.11",            "/Courier-BoldOblique" },
+       { "Root.PSFont.12",            "/Symbol" },
+       { "Root.PSFont.13",            "/Times-Roman" },
+       { "Root.PSFont.14",            "/ZapfDingbats" },
+diff -ur root-5.34.20.orig/graf3d/gl/Module.mk root-5.34.20/graf3d/gl/Module.mk
+--- root-5.34.20.orig/graf3d/gl/Module.mk	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf3d/gl/Module.mk	2014-08-16 19:24:53.377132564 +0200
 @@ -78,7 +78,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
@@ -1063,9 +1043,9 @@ diff -ur root-5.34.18.orig/graf3d/gl/Module.mk root-5.34.18/graf3d/gl/Module.mk
  
  $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
  		$(MAKEDIR)
-diff -ur root-5.34.18.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.18/graf3d/gl/src/TGLFontManager.cxx
---- root-5.34.18.orig/graf3d/gl/src/TGLFontManager.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf3d/gl/src/TGLFontManager.cxx	2014-03-22 09:22:22.715637375 +0100
+diff -ur root-5.34.20.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.20/graf3d/gl/src/TGLFontManager.cxx
+--- root-5.34.20.orig/graf3d/gl/src/TGLFontManager.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf3d/gl/src/TGLFontManager.cxx	2014-08-16 19:24:53.378132573 +0200
 @@ -36,6 +36,7 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -1388,9 +1368,9 @@ diff -ur root-5.34.18.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.18/graf3d/
     fgFontFileArray.Add(new TObjString("STIXGeneral.otf"));          // 200
     fgFontFileArray.Add(new TObjString("STIXGeneralItalic.otf"));    // 210
     fgFontFileArray.Add(new TObjString("STIXGeneralBol.otf"));       // 220
-diff -ur root-5.34.18.orig/graf3d/gl/src/TGLText.cxx root-5.34.18/graf3d/gl/src/TGLText.cxx
---- root-5.34.18.orig/graf3d/gl/src/TGLText.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/graf3d/gl/src/TGLText.cxx	2014-03-22 09:15:17.075732162 +0100
+diff -ur root-5.34.20.orig/graf3d/gl/src/TGLText.cxx root-5.34.20/graf3d/gl/src/TGLText.cxx
+--- root-5.34.20.orig/graf3d/gl/src/TGLText.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/graf3d/gl/src/TGLText.cxx	2014-08-16 19:24:53.378132573 +0200
 @@ -34,6 +34,8 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -1530,9 +1510,9 @@ diff -ur root-5.34.18.orig/graf3d/gl/src/TGLText.cxx root-5.34.18/graf3d/gl/src/
 -   delete [] ttfont;
 +      Error("SetGLTextFont","Cannot set FTGL::FaceSize");
  }
-diff -ur root-5.34.18.orig/gui/gui/src/TGApplication.cxx root-5.34.18/gui/gui/src/TGApplication.cxx
---- root-5.34.18.orig/gui/gui/src/TGApplication.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/gui/gui/src/TGApplication.cxx	2014-03-15 18:15:22.761445175 +0100
+diff -ur root-5.34.20.orig/gui/gui/src/TGApplication.cxx root-5.34.20/gui/gui/src/TGApplication.cxx
+--- root-5.34.20.orig/gui/gui/src/TGApplication.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/gui/gui/src/TGApplication.cxx	2014-08-16 19:24:53.379132582 +0200
 @@ -83,25 +83,12 @@
     gROOT->SetBatch(kFALSE);
  
@@ -1560,9 +1540,9 @@ diff -ur root-5.34.18.orig/gui/gui/src/TGApplication.cxx root-5.34.18/gui/gui/sr
     }
  
     // Create the canvas colors early so they are allocated before
-diff -ur root-5.34.18.orig/gui/gui/src/TGSpeedo.cxx root-5.34.18/gui/gui/src/TGSpeedo.cxx
---- root-5.34.18.orig/gui/gui/src/TGSpeedo.cxx	2014-03-14 16:21:52.000000000 +0100
-+++ root-5.34.18/gui/gui/src/TGSpeedo.cxx	2014-03-15 18:15:22.761445175 +0100
+diff -ur root-5.34.20.orig/gui/gui/src/TGSpeedo.cxx root-5.34.20/gui/gui/src/TGSpeedo.cxx
+--- root-5.34.20.orig/gui/gui/src/TGSpeedo.cxx	2014-08-13 15:03:22.000000000 +0200
++++ root-5.34.20/gui/gui/src/TGSpeedo.cxx	2014-08-16 19:24:53.379132582 +0200
 @@ -119,8 +119,7 @@
  
     TString sc;
