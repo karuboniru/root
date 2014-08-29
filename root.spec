@@ -36,7 +36,7 @@
 Name:		root
 Version:	5.34.20
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -174,10 +174,10 @@ BuildRequires:	font(liberationmono)
 BuildRequires:	liberation-fonts
 %endif
 BuildRequires:	urw-fonts
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
 BuildRequires:	font(droidsansfallback)
 %endif
-%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 18
 # STIX font version 1.1 - not backwards compatible with earlier versions
 # We use the texlive supplied version 1.0 instead of font(stix)
 BuildRequires:	texlive-stix
@@ -187,7 +187,7 @@ BuildRequires:	texlive-stix
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsizeonesym)
 %else
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
 # STIX font version 0.9
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsize1)
@@ -272,10 +272,10 @@ Requires:	font(liberationmono)
 Requires:	liberation-fonts
 %endif
 Requires:	urw-fonts
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
 Requires:	font(droidsansfallback)
 %endif
-%if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 7
+%if %{?fedora}%{!?fedora:0} >= 18
 # STIX font version 1.1 - not backwards compatible with earlier versions
 # We use the texlive supplied version 1.0 instead of font(stix)
 Requires:	texlive-stix
@@ -285,7 +285,7 @@ Requires:	texlive-stix
 Requires:	font(stixgeneral)
 Requires:	font(stixsizeonesym)
 %else
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
+%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
 # STIX font version 0.9
 Requires:	font(stixgeneral)
 Requires:	font(stixsize1)
@@ -333,10 +333,6 @@ with CINT with any class for which a Reflex dictionary is provided.
 Summary:	Parallel ROOT Facility - distributed, parallel computing
 Group:		Applications/Engineering
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
-Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
-%if %{xrootd}
-Requires:	xrootd-server%{?_isa}
-%endif
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
 Requires(post):		chkconfig
@@ -1014,6 +1010,8 @@ session in ROOT.
 %package xproof
 Summary:	XPROOF extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
+Requires:	xrootd-server%{?_isa}
 
 %description xproof
 This package contains the xproof extension for ROOT. This provides a
@@ -1966,16 +1964,9 @@ fi
 %{_bindir}/proofserv
 %{_bindir}/proofserv.exe
 %{_bindir}/xpdtest
-%if %{xrootd}
-%{_bindir}/proofexecv
-%{_bindir}/xproofd
-%endif
 %{_mandir}/man1/proofd.1*
 %{_mandir}/man1/proofserv.1*
 %{_mandir}/man1/xpdtest.1*
-%if %{xrootd}
-%{_mandir}/man1/xproofd.1*
-%endif
 %{_initrddir}/proofd
 
 %files rootd
@@ -2380,6 +2371,9 @@ fi
 
 %if %{xrootd}
 %files xproof -f includelist-proof-proofx
+%{_bindir}/proofexecv
+%{_bindir}/xproofd
+%{_mandir}/man1/xproofd.1*
 %{_libdir}/%{name}/libProofx.*
 %{_libdir}/%{name}/libXrdProofd.*
 %{_datadir}/%{name}/plugins/TProofMgr/P010_TXProofMgr.C
@@ -2435,6 +2429,11 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Aug 28 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-2
+- Move xproofd binaries from root-proofd to root-xproof
+- Adjust EPEL 7 font dependencies
+- Rebuild using new binutils (ld bug fixed - F21+)
+
 * Wed Aug 20 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-1
 - Update to 5.34.20
 - Re-enable xrootd support for F21+ and EPEL7 (now ported to xrootd 4)
