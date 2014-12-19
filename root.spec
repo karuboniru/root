@@ -34,9 +34,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.20
+Version:	5.34.24
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -78,10 +78,10 @@ Patch6:		%{name}-no-extra-formats.patch
 Patch7:		%{name}-hdfs.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
 Patch8:		%{name}-dont-link-jvm.patch
-#		Avoid deprecated __USE_BSD
-Patch9:		%{name}-bsd-misc.patch
 #		Use local copy of input file during documentation generation
-Patch10:	%{name}-usa.patch
+Patch9:		%{name}-usa.patch
+#		Make sure xrootd version is known
+Patch10:	%{name}-xrdversion.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -1345,6 +1345,7 @@ unset QTINC
 	    --disable-chirp \
 	    --disable-cling \
 	    --disable-cxx11 \
+	    --disable-cxx14 \
 	    --disable-glite \
 	    --disable-libcxx \
 	    --disable-monalisa \
@@ -2429,6 +2430,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Fri Dec 19 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.24-1
+- Update to 5.34.24
+- Drop patch root-bsd-misc.patch
+
 * Thu Aug 28 2014 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.20-2
 - Move xproofd binaries from root-proofd to root-xproof
 - Adjust EPEL 7 font dependencies

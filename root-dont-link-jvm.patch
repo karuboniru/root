@@ -1,21 +1,21 @@
-diff -ur root-5.34.11.orig/cmake/modules/RootConfiguration.cmake root-5.34.11/cmake/modules/RootConfiguration.cmake
---- root-5.34.11.orig/cmake/modules/RootConfiguration.cmake	2013-10-31 16:46:31.000000000 +0100
-+++ root-5.34.11/cmake/modules/RootConfiguration.cmake	2013-11-06 09:43:56.008974184 +0100
-@@ -167,10 +167,6 @@
- set(hdfslib ${HDFS_LIBRARY})
+diff -ur root-5.34.24.orig/cmake/modules/RootConfiguration.cmake root-5.34.24/cmake/modules/RootConfiguration.cmake
+--- root-5.34.24.orig/cmake/modules/RootConfiguration.cmake	2014-12-02 18:12:03.000000000 +0100
++++ root-5.34.24/cmake/modules/RootConfiguration.cmake	2014-12-19 11:41:09.559330313 +0100
+@@ -257,10 +257,6 @@
+ string(REPLACE ";" " " hdfslib "${HDFS_LIBRARY}")
  set(hdfsincdir ${HDFS_INCLUDE_DIR})
  
 -set(jniincdir ${Java_INCLUDE_DIRS})
--set(jvmlib ${Java_LIBRARIES})
+-string(REPLACE ";" " " jvmlib "${Java_LIBRARIES}")
 -set(jvmlibdir ${Java_LIBRARY_DIR})
 -
  set(buildalien ${value${alien}})
  set(alienlibdir ${ALIEN_LIBRARY_DIR})
- set(alienlib ${ALIEN_LIBRARY})
-diff -ur root-5.34.11.orig/config/Makefile.in root-5.34.11/config/Makefile.in
---- root-5.34.11.orig/config/Makefile.in	2013-10-31 16:46:31.000000000 +0100
-+++ root-5.34.11/config/Makefile.in	2013-11-06 09:41:09.145976839 +0100
-@@ -198,9 +198,6 @@
+ string(REPLACE ";" " " alienlib "${ALIEN_LIBRARY}")
+diff -ur root-5.34.24.orig/config/Makefile.in root-5.34.24/config/Makefile.in
+--- root-5.34.24.orig/config/Makefile.in	2014-12-02 18:12:03.000000000 +0100
++++ root-5.34.24/config/Makefile.in	2014-12-19 11:39:26.580520172 +0100
+@@ -207,9 +207,6 @@
  HDFSLIBDIR     := @hdfslibdir@
  HDFSCLILIB     := @hdfslib@
  HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
@@ -25,10 +25,10 @@ diff -ur root-5.34.11.orig/config/Makefile.in root-5.34.11/config/Makefile.in
  
  BUILDALIEN     := @buildalien@
  ALIENLIBDIR    := @alienlibdir@
-diff -ur root-5.34.11.orig/configure root-5.34.11/configure
---- root-5.34.11.orig/configure	2013-10-31 16:46:31.000000000 +0100
-+++ root-5.34.11/configure	2013-11-06 09:39:57.651833708 +0100
-@@ -1682,8 +1682,6 @@
+diff -ur root-5.34.24.orig/configure root-5.34.24/configure
+--- root-5.34.24.orig/configure	2014-12-02 18:12:03.000000000 +0100
++++ root-5.34.24/configure	2014-12-19 11:39:26.607519860 +0100
+@@ -1753,8 +1753,6 @@
    hdfs-incdir        HDFS support, location of hdfs.h
    hdfs-libdir        HDFS support, location of libhdfs
    iosvers            iOS SDK version (6.1, 7.0), default will be latest SDK
@@ -37,7 +37,7 @@ diff -ur root-5.34.11.orig/configure root-5.34.11/configure
    krb5               Kerberos5 support, location of Kerberos distribution
    krb5-incdir        Kerberos5 support, location of krb5.h
    krb5-libdir        Kerberos5 support, location of libkrb5
-@@ -2047,8 +2045,6 @@
+@@ -2141,8 +2139,6 @@
        --with-hdfs-incdir=*)    hdfsincdir=$optarg    ; enable_hdfs="yes"    ;;
        --with-hdfs-libdir=*)    hdfslibdir=$optarg    ; enable_hdfs="yes"    ;;
        --with-iosvers=*)        iosvers=$optarg       ;;
@@ -46,7 +46,7 @@ diff -ur root-5.34.11.orig/configure root-5.34.11/configure
        --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
        --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
        --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
-@@ -4082,17 +4078,6 @@
+@@ -4285,17 +4281,6 @@
      hdfsinc=$found_hdr
      hdfsincdir=$found_dir
  
@@ -64,7 +64,7 @@ diff -ur root-5.34.11.orig/configure root-5.34.11/configure
      check_library "libhdfs" "$enable_shared" "$hdfslibdir" \
          $HDFS ${HDFS:+$HDFS/lib} ${HDFS:+$HDFS/build/libhdfs} \
          $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/build/libhdfs} \
-@@ -4100,26 +4085,12 @@
+@@ -4303,26 +4288,12 @@
      hdfslib=$found_lib
      hdfslibdir=$found_dir
  
@@ -93,7 +93,7 @@ diff -ur root-5.34.11.orig/configure root-5.34.11/configure
                  if test $link_result -eq 0 ; then
                      enable_hdfs="no"
                  fi
-@@ -6843,9 +6814,6 @@
+@@ -7324,9 +7295,6 @@
      -e "s|@iosvers@|$iosvers|"                  \
      -e "s|@iconpath@|$iconpath|"                \
      -e "s|@incdir@|$incdir|"                    \
@@ -103,9 +103,9 @@ diff -ur root-5.34.11.orig/configure root-5.34.11/configure
      -e "s|@krb5incdir@|$krb5incdir|"            \
      -e "s|@krb5lib@|$krb5lib|"                  \
      -e "s|@krb5libdir@|$krb5libdir|"            \
-diff -ur root-5.34.11.orig/io/hdfs/Module.mk root-5.34.11/io/hdfs/Module.mk
---- root-5.34.11.orig/io/hdfs/Module.mk	2013-10-31 16:46:31.000000000 +0100
-+++ root-5.34.11/io/hdfs/Module.mk	2013-11-06 09:42:21.320111053 +0100
+diff -ur root-5.34.24.orig/io/hdfs/Module.mk root-5.34.24/io/hdfs/Module.mk
+--- root-5.34.24.orig/io/hdfs/Module.mk	2014-12-02 18:12:03.000000000 +0100
++++ root-5.34.24/io/hdfs/Module.mk	2014-12-19 11:39:26.608519849 +0100
 @@ -44,7 +44,7 @@
  $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
