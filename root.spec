@@ -36,7 +36,7 @@
 Name:		root
 Version:	5.34.24
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2430,6 +2430,9 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Thu Jan 29 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.24-3
+- Rebuild with fixed cairo (bz 1183242)
+
 * Sat Jan 17 2015 Mamoru TASAKA <mtasaka@fedoraproject.org> - 5.34.24-2
 - Rebuild for https://fedoraproject.org/wiki/Changes/Ruby_2.2
 
