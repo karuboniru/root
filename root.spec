@@ -1,6 +1,6 @@
 %{!?python_sitearch: %global python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 %global __python26 /usr/bin/python26
 %{!?python26_sitearch: %global python26_sitearch %(%{__python26} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 # Disable the default python byte code compilation
@@ -34,9 +34,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.24
+Version:	5.34.26
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -80,8 +80,6 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
-#		Make sure xrootd version is known
-Patch10:	%{name}-xrdversion.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -128,7 +126,7 @@ BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 BuildRequires:	python26-devel
 %endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
@@ -159,7 +157,7 @@ BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
 BuildRequires:	graphviz-devel
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 BuildRequires:	graphviz-gd
 %endif
 BuildRequires:	expat-devel
@@ -369,7 +367,7 @@ Group:		Applications/Engineering
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 %package python26
 Summary:	Python extension for ROOT
 Group:		Applications/Engineering
@@ -1128,7 +1126,7 @@ Group:		Applications/Engineering
 BuildArch:	noarch
 %endif
 Requires:	%{name} = %{version}-%{release}
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 Requires:	emacs >= %{emacs_version}
 %else
 Requires:	emacs(bin) >= %{emacs_version}
@@ -1165,7 +1163,6 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
-%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1213,6 +1210,8 @@ rm graf3d/gl/src/gl2ps.cxx graf3d/gl/inc/gl2ps.h
 sed 's/^GLLIBS *:= .* $(OPENGLLIB)/& -lgl2ps/' -i graf3d/gl/Module.mk
 #  * unuran
 rm -rf math/unuran/src/*.tar.gz
+#  * xrootd-private-devel headers
+rm -rf proof/xrdinc
 
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
@@ -1235,7 +1234,7 @@ sed s/c1/c1c/g -i tutorials/graphics/earth.C
 sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
 sed s/c1/c1simp/g -i tutorials/hsimple.C
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 # Build PyROOT for python 2.6
 cp -pr bindings/pyroot bindings/pyroot26
 sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
@@ -1273,14 +1272,11 @@ unset QTINC
 	    --enable-gdml \
 	    --enable-genvector \
 	    --enable-gfal \
-	      --with-gfal-incdir=%{_includedir}/gfal2 \
-	      --with-gfal-libdir=%{_libdir} \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
 %if %{?fedora}%{!?fedora:0} >= 20
 	    --enable-hdfs \
-	      --with-hdfs-incdir=%{_includedir}/hadoop \
 %else
 	    --disable-hdfs \
 %endif
@@ -1309,8 +1305,6 @@ unset QTINC
 %endif
 	    --enable-reflex \
 	    --enable-rfio \
-	      --with-rfio-incdir=%{_includedir}/dpm \
-	      --with-rfio-libdir=%{_libdir} \
 	    --enable-roofit \
 	    --enable-ruby \
 	    --enable-shadowpw \
@@ -1327,8 +1321,6 @@ unset QTINC
 	    --enable-xml \
 %if %{xrootd}
 	    --enable-xrootd \
-	      --with-xrootd-incdir=%{_includedir}/xrootd \
-	      --with-xrootd-libdir=%{_libdir} \
 %else
 	    --disable-xrootd \
 %endif
@@ -1361,7 +1353,7 @@ unset QTINC
 make OPTFLAGS="%{optflags}" \
 	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags}
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 # Build PyROOT for python 2.6
 mkdir pyroot26
 cp bindings/pyroot26/ROOT.py pyroot26
@@ -1379,17 +1371,16 @@ rm -rf %{buildroot}
 make install DESTDIR=%{buildroot}
 
 # Move python modules to the sitelib
-mkdir -p ${RPM_BUILD_ROOT}%{python_sitearch}
-mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/*.py* \
-   ${RPM_BUILD_ROOT}%{python_sitearch}
+mkdir -p %{buildroot}%{python_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
 
 # Do emacs byte compilation
 emacs -batch -no-site-file -f batch-byte-compile \
-    ${RPM_BUILD_ROOT}%{emacs_lispdir}/%{name}/*.el
+    %{buildroot}%{emacs_lispdir}/%{name}/*.el
 
 # Install desktop entry and icon
-mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/applications
-mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/icons/hicolor/48x48/apps
+mkdir -p %{buildroot}%{_datadir}/applications
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/48x48/apps
 
 cat > root.desktop << EOF
 [Desktop Entry]
@@ -1405,104 +1396,103 @@ Categories=Utility;
 Encoding=UTF-8
 EOF
 
-desktop-file-install --dir=${RPM_BUILD_ROOT}%{_datadir}/applications \
+desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
 		     --vendor "" root.desktop
 install -p -m 644 build/package/debian/root-system-bin.png \
-    ${RPM_BUILD_ROOT}%{_datadir}/icons/hicolor/48x48/apps/root.png
+    %{buildroot}%{_datadir}/icons/hicolor/48x48/apps/root.png
 
 # Install mime type and icon
-mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/mime/packages
-mkdir -p ${RPM_BUILD_ROOT}%{_datadir}/icons/hicolor/48x48/mimetypes
+mkdir -p %{buildroot}%{_datadir}/mime/packages
+mkdir -p %{buildroot}%{_datadir}/icons/hicolor/48x48/mimetypes
 install -p -m 644 build/package/debian/root-system-bin.sharedmimeinfo \
-    ${RPM_BUILD_ROOT}%{_datadir}/mime/packages/root.xml
+    %{buildroot}%{_datadir}/mime/packages/root.xml
 install -p -m 644 build/package/debian/application-x-root.png \
-    ${RPM_BUILD_ROOT}%{_datadir}/icons/hicolor/48x48/mimetypes
+    %{buildroot}%{_datadir}/icons/hicolor/48x48/mimetypes
 
 # Init scripts for services
-mkdir -p ${RPM_BUILD_ROOT}%{_initrddir}
-mv ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/proofd.rc.d \
-   ${RPM_BUILD_ROOT}%{_initrddir}/proofd
-mv ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/rootd.rc.d \
-   ${RPM_BUILD_ROOT}%{_initrddir}/rootd
+mkdir -p %{buildroot}%{_initrddir}
+mv %{buildroot}%{_datadir}/%{name}/daemons/proofd.rc.d \
+   %{buildroot}%{_initrddir}/proofd
+mv %{buildroot}%{_datadir}/%{name}/daemons/rootd.rc.d \
+   %{buildroot}%{_initrddir}/rootd
 
 # Turn off services by default
-sed 's/\(chkconfig: \)[0-9]*/\1-/' -i ${RPM_BUILD_ROOT}%{_initrddir}/*
+sed 's/\(chkconfig: \)[0-9]*/\1-/' -i %{buildroot}%{_initrddir}/*
 
 # The Python interface library must be in two places
-mkdir -p ${RPM_BUILD_ROOT}%{python_sitearch}
-mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion} \
-   ${RPM_BUILD_ROOT}%{python_sitearch}/libPyROOT.so
-%if "%{?rhel}" == "5"
-touch ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+mkdir -p %{buildroot}%{python_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{libversion} \
+   %{buildroot}%{python_sitearch}/libPyROOT.so
+%if %{?rhel}%{!?rhel:0} == 5
+touch %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %else
 ln -s ..`sed 's!%{_libdir}!!' <<< %{python_sitearch}`/libPyROOT.so \
-   ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+   %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %endif
 
-%if "%{?rhel}" == "5"
-mkdir -p ${RPM_BUILD_ROOT}%{python26_sitearch}
+%if %{?rhel}%{!?rhel:0} == 5
+mkdir -p %{buildroot}%{python26_sitearch}
 install pyroot26/libPyROOT.so.%{libversion} \
-   ${RPM_BUILD_ROOT}%{python26_sitearch}/libPyROOT.so
-install -m 644 pyroot26/ROOT.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
-install -m 644 pyroot26/cppyy.py* ${RPM_BUILD_ROOT}%{python26_sitearch}
+   %{buildroot}%{python26_sitearch}/libPyROOT.so
+install -m 644 pyroot26/ROOT.py* %{buildroot}%{python26_sitearch}
+install -m 644 pyroot26/cppyy.py* %{buildroot}%{python26_sitearch}
 %endif
 
 # Same for the Ruby interface library
-mkdir -p ${RPM_BUILD_ROOT}%{ruby_installdir}
-mv ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion} \
-   ${RPM_BUILD_ROOT}%{ruby_installdir}/libRuby.so
+mkdir -p %{buildroot}%{ruby_installdir}
+mv %{buildroot}%{_libdir}/%{name}/libRuby.so.%{libversion} \
+   %{buildroot}%{ruby_installdir}/libRuby.so
 ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_installdir}`/libRuby.so \
-   ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libRuby.so.%{libversion}
+   %{buildroot}%{_libdir}/%{name}/libRuby.so.%{libversion}
 
 # These should be in PATH
-mv ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils/pq2/pq2* \
-   ${RPM_BUILD_ROOT}%{_bindir}
+mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
 # Remove some junk
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.plist
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/*.xinetd
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/daemons/README
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/hostcert.conf
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/*.sample
-rm -rf ${RPM_BUILD_ROOT}%{_datadir}/%{name}/proof/utils
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/root.desktop
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/system.plugins-ios
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/gitinfo.txt
+rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
+rm %{buildroot}%{_datadir}/%{name}/daemons/*.xinetd
+rm %{buildroot}%{_datadir}/%{name}/daemons/README
+rm %{buildroot}%{_datadir}/%{name}/hostcert.conf
+rm %{buildroot}%{_datadir}/%{name}/proof/*.sample
+rm -rf %{buildroot}%{_datadir}/%{name}/proof/utils
+rm %{buildroot}%{_datadir}/%{name}/root.desktop
+rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
+rm %{buildroot}%{_datadir}/%{name}/gitinfo.txt
 %if %{?fedora}%{!?fedora:0} < 13 && %{?rhel}%{!?rhel:0} < 6
-rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libAfterImage.a
+rm %{buildroot}%{_libdir}/%{name}/libAfterImage.a
 %endif
-rm ${RPM_BUILD_ROOT}%{_libdir}/%{name}/libmathtext.a
-rm ${RPM_BUILD_ROOT}%{_bindir}/setxrd*
-rm ${RPM_BUILD_ROOT}%{_bindir}/thisroot*
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/cint.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/g2rootold.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/makecint.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/proofserva.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/roota.1
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/setup-pq2.1
+rm %{buildroot}%{_libdir}/%{name}/libmathtext.a
+rm %{buildroot}%{_bindir}/setxrd*
+rm %{buildroot}%{_bindir}/thisroot*
+rm %{buildroot}%{_mandir}/man1/cint.1
+rm %{buildroot}%{_mandir}/man1/g2rootold.1
+rm %{buildroot}%{_mandir}/man1/makecint.1
+rm %{buildroot}%{_mandir}/man1/proofserva.1
+rm %{buildroot}%{_mandir}/man1/roota.1
+rm %{buildroot}%{_mandir}/man1/setup-pq2.1
 %if %{xrootd} == 0
-rm ${RPM_BUILD_ROOT}%{_mandir}/man1/xproofd.1
+rm %{buildroot}%{_mandir}/man1/xproofd.1
 %endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
-rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.cw
-rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/*.pri
+rm %{buildroot}%{_includedir}/%{name}/*.cw
+rm %{buildroot}%{_includedir}/%{name}/*.pri
 %endif
-rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/proofdp.h
-rm ${RPM_BUILD_ROOT}%{_includedir}/%{name}/rootdp.h
-rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/BUILDSYSTEM
-rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/ChangeLog-2-24
-rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/INSTALL
-rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/README.ALIEN
-rm ${RPM_BUILD_ROOT}%{_pkgdocdir}/README.MONALISA
+rm %{buildroot}%{_includedir}/%{name}/proofdp.h
+rm %{buildroot}%{_includedir}/%{name}/rootdp.h
+rm %{buildroot}%{_pkgdocdir}/BUILDSYSTEM
+rm %{buildroot}%{_pkgdocdir}/ChangeLog-2-24
+rm %{buildroot}%{_pkgdocdir}/INSTALL
+rm %{buildroot}%{_pkgdocdir}/README.ALIEN
+rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
 # Remove cintdll sources - keep the prec_stl directory
-rm -rf ${RPM_BUILD_ROOT}%{_libdir}/%{name}/cint/cint/lib/{[^p],p[^r]}*
+rm -rf %{buildroot}%{_libdir}/%{name}/cint/cint/lib/{[^p],p[^r]}*
 
 # Only used on Windows
-rm ${RPM_BUILD_ROOT}%{_datadir}/%{name}/macros/fileopen.C
+rm %{buildroot}%{_datadir}/%{name}/macros/fileopen.C
 
 # Remove plugin definitions for non-built and obsolete plugins
-pushd ${RPM_BUILD_ROOT}%{_datadir}/%{name}/plugins
+pushd %{buildroot}%{_datadir}/%{name}/plugins
 rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TDataSetManager/P020_TDataSetManagerAliEn.C
@@ -1549,9 +1539,9 @@ rmdir TImagePlugin
 popd
 
 # Create ldconfig configuration
-mkdir -p ${RPM_BUILD_ROOT}%{_sysconfdir}/ld.so.conf.d
+mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d
 echo %{_libdir}/%{name} > \
-     ${RPM_BUILD_ROOT}%{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
+     %{buildroot}%{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
 
 # Generate documentation
 echo Rint.Includes: 0 > .rootrc
@@ -1563,7 +1553,7 @@ install -m 644 -p %{SOURCE6} tutorials/hist/usa.root
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
-mv htmldoc ${RPM_BUILD_ROOT}%{_pkgdocdir}/html
+mv htmldoc %{buildroot}%{_pkgdocdir}/html
 
 # Create includelist files ...
 for module in `find * -name Module.mk` ; do
@@ -1582,7 +1572,7 @@ cat includelist-io-xmlparser >> includelist-io-xml
 cat includelist-proof-proofplayer >> includelist-proof-proof
 cat includelist-net-netx* > includelist-netx
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 # Python byte code compilation
 %{__python} -c 'import compileall; compileall.compile_dir("%{buildroot}%{_libdir}/%{name}/python", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
 %{__python} -O -c 'import compileall; compileall.compile_dir("%{buildroot}%{_libdir}/%{name}/python", 10, "%{_libdir}/%{name}/python", 1)' > /dev/null
@@ -1639,7 +1629,7 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service proofd condrestart >/dev/null 2>&1 || :
 fi
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 %post python
 [ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
     readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
@@ -1976,7 +1966,7 @@ fi
 %{_initrddir}/rootd
 
 %files python -f includelist-bindings-pyroot
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.5
@@ -1988,7 +1978,7 @@ fi
 %{python_sitearch}/ROOT.py*
 %{python_sitearch}/cppyy.py*
 
-%if "%{?rhel}" == "5"
+%if %{?rhel}%{!?rhel:0} == 5
 %files python26 -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
@@ -2430,6 +2420,10 @@ fi
 %{emacs_lispdir}/root/*.el
 
 %changelog
+* Tue Feb 24 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.26-1
+- Update to 5.34.26
+- Drop patch root-xrdversion.patch
+
 * Thu Jan 29 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.24-3
 - Rebuild with fixed cairo (bz 1183242)
 
