@@ -1,0 +1,69 @@
+From 126c993d3c432ed09abc963bdbb1dc18f229a3e3 Mon Sep 17 00:00:00 2001
+From: David Abdurachmanov <davidlt@cern.ch>
+Date: Wed, 11 Mar 2015 11:31:13 +0100
+Subject: [PATCH 1/1] Regenerate iosenum.linuxarm643 for GCC 5
+
+There are two `iosenum.cxx` in ROOT5 source. Previously I used
+`./cint/cint/include/iosenum.cxx` which also generated compiler
+version check. This breaks on GCC 5 based system (e.g, Fedora 22).
+
+This time used `./cint/iosenum/iosenum.cxx` to match the rest of
+`iosenum.h` files in source.
+
+Signed-off-by: David Abdurachmanov <davidlt@cern.ch>
+---
+ cint/iosenum/iosenum.linuxarm643 | 38 ++------------------------------------
+ 1 file changed, 2 insertions(+), 36 deletions(-)
+
+diff --git a/cint/iosenum/iosenum.linuxarm643 b/cint/iosenum/iosenum.linuxarm643
+index 997f30b..0465c64 100644
+--- a/cint/iosenum/iosenum.linuxarm643
++++ b/cint/iosenum/iosenum.linuxarm643
+@@ -1,42 +1,8 @@
+-/* include/iosenum.h
++/* include/platform/iosenum.h
+  *  This file contains platform dependent ios enum value.
+- *  Run 'cint include/iosenum.cxx' to create this file. It is done
++ *  Run 'cint iosenum.cxx' to create this file. It is done
+  *  only once at installation. */
+-#if !defined(G__GNUC) || (G__GNUC!=4)
+-#error $CINTSYSDIR/include/iosenum.h compiler version mismatch. Do'cd $CINTSYSDIR/include; cint iosenum.cxx' to restore
+-#endif
+ #pragma ifndef G__TMPLTIOS
+-static int ios::goodbit=0;
+-static int ios::eofbit=2;
+-static int ios::failbit=4;
+-static int ios::badbit=1;
+-static int ios::in=8;
+-static int ios::out=16;
+-static int ios::ate=2;
+-static int ios::app=1;
+-static int ios::trunc=32;
+-static int ios::binary=4;
+-static int ios::beg=0;
+-static int ios::cur=1;
+-static int ios::end=2;
+-static int ios::boolalpha=1;
+-static int ios::adjustfield=176;
+-static int ios::basefield=74;
+-static int ios::floatfield=260;
+-static int ios::skipws=4096;
+-static int ios::left=32;
+-static int ios::right=128;
+-static int ios::internal=16;
+-static int ios::dec=2;
+-static int ios::oct=64;
+-static int ios::hex=8;
+-static int ios::showbase=512;
+-static int ios::showpoint=1024;
+-static int ios::uppercase=16384;
+-static int ios::showpos=2048;
+-static int ios::scientific=256;
+-static int ios::fixed=4;
+-static int ios::unitbuf=8192;
+ #pragma else
+ static ios_base::fmtflags ios_base::boolalpha=1;
+ static ios_base::fmtflags ios_base::dec=2;
+-- 
+1.8.2
+

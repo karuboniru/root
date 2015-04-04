@@ -1,0 +1,34 @@
+From 0a2381e82798f6fad2013d553c76b5f321b8a6a3 Mon Sep 17 00:00:00 2001
+From: David Abdurachmanov <davidlt@cern.ch>
+Date: Wed, 11 Mar 2015 11:37:28 +0100
+Subject: [PATCH 1/1] Disable unsecure gets() in CINT as it's removed in C11
+
+gets() for a long time is considered unsafe, one could use fgets()
+instead. Also gets_s() could be used since C11. GCC 5 and Clang 3.6
+defaults to C11 as default now. glibc still provides gets() only
+if compiling for GNU specifically (_GNU_SOURCE is defined). Other
+libc implementations behavior is unknown to me.
+
+Required for Fedora 22.
+
+Signed-off-by: David Abdurachmanov <davidlt@cern.ch>
+---
+ cint/cint/lib/stdstrct/stdfunc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cint/cint/lib/stdstrct/stdfunc.h b/cint/cint/lib/stdstrct/stdfunc.h
+index 530bc71..f849b13 100644
+--- a/cint/cint/lib/stdstrct/stdfunc.h
++++ b/cint/cint/lib/stdstrct/stdfunc.h
+@@ -70,7 +70,7 @@ size_t fwrite(void *buffer,size_t size,size_t n,FILE *fp);
+ int getc(FILE *fp);
+ int getchar(void);
+ char *getenv(const char *variable);
+-char *gets(char *buffer);
++/* char *gets(char *buffer); */
+ struct tm* gmtime(time_t *caltime);
+ int isalnum(int c);
+ int isalpha(int c);
+-- 
+1.8.2
+

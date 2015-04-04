@@ -21,20 +21,14 @@
 %endif
 %endif
 
-%if %($(pkg-config emacs) ; echo $?)
-%global emacs_version 21.4
-%global emacs_lispdir %{_datadir}/emacs/site-lisp
-%else
-%global emacs_version %(pkg-config emacs --modversion)
-%global emacs_lispdir %(pkg-config emacs --variable sitepkglispdir)
-%endif
+%{!?_emacs_sitelispdir: %global _emacs_sitelispdir %{_datadir}/emacs/site-lisp}
 
 %global xrootd 1
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.26
+Version:	5.34.28
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -80,6 +74,11 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
+#		Fixes for gcc 5 (from upstream git)
+Patch10:	%{name}-gcc5-1.patch
+Patch11:	%{name}-gcc5-2.patch
+Patch12:	%{name}-gcc5-3.patch
+Patch13:	%{name}-gcc5-4.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -193,6 +192,13 @@ BuildRequires:	font(stixsize1)
 %endif
 %endif
 Requires:	hicolor-icon-theme
+%if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 7
+Requires:	emacs-filesystem >= %{_emacs_version}
+%endif
+Provides:	emacs-%{name} = %{version}-%{release}
+Provides:	emacs-%{name}-el = %{version}-%{release}
+Obsoletes:	emacs-%{name} < 5.34.28
+Obsoletes:	emacs-%{name}-el < 5.34.28
 
 %description
 The ROOT system provides a set of object oriented frameworks with all
@@ -1119,36 +1125,6 @@ Group:		Applications/Engineering
 %description tree-viewer
 This package contains a plugin for browsing a ROOT tree in ROOT.
 
-%package -n emacs-%{name}
-Summary:	Compiled elisp files to run root under GNU Emacs
-Group:		Applications/Engineering
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
-BuildArch:	noarch
-%endif
-Requires:	%{name} = %{version}-%{release}
-%if %{?rhel}%{!?rhel:0} == 5
-Requires:	emacs >= %{emacs_version}
-%else
-Requires:	emacs(bin) >= %{emacs_version}
-%endif
-
-%description -n emacs-%{name}
-emacs-root is an add-on package for GNU Emacs. It provides integration
-with ROOT.
-
-%package -n emacs-%{name}-el
-Summary:	Elisp source files for root under GNU Emacs
-Group:		Applications/Engineering
-%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
-BuildArch:	noarch
-%endif
-Requires:	emacs-%{name} = %{version}-%{release}
-
-%description -n emacs-%{name}-el
-This package contains the elisp source files for root under GNU Emacs. You
-do not need to install this package to run root. Install the emacs-root
-package to use root with GNU Emacs.
-
 %prep
 %setup -q
 if pkg-config --max-version 2.1.2 ftgl ; then
@@ -1163,6 +1139,10 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1249,7 +1229,7 @@ unset QTINC
 	    --libdir=%{_libdir}/%{name} \
 	    --etcdir=%{_datadir}/%{name} \
 	    --docdir=%{_pkgdocdir} \
-	    --elispdir=%{emacs_lispdir}/%{name} \
+	    --elispdir=%{_emacs_sitelispdir}/%{name} \
 %if %{?fedora}%{!?fedora:0} >= 13 || %{?rhel}%{!?rhel:0} >= 6
 	    --disable-builtin-afterimage \
 %else
@@ -1376,7 +1356,7 @@ mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
 
 # Do emacs byte compilation
 emacs -batch -no-site-file -f batch-byte-compile \
-    %{buildroot}%{emacs_lispdir}/%{name}/*.el
+    %{buildroot}%{_emacs_sitelispdir}/%{name}/*.el
 
 # Install desktop entry and icon
 mkdir -p %{buildroot}%{_datadir}/applications
@@ -1867,6 +1847,14 @@ fi
 %{_datadir}/icons/hicolor/48x48/apps/root.png
 %{_datadir}/icons/hicolor/48x48/mimetypes/application-x-root.png
 %{_datadir}/mime/packages/root.xml
+%if %{?fedora}%{!?fedora:0} < 15 && %{?rhel}%{!?rhel:0} < 7
+# No emacs-filesystem package
+%dir %{_datadir}/emacs
+%dir %{_emacs_sitelispdir}
+%endif
+%dir %{_emacs_sitelispdir}/%{name}
+%{_emacs_sitelispdir}/%{name}/*.elc
+%{_emacs_sitelispdir}/%{name}/*.el
 
 %files icons
 %{_datadir}/%{name}/icons
@@ -2412,14 +2400,11 @@ fi
 %{_libdir}/%{name}/libTreeViewer.*
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
-%files -n emacs-%{name}
-%dir %{emacs_lispdir}/root
-%{emacs_lispdir}/root/*.elc
-
-%files -n emacs-%{name}-el
-%{emacs_lispdir}/root/*.el
-
 %changelog
+* Fri Apr 03 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.28-1
+- Update to 5.34.28
+- Merge emacs support files into main package (guidelines updated)
+
 * Tue Feb 24 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.26-1
 - Update to 5.34.26
 - Drop patch root-xrdversion.patch
