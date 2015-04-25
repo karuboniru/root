@@ -1,13 +1,15 @@
-diff -ur root-5.34.19.orig/hist/histpainter/src/THistPainter.cxx root-5.34.19/hist/histpainter/src/THistPainter.cxx
---- root-5.34.19.orig/hist/histpainter/src/THistPainter.cxx	2014-07-09 16:50:16.000000000 +0200
-+++ root-5.34.19/hist/histpainter/src/THistPainter.cxx	2014-07-26 23:01:20.083002118 +0200
-@@ -2305,7 +2305,8 @@
+diff -ur root-5.34.30.orig/hist/histpainter/src/THistPainter.cxx root-5.34.30/hist/histpainter/src/THistPainter.cxx
+--- root-5.34.30.orig/hist/histpainter/src/THistPainter.cxx	2015-04-23 18:30:25.000000000 +0200
++++ root-5.34.30/hist/histpainter/src/THistPainter.cxx	2015-04-24 20:05:03.349081003 +0200
+@@ -2367,7 +2367,10 @@
     TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
  
     TFile *f;
 -   f = TFile::Open("http://root.cern.ch/files/usa.root");
-+   // f = TFile::Open("http://root.cern.ch/files/usa.root");
-+   f = TFile::Open("$(ROOTSYS)/tutorials/hist/usa.root");
++   if (!gSystem->AccessPathName("$(ROOTSYS)/tutorials/hist/usa.root"))
++      f = TFile::Open("$(ROOTSYS)/tutorials/hist/usa.root");
++   else
++      f = TFile::Open("http://root.cern.ch/files/usa.root");
  
     TMultiGraph *mg;
     TKey *key;

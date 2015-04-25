@@ -7,6 +7,10 @@
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 %endif
 
+%if %{?fedora}%{!?fedora:0} >= 15
+%global py3soabi %(%{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))" | sed -e 's/None//' -e 's/^..*$/\.&/')
+%endif
+
 %{!?ruby_sitearchdir: %global ruby_sitearchdir %(ruby -rrbconfig -e 'puts RbConfig::CONFIG["sitearchdir"]' 2>/dev/null)}
 
 %if %{?fedora}%{!?fedora:0} >= 19 || %{?rhel}%{!?rhel:0} >= 7
@@ -25,10 +29,16 @@
 
 %global xrootd 1
 
+%if %{?fedora}%{!?fedora:0} >= 20 && %{?fedora}%{!?fedora:0} < 23
+%global hadoop 1
+%else
+%global hadoop 0
+%endif
+
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.28
+Version:	5.34.30
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -74,11 +84,6 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
-#		Fixes for gcc 5 (from upstream git)
-Patch10:	%{name}-gcc5-1.patch
-Patch11:	%{name}-gcc5-2.patch
-Patch12:	%{name}-gcc5-3.patch
-Patch13:	%{name}-gcc5-4.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc64 during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
@@ -128,6 +133,9 @@ BuildRequires:	python-devel
 %if %{?rhel}%{!?rhel:0} == 5
 BuildRequires:	python26-devel
 %endif
+%if %{?fedora}%{!?fedora:0} >= 15
+BuildRequires:	python3-devel
+%endif
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 BuildRequires:	qt4-devel
 %endif
@@ -149,7 +157,7 @@ BuildRequires:	cfitsio-devel
 BuildRequires:	davix-devel >= 0.2.8
 BuildRequires:	gfal2-devel
 BuildRequires:	srm-ifce-devel
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{hadoop}
 BuildRequires:	hadoop-devel
 %endif
 BuildRequires:	emacs
@@ -379,6 +387,16 @@ Summary:	Python extension for ROOT
 Group:		Applications/Engineering
 
 %description python26
+This package contains the Python extension for ROOT. This package
+provide a Python interface to ROOT, and a ROOT interface to Python.
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 15
+%package python3
+Summary:	Python extension for ROOT
+Group:		Applications/Engineering
+
+%description python3
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 %endif
@@ -652,7 +670,7 @@ Group:		Applications/Engineering
 %description io-gfal
 This package contains the Grid File Access Library extension for ROOT.
 
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{hadoop}
 %package io-hdfs
 Summary:	Hadoop File System input/output library for ROOT
 Group:		Applications/Engineering
@@ -1139,10 +1157,6 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -1209,6 +1223,9 @@ sed '/CopyFileFromEtcDir("ROOT.css");/a\
    CopyFileFromEtcDir("root-banner.png");\
    CopyFileFromEtcDir("rootdrawing-logo.png");' -i html/src/THtml.cxx
 
+# Use local copy of input file during documentation generation
+install -p -m 644 %{SOURCE6} tutorials/hist/usa.root
+
 # Rename canvases to avoid name conflicts during doc generation
 sed s/c1/c1c/g -i tutorials/graphics/earth.C
 sed s/c3/c3c/g -i tutorials/graphs/multipalette.C
@@ -1219,6 +1236,13 @@ sed s/c1/c1simp/g -i tutorials/hsimple.C
 cp -pr bindings/pyroot bindings/pyroot26
 sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
     -i bindings/pyroot26/Module.mk
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 15
+# Build PyROOT for python 3
+cp -pr bindings/pyroot bindings/pyroot3
+sed -e 's/= pyroot/= pyroot3/' -e 's/python /python3 /' \
+    -i bindings/pyroot3/Module.mk
 %endif
 
 %build
@@ -1241,9 +1265,23 @@ unset QTINC
 	    --disable-builtin-lzma \
 	    --disable-builtin-pcre \
 	    --disable-builtin-zlib \
+	    --disable-afdsmgrd \
+	    --disable-afs \
+	    --disable-alien \
+	    --disable-alloc \
 	    --enable-asimage \
 	    --enable-astiff \
 	    --enable-bonjour \
+	    --disable-castor \
+	    --disable-chirp \
+%ifarch %{ix86} x86_64
+	    --enable-cintex \
+%else
+	    --disable-cintex \
+%endif
+	    --disable-cling \
+	    --disable-cxx11 \
+	    --disable-cxx14 \
 	    --enable-davix \
 	    --enable-dcache \
 	    --enable-explicitlink \
@@ -1252,10 +1290,11 @@ unset QTINC
 	    --enable-gdml \
 	    --enable-genvector \
 	    --enable-gfal \
+	    --disable-glite \
 	    --enable-globus \
 	    --enable-gsl-shared \
 	    --enable-gviz \
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{hadoop}
 	    --enable-hdfs \
 %else
 	    --disable-hdfs \
@@ -1263,19 +1302,23 @@ unset QTINC
 	    --enable-http \
 	    --enable-krb5 \
 	    --enable-ldap \
+	    --disable-libcxx \
 	    --enable-mathmore \
 	    --enable-memstat \
 	    --enable-minuit2 \
+	    --disable-monalisa \
 	    --enable-mysql \
 	    --enable-odbc \
 	    --enable-opengl \
+	    --disable-oracle \
 	    --enable-pgsql \
-	    --enable-python \
+	    --disable-pythia6 \
 %if %{?fedora}%{!?fedora:0} >= 18 || %{?rhel}%{!?rhel:0} >= 5
 	    --enable-pythia8 \
 %else
 	    --disable-pythia8 \
 %endif
+	    --enable-python \
 %if %{?fedora}%{!?fedora:0} >= 9 || %{?rhel}%{!?rhel:0} >= 6
 	    --enable-qt \
 	    --enable-qtgsi \
@@ -1286,16 +1329,21 @@ unset QTINC
 	    --enable-reflex \
 	    --enable-rfio \
 	    --enable-roofit \
+	    --disable-rpath \
 	    --enable-ruby \
+	    --disable-sapdb \
 	    --enable-shadowpw \
 	    --enable-shared \
 	    --enable-soversion \
 	    --enable-sqlite \
+	    --disable-srp \
 	    --enable-ssl \
 	    --enable-table \
 	    --enable-tmva \
 	    --enable-unuran \
+	    --disable-vc \
 	    --enable-vdt \
+	    --disable-werror \
 	    --enable-x11 \
 	    --enable-xft \
 	    --enable-xml \
@@ -1304,30 +1352,6 @@ unset QTINC
 %else
 	    --disable-xrootd \
 %endif
-%ifarch %{ix86} x86_64
-	    --enable-cintex \
-%else
-	    --disable-cintex \
-%endif
-	    --disable-afdsmgrd \
-	    --disable-afs \
-	    --disable-alien \
-	    --disable-alloc \
-	    --disable-castor \
-	    --disable-chirp \
-	    --disable-cling \
-	    --disable-cxx11 \
-	    --disable-cxx14 \
-	    --disable-glite \
-	    --disable-libcxx \
-	    --disable-monalisa \
-	    --disable-oracle \
-	    --disable-pythia6 \
-	    --disable-rpath \
-	    --disable-sapdb \
-	    --disable-srp \
-	    --disable-vc \
-	    --disable-werror \
 	    --fail-on-missing
 
 make OPTFLAGS="%{optflags}" \
@@ -1344,6 +1368,20 @@ make OPTFLAGS="%{optflags}" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
 	PYROOTLIB=pyroot26/libPyROOT.so \
 	ROOTPY="pyroot26/ROOT.py pyroot26/cppyy.py"
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 15
+# Build PyROOT for python 3
+mkdir pyroot3
+cp bindings/pyroot3/ROOT.py pyroot3
+cp bindings/pyroot3/cppyy.py pyroot3
+make OPTFLAGS="%{optflags}" \
+	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
+	MODULES="build cint/cint core/utils bindings/pyroot3" \
+	PYTHONINCDIR=`pkg-config --cflags python3 | sed 's/-I//'` \
+	PYTHONLIB=`pkg-config --libs python3` \
+	PYROOTLIB=pyroot3/libPyROOT.so \
+	ROOTPY="pyroot3/ROOT.py pyroot3/cppyy.py"
 %endif
 
 %install
@@ -1418,6 +1456,14 @@ install -m 644 pyroot26/ROOT.py* %{buildroot}%{python26_sitearch}
 install -m 644 pyroot26/cppyy.py* %{buildroot}%{python26_sitearch}
 %endif
 
+%if %{?fedora}%{!?fedora:0} >= 15
+mkdir -p %{buildroot}%{python3_sitearch}
+install pyroot3/libPyROOT.so.%{libversion} \
+   %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
+install -m 644 pyroot3/ROOT.py* %{buildroot}%{python3_sitearch}
+install -m 644 pyroot3/cppyy.py* %{buildroot}%{python3_sitearch}
+%endif
+
 # Same for the Ruby interface library
 mkdir -p %{buildroot}%{ruby_installdir}
 mv %{buildroot}%{_libdir}/%{name}/libRuby.so.%{libversion} \
@@ -1479,7 +1525,7 @@ rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P030_TCastorFile.C
 rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
-%if %{?fedora}%{!?fedora:0} < 20
+%if %{hadoop} == 0
 rm TFile/P110_THDFSFile.C
 %endif
 rm TGLManager/P020_TGWin32GLManager.C
@@ -1493,7 +1539,7 @@ rm TImagePlugin/P010_TASPluginGS.C
 rm TSQLServer/P030_TSapDBServer.C
 rm TSQLServer/P040_TOracleServer.C
 rm TSystem/P030_TAlienSystem.C
-%if %{?fedora}%{!?fedora:0} < 20
+%if %{hadoop} == 0
 rm TSystem/P060_THDFSSystem.C
 %endif
 rm TViewerX3D/P020_TQtViewerX3D.C
@@ -1529,7 +1575,6 @@ echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
-install -m 644 -p %{SOURCE6} tutorials/hist/usa.root
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
 rm .rootrc
@@ -1609,7 +1654,7 @@ if [ "$1" -ge "1" ] ; then
     /sbin/service proofd condrestart >/dev/null 2>&1 || :
 fi
 
-%if %{?rhel}%{!?rhel:0} == 5
+%if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} == 5
 %post python
 [ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
     readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
@@ -1619,14 +1664,17 @@ fi
     libPyROOT.so %{python_sitearch}/libPyROOT.so 20
 /sbin/ldconfig
 
-%postun python -p /sbin/ldconfig
-
 %preun python
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
 	libPyROOT.so %{python_sitearch}/libPyROOT.so
 fi
+%else
+%post python -p /sbin/ldconfig
+%endif
+%postun python -p /sbin/ldconfig
 
+%if %{?rhel}%{!?rhel:0} == 5
 %post python26
 [ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
     readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
@@ -1643,9 +1691,25 @@ if [ $1 = 0 ]; then
 fi
 
 %postun python26 -p /sbin/ldconfig
-%else
-%post python -p /sbin/ldconfig
-%postun python -p /sbin/ldconfig
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 15
+%post python3
+[ -h %{_libdir}/%{name}/libPyROOT.so.%{libversion} ] && \
+    readlink %{_libdir}/%{name}/libPyROOT.so.%{libversion} | \
+    grep -q site-packages && rm %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{libversion} \
+    libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
+/sbin/ldconfig
+
+%preun python3
+if [ $1 = 0 ]; then
+    %{_sbindir}/update-alternatives --remove \
+	libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so
+fi
+
+%postun python3 -p /sbin/ldconfig
 %endif
 
 %post core -p /sbin/ldconfig
@@ -1728,7 +1792,7 @@ fi
 %postun io-dcache -p /sbin/ldconfig
 %post io-gfal -p /sbin/ldconfig
 %postun io-gfal -p /sbin/ldconfig
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{hadoop}
 %post io-hdfs -p /sbin/ldconfig
 %postun io-hdfs -p /sbin/ldconfig
 %endif
@@ -1954,7 +2018,7 @@ fi
 %{_initrddir}/rootd
 
 %files python -f includelist-bindings-pyroot
-%if %{?rhel}%{!?rhel:0} == 5
+%if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} == 5
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.5
@@ -1962,7 +2026,7 @@ fi
 %else
 %{_libdir}/%{name}/libPyROOT.*
 %endif
-%{python_sitearch}/libPyROOT.*
+%{python_sitearch}/libPyROOT.so
 %{python_sitearch}/ROOT.py*
 %{python_sitearch}/cppyy.py*
 
@@ -1972,9 +2036,21 @@ fi
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.5
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{libversion}
-%{python26_sitearch}/libPyROOT.*
+%{python26_sitearch}/libPyROOT.so
 %{python26_sitearch}/ROOT.py*
 %{python26_sitearch}/cppyy.py*
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 15
+%files python3 -f includelist-bindings-pyroot
+%{_libdir}/%{name}/libPyROOT.rootmap
+%{_libdir}/%{name}/libPyROOT.so
+%{_libdir}/%{name}/libPyROOT.so.5
+%ghost %{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%{python3_sitearch}/libPyROOT%{py3soabi}.so
+%{python3_sitearch}/ROOT.py
+%{python3_sitearch}/cppyy.py
+%{python3_sitearch}/__pycache__
 %endif
 
 %files ruby -f includelist-bindings-ruby
@@ -2144,7 +2220,7 @@ fi
 %{_libdir}/%{name}/libGFAL.*
 %{_datadir}/%{name}/plugins/TFile/P050_TGFALFile.C
 
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{hadoop}
 %files io-hdfs -f includelist-io-hdfs
 %{_libdir}/%{name}/libHDFS.*
 %{_datadir}/%{name}/plugins/TFile/P110_THDFSFile.C
@@ -2401,6 +2477,12 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Fri Apr 24 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.30-1
+- Update to 5.34.30
+- New sub-package: root-python3
+- Disable hadoop/hdfs support for F23+ (not installable)
+- Drop previously backported gcc 5 patches
+
 * Fri Apr 03 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.28-1
 - Update to 5.34.28
 - Merge emacs support files into main package (guidelines updated)
