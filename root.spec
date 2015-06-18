@@ -1233,16 +1233,20 @@ sed s/c1/c1simp/g -i tutorials/hsimple.C
 
 %if %{?rhel}%{!?rhel:0} == 5
 # Build PyROOT for python 2.6
-cp -pr bindings/pyroot bindings/pyroot26
-sed -e 's/= pyroot/= pyroot26/' -e 's/python /python26 /' \
-    -i bindings/pyroot26/Module.mk
+# Use "python" as name for the build directory
+# THTML ignores directories named "python"
+cp -pr bindings/pyroot bindings/python
+sed -e 's/python /python26 /' -e 's/= pyroot/= python/' \
+    -i bindings/python/Module.mk
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 15
 # Build PyROOT for python 3
-cp -pr bindings/pyroot bindings/pyroot3
-sed -e 's/= pyroot/= pyroot3/' -e 's/python /python3 /' \
-    -i bindings/pyroot3/Module.mk
+# Use "python" as name for the build directory
+# THTML ignores directories named "python"
+cp -pr bindings/pyroot bindings/python
+sed -e 's/python /python3 /' -e 's/= pyroot/= python/' \
+    -i bindings/python/Module.mk
 %endif
 
 %build
@@ -1359,29 +1363,29 @@ make OPTFLAGS="%{optflags}" \
 
 %if %{?rhel}%{!?rhel:0} == 5
 # Build PyROOT for python 2.6
-mkdir pyroot26
-cp bindings/pyroot26/ROOT.py pyroot26
-cp bindings/pyroot26/cppyy.py pyroot26
+mkdir python
+cp bindings/python/ROOT.py python
+cp bindings/python/cppyy.py python
 make OPTFLAGS="%{optflags}" \
 	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
-	MODULES="build cint/cint core/utils bindings/pyroot26" \
+	MODULES="build cint/cint core/utils bindings/python" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
-	PYROOTLIB=pyroot26/libPyROOT.so \
-	ROOTPY="pyroot26/ROOT.py pyroot26/cppyy.py"
+	PYROOTLIB=python/libPyROOT.so \
+	ROOTPY="python/ROOT.py python/cppyy.py"
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 15
 # Build PyROOT for python 3
-mkdir pyroot3
-cp bindings/pyroot3/ROOT.py pyroot3
-cp bindings/pyroot3/cppyy.py pyroot3
+mkdir python
+cp bindings/python/ROOT.py python
+cp bindings/python/cppyy.py python
 make OPTFLAGS="%{optflags}" \
 	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
-	MODULES="build cint/cint core/utils bindings/pyroot3" \
+	MODULES="build cint/cint core/utils bindings/python" \
 	PYTHONINCDIR=`pkg-config --cflags python3 | sed 's/-I//'` \
 	PYTHONLIB=`pkg-config --libs python3` \
-	PYROOTLIB=pyroot3/libPyROOT.so \
-	ROOTPY="pyroot3/ROOT.py pyroot3/cppyy.py"
+	PYROOTLIB=python/libPyROOT.so \
+	ROOTPY="python/ROOT.py python/cppyy.py"
 %endif
 
 %install
@@ -1450,18 +1454,18 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{python_sitearch}`/libPyROOT.so \
 
 %if %{?rhel}%{!?rhel:0} == 5
 mkdir -p %{buildroot}%{python26_sitearch}
-install pyroot26/libPyROOT.so.%{libversion} \
+install python/libPyROOT.so.%{libversion} \
    %{buildroot}%{python26_sitearch}/libPyROOT.so
-install -m 644 pyroot26/ROOT.py* %{buildroot}%{python26_sitearch}
-install -m 644 pyroot26/cppyy.py* %{buildroot}%{python26_sitearch}
+install -m 644 python/ROOT.py* %{buildroot}%{python26_sitearch}
+install -m 644 python/cppyy.py* %{buildroot}%{python26_sitearch}
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 15
 mkdir -p %{buildroot}%{python3_sitearch}
-install pyroot3/libPyROOT.so.%{libversion} \
+install python/libPyROOT.so.%{libversion} \
    %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
-install -m 644 pyroot3/ROOT.py* %{buildroot}%{python3_sitearch}
-install -m 644 pyroot3/cppyy.py* %{buildroot}%{python3_sitearch}
+install -m 644 python/ROOT.py* %{buildroot}%{python3_sitearch}
+install -m 644 python/cppyy.py* %{buildroot}%{python3_sitearch}
 %endif
 
 # Same for the Ruby interface library

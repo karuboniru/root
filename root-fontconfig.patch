@@ -485,7 +485,7 @@ diff -ur root-5.34.20.orig/graf2d/graf/src/TTF.cxx root-5.34.20/graf2d/graf/src/
 +         break;
 +      case 24:
 +         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
-+         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize13");
++         FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize3");
 +         FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +         FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +         break;
@@ -945,7 +945,7 @@ diff -ur root-5.34.20.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.20/gr
 +               break;
 +            case 24:
 +               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
-+               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize13");
++               FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize3");
 +               FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +               FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +               break;
@@ -1262,7 +1262,7 @@ diff -ur root-5.34.20.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.20/graf3d/
 +            break;
 +         case 23:
 +            FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsizethreesym");
-+            FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize13");
++            FcPatternAddString (pat, FC_FAMILY, (const FcChar8*)"stixsize3");
 +            FcPatternAddInteger (pat, FC_WEIGHT, FC_WEIGHT_REGULAR);
 +            FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +            break;
