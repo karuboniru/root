@@ -38,9 +38,9 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.30
+Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -49,7 +49,7 @@ URL:		http://root.cern.ch/
 #		The upstream source is modified to exclude proprietary fonts:
 #		wget -N ftp://root.cern.ch/root/root_v%{version}.source.tar.gz
 #		tar -z -x -f root_v%{version}.source.tar.gz
-#		rm -rf root/fonts
+#		find root/fonts -type f -a '!' '(' -name 'STIX*' -o -name DroidSansFallback.ttf ')' -exec rm {} ';'
 #		mv root root-%{version}
 #		tar -J -c -f root-%{version}.tar.xz root-%{version}
 Source0:	%{name}-%{version}.tar.xz
@@ -76,8 +76,8 @@ Patch3:		%{name}-xrootd.patch
 Patch4:		%{name}-meta.patch
 #		Use TLatex in doc generation:
 Patch5:		%{name}-doc-latex.patch
-#		Don't save in all image formats:
-Patch6:		%{name}-no-extra-formats.patch
+#		Fix segfault when embedding Type 1 fonts
+Patch6:		%{name}-type1-embed.patch
 #		Fixes for HDFS module
 Patch7:		%{name}-hdfs.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
@@ -172,32 +172,28 @@ BuildRequires:	expat-devel
 BuildRequires:	pythia8-devel >= 8.1.80
 %endif
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
-BuildRequires:	font(liberationsans)
-BuildRequires:	font(liberationserif)
-BuildRequires:	font(liberationmono)
+BuildRequires:	font(freesans)
+BuildRequires:	font(freeserif)
+BuildRequires:	font(freemono)
 %else
-BuildRequires:	liberation-fonts
+BuildRequires:	freefont
 %endif
+#		Provides "symbol" and "dingbats"
 BuildRequires:	urw-fonts
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
+#		The root-fonts package provides Droid Sans Fallback for EPEL
+%if %{?fedora}%{!?fedora:0} >= 11
 BuildRequires:	font(droidsansfallback)
 %endif
-%if %{?fedora}%{!?fedora:0} >= 18
-# STIX font version 1.1 - not backwards compatible with earlier versions
-# We use the texlive supplied version 1.0 instead of font(stix)
-BuildRequires:	texlive-stix
-%else
-%if %{?fedora}%{!?fedora:0} >= 14
-# STIX font version 1.0
-BuildRequires:	font(stixgeneral)
-BuildRequires:	font(stixsizeonesym)
-%else
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
-# STIX font version 0.9
+#		TMathText requires STIX fonts version 0.9
+#		Fedora has newer versions that are not backwards compatible
+#		Fedora 18-   and EPEL 7 have STIX fonts version 1.1 (*)
+#		Fedora 14-17		have STIX fonts version 1.0
+#		Fedora 11-13 and EPEL 6 have STIX fonts version 0.9
+#		(*) TeXlive in addition provides STIX 1.0 (not in EPEL 7)
+#		The root-fonts package provides STIX 0.9 where it is missing
+%if %{?rhel}%{!?rhel:0} == 6
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsize1)
-%endif
-%endif
 %endif
 Requires:	hicolor-icon-theme
 %if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 7
@@ -245,6 +241,33 @@ Requires:	%{name}-core = %{version}-%{release}
 %description icons
 This package contains icons used by the ROOT GUI.
 
+%package fonts
+Summary:	ROOT font collection
+Group:		Applications/Engineering
+%if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
+BuildArch:	noarch
+%endif
+%if %{?rhel}%{!?rhel:0} == 6
+#		Driod Sans Fallback only
+License:	ASL 2.0
+%else
+%if %{?rhel}%{!?rhel:0}
+#		STIX version 0.9 and Driod Sans Fallback
+License:	OFL and ASL 2.0
+%else
+#		STIX version 0.9 only
+License:	OFL
+%endif
+%endif
+Requires:	%{name}-core = %{version}-%{release}
+
+%description fonts
+This package contains fonts used by ROOT that are not available in Fedora.
+In particular it contains STIX version 0.9 that is used by TMathText.
+%if %{?rhel}%{!?rhel:0}
+For EPEL it also provides the Google Droid Sans Fallback font.
+%endif
+
 %package doc
 Summary:	Documentation for the ROOT system
 Group:		Applications/Engineering
@@ -273,36 +296,33 @@ This package contains the tutorial scripts and test suite for ROOT.
 Summary:	ROOT core libraries
 Group:		Applications/Engineering
 License:	LGPLv2+ and BSD
+Requires:	%{name}-fonts = %{version}-%{release}
 Requires:	%{name}-icons = %{version}-%{release}
 Requires:	%{name}-graf-asimage%{?_isa} = %{version}-%{release}
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
-Requires:	font(liberationsans)
-Requires:	font(liberationserif)
-Requires:	font(liberationmono)
+Requires:	font(freesans)
+Requires:	font(freeserif)
+Requires:	font(freemono)
 %else
-Requires:	liberation-fonts
+Requires:	freefont
 %endif
+#		Provides "symbol" and "dingbats"
 Requires:	urw-fonts
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
+#		The root-fonts package provides Droid Sans Fallback for EPEL
+%if %{?fedora}%{!?fedora:0} >= 11
 Requires:	font(droidsansfallback)
 %endif
-%if %{?fedora}%{!?fedora:0} >= 18
-# STIX font version 1.1 - not backwards compatible with earlier versions
-# We use the texlive supplied version 1.0 instead of font(stix)
-Requires:	texlive-stix
-%else
-%if %{?fedora}%{!?fedora:0} >= 14
-# STIX font version 1.0
-Requires:	font(stixgeneral)
-Requires:	font(stixsizeonesym)
-%else
-%if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} == 6
-# STIX font version 0.9
+#		TMathText requires STIX fonts version 0.9
+#		Fedora has newer versions that are not backwards compatible
+#		Fedora 18-   and EPEL 7 have STIX fonts version 1.1 (*)
+#		Fedora 14-17		have STIX fonts version 1.0
+#		Fedora 11-13 and EPEL 6 have STIX fonts version 0.9
+#		(*) TeXlive in addition provides STIX 1.0 (not in EPEL 7)
+#		The root-fonts package provides STIX 0.9 where it is missing
+%if %{?rhel}%{!?rhel:0} == 6
 Requires:	font(stixgeneral)
 Requires:	font(stixsize1)
-%endif
-%endif
 %endif
 
 %description core
@@ -312,8 +332,8 @@ libRint and libThread.
 %package cint
 Summary:	CINT C++ interpreter
 Group:		Applications/Engineering
-Obsoletes:	%{name}-cint7 < 5.26.00c
 License:	MIT
+Obsoletes:	%{name}-cint7 < 5.26.00c
 
 %description cint
 This package contains the CINT C++ interpreter version 5.
@@ -1207,6 +1227,14 @@ rm -rf math/unuran/src/*.tar.gz
 #  * xrootd-private-devel headers
 rm -rf proof/xrdinc
 
+# Remove bundled fonts provided by the OS distributions
+%if %{?fedora}%{!?fedora:0} >= 11
+rm fonts/DroidSansFallback.ttf
+%endif
+%if %{?rhel}%{!?rhel:0} == 6
+rm fonts/STIX*
+%endif
+
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
 
@@ -1578,6 +1606,10 @@ echo Rint.Includes: 0 > .rootrc
 echo Cint.Includes: 0 >> .rootrc
 echo Root.StacktraceScript: ${PWD}/etc/gdb-backtrace.sh >> .rootrc
 echo Gui.MimeTypeFile: ${PWD}/etc/root.mimes >> .rootrc
+echo Unix.*.Root.DynamicPath: ${PWD}/lib >> .rootrc
+echo Unix.*.Root.MacroPath: .:${PWD}/macros >> .rootrc
+echo Unix.*.Root.PluginPath: ${PWD}/etc/plugins >> .rootrc
+echo *.*.Root.TTFontPath: ${PWD}/fonts >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
 ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
@@ -1926,6 +1958,9 @@ fi
 
 %files icons
 %{_datadir}/%{name}/icons
+
+%files fonts
+%{_datadir}/%{name}/fonts
 
 %files core -f includelist-core
 %{_bindir}/memprobe
@@ -2481,6 +2516,13 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Thu Jul 02 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-1
+- Update to 5.34.32
+- New sub-package: root-fonts (STIX version 0.9 required by TMathText)
+- Use GNU Free instead of Liberation, works better with TMathText
+- Fix segfault when embedding Type 1 fonts
+- Drop patch root-no-extra-formats.patch (workaround for above problem)
+
 * Thu Jun 18 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.30-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
 
