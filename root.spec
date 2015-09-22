@@ -40,7 +40,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -341,12 +341,16 @@ This package contains the CINT C++ interpreter version 5.
 %package reflex
 Summary:	Reflex dictionary generator
 Group:		Applications/Engineering
+# Cintex can operate on AArch64, but requires Relfex library and headers
+# This allows reading x86_64 serialized data on aarch64
+%ifnarch aarch64
 Requires:	gccxml
+%endif
 
 %description reflex
 This package contains the reflex dictionary generator for ROOT.
 
-%ifarch %{ix86} x86_64
+%ifarch %{ix86} x86_64 aarch64
 #		Cintex does not work on ppc
 #		https://savannah.cern.ch/bugs/?22003#comment16
 #		./configure only allows --enable-cintex for ix86 and x86_64
@@ -1306,7 +1310,7 @@ unset QTINC
 	    --enable-bonjour \
 	    --disable-castor \
 	    --disable-chirp \
-%ifarch %{ix86} x86_64
+%ifarch %{ix86} x86_64 aarch64
 	    --enable-cintex \
 %else
 	    --disable-cintex \
@@ -1754,7 +1758,7 @@ fi
 %postun cint -p /sbin/ldconfig
 %post reflex -p /sbin/ldconfig
 %postun reflex -p /sbin/ldconfig
-%ifarch %{ix86} x86_64
+%ifarch %{ix86} x86_64 aarch64
 %post cintex -p /sbin/ldconfig
 %postun cintex -p /sbin/ldconfig
 %endif
@@ -2013,7 +2017,7 @@ fi
 %doc %dir %{_pkgdocdir}
 %doc %{_pkgdocdir}/COPYING.CINT
 
-%ifarch %{ix86} x86_64
+%ifarch %{ix86} x86_64 aarch64
 %files cintex -f includelist-cint-cintex
 %{_libdir}/%{name}/libCintex.*
 %{python_sitearch}/PyCintex.py*
@@ -2516,6 +2520,10 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Wed Sep 16 2015 David Abdurachmanov <davidlt@cern.ch> - 5.34.32-2
+- Disable run-time dependency on gccxml in Reflex (allows installing on aarch64) (#1263206)
+- Enable Cintex on aarch64
+
 * Thu Jul 02 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-1
 - Update to 5.34.32
 - New sub-package: root-fonts (STIX version 0.9 required by TMathText)
