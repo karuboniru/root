@@ -29,8 +29,13 @@
 
 %global xrootd 1
 
-%if %{?fedora}%{!?fedora:0} >= 20 && %{?fedora}%{!?fedora:0} < 23
+%if %{?fedora}%{!?fedora:0} >= 20
+# libhdfs is currently only available on intel architectures in Fedora
+%ifarch %{ix86} x86_64
 %global hadoop 1
+%else
+%global hadoop 0
+%endif
 %else
 %global hadoop 0
 %endif
@@ -40,7 +45,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -85,9 +90,9 @@ Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-#		The build segfaults on ppc64 during an invocation of cint:
+#		The build segfaults on ppc(64) during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
-ExcludeArch:	ppc64
+ExcludeArch:	ppc ppc64
 #		The cint interpreter is not fully ported to arm
 #		https://sft.its.cern.ch/jira/browse/ROOT-5398
 #		https://sft.its.cern.ch/jira/browse/ROOT-5399
@@ -195,6 +200,8 @@ BuildRequires:	font(droidsansfallback)
 BuildRequires:	font(stixgeneral)
 BuildRequires:	font(stixsize1)
 %endif
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	hicolor-icon-theme
 %if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 7
 Requires:	emacs-filesystem >= %{_emacs_version}
@@ -275,7 +282,6 @@ Group:		Applications/Engineering
 BuildArch:	noarch
 %endif
 License:	LGPLv2+ and GPLv2+ and BSD
-Requires:	%{name}-cint = %{version}-%{release}
 
 %description doc
 This package contains the automatically generated ROOT class
@@ -287,7 +293,7 @@ Group:		Applications/Engineering
 %if %{?fedora}%{!?fedora:0} >= 10 || %{?rhel}%{!?rhel:0} >= 6
 BuildArch:	noarch
 %endif
-Requires:	%{name}-cint = %{version}-%{release}
+Requires:	%{name} = %{version}-%{release}
 
 %description tutorial
 This package contains the tutorial scripts and test suite for ROOT.
@@ -296,8 +302,10 @@ This package contains the tutorial scripts and test suite for ROOT.
 Summary:	ROOT core libraries
 Group:		Applications/Engineering
 License:	LGPLv2+ and BSD
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
 Requires:	%{name}-fonts = %{version}-%{release}
 Requires:	%{name}-icons = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-graf-asimage%{?_isa} = %{version}-%{release}
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 %if %{?fedora}%{!?fedora:0} >= 11 || %{?rhel}%{!?rhel:0} >= 6
@@ -341,10 +349,18 @@ This package contains the CINT C++ interpreter version 5.
 %package reflex
 Summary:	Reflex dictionary generator
 Group:		Applications/Engineering
-# Cintex can operate on AArch64, but requires Relfex library and headers
-# This allows reading x86_64 serialized data on aarch64
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+%if %{?fedora}%{!?fedora:0} >= 23
+#		In Fedora 23+ gccxml has been replaced by castxml
+#		Some of the scripts in root needs to be adapted for this change
+#		This is still not done, so e.g. genreflex is a bit broken
+Requires:	castxml
+%else
+#		gccxml is not available in aarch64
 %ifnarch aarch64
 Requires:	gccxml
+%endif
 %endif
 
 %description reflex
@@ -357,7 +373,11 @@ This package contains the reflex dictionary generator for ROOT.
 %package cintex
 Summary:	Reflex to CINT dictionary converter
 Group:		Applications/Engineering
-Requires:	%{name}-python = %{version}-%{release}
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-reflex%{?_isa} = %{version}-%{release}
+#		For PyCintex.py
+Requires:	%{name}-python%{?_isa} = %{version}-%{release}
 
 %description cintex
 Cintex is a library that converts Reflex dictionary information to
@@ -368,6 +388,9 @@ with CINT with any class for which a Reflex dictionary is provided.
 %package proofd
 Summary:	Parallel ROOT Facility - distributed, parallel computing
 Group:		Applications/Engineering
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
@@ -385,6 +408,7 @@ transparent interface.
 %package rootd
 Summary:	ROOT remote file server
 Group:		Applications/Engineering
+#		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
 Requires(preun):	chkconfig
 Requires(preun):	initscripts
@@ -400,6 +424,10 @@ transparent interface.
 %package python
 Summary:	Python extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description python
 This package contains the Python extension for ROOT. This package
@@ -409,6 +437,10 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package python26
 Summary:	Python extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description python26
 This package contains the Python extension for ROOT. This package
@@ -419,6 +451,10 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package python3
 Summary:	Python extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description python3
 This package contains the Python extension for ROOT. This package
@@ -428,6 +464,10 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package ruby
 Summary:	Ruby extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Provides:	ruby(libRuby) = %{version}
 %if %{?ruby_abi:1}%{!?ruby_abi:0}
 Requires:	ruby(abi) = %{ruby_abi}
@@ -441,6 +481,10 @@ invoke the Ruby interpreter from ROOT.
 %package genetic
 Summary:	Genetic algorithms for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tmva%{?_isa} = %{version}-%{release}
 
 %description genetic
 This package contains a genetic minimizer module for ROOT.
@@ -448,6 +492,16 @@ This package contains a genetic minimizer module for ROOT.
 %package geom
 Summary:	Geometry library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description geom
 This package contains a library for defining geometries in ROOT.
@@ -455,7 +509,13 @@ This package contains a library for defining geometries in ROOT.
 %package gdml
 Summary:	GDML import/export for ROOT geometries
 Group:		Applications/Engineering
-Requires:	%{name}-python = %{version}-%{release}
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+#		For ROOTwriter.py
+Requires:	%{name}-python%{?_isa} = %{version}-%{release}
 
 %description gdml
 This package contains an import/export module for ROOT geometries.
@@ -463,6 +523,11 @@ This package contains an import/export module for ROOT geometries.
 %package graf
 Summary:	2D graphics library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description graf
 This package contains the 2-dimensional graphics library for ROOT.
@@ -470,6 +535,13 @@ This package contains the 2-dimensional graphics library for ROOT.
 %package graf-asimage
 Summary:	AfterImage graphics renderer for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description graf-asimage
 This package contains the AfterImage renderer for ROOT, which allows
@@ -479,6 +551,12 @@ TIFF.
 %package graf-fitsio
 Summary:	ROOT interface for the Flexible Image Transport System (FITS)
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description graf-fitsio
 This package contains a library for using the Flexible Image Transport
@@ -487,6 +565,11 @@ System (FITS) data format in root.
 %package graf-gpad
 Summary:	Canvas and pad library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
 
 %description graf-gpad
@@ -495,6 +578,10 @@ This package contains a library for canvas and pad manipulations.
 %package graf-gviz
 Summary:	Graphviz 2D library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 
 %description graf-gviz
 This package contains the 2-dimensional graphviz library for ROOT.
@@ -502,6 +589,9 @@ This package contains the 2-dimensional graphviz library for ROOT.
 %package graf-postscript
 Summary:	Postscript/PDF renderer library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 
 %description graf-postscript
 This package contains a library for ROOT, which allows rendering
@@ -511,6 +601,10 @@ postscript and PDF output.
 %package graf-qt
 Summary:	Qt renderer for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 
 %description graf-qt
 This package contains the Qt renderer for ROOT.
@@ -519,6 +613,9 @@ This package contains the Qt renderer for ROOT.
 %package graf-x11
 Summary:	X window system renderer for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 
 %description graf-x11
 This package contains the X11 renderer for ROOT, which allows using an
@@ -527,6 +624,12 @@ X display for showing graphics.
 %package graf3d
 Summary:	Basic 3D shapes library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description graf3d
 This library contains the basic 3D shapes and classes for ROOT. For
@@ -535,6 +638,22 @@ a more full-blown geometry library, see the root-geom package.
 %package graf3d-eve
 Summary:	Event display library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d-gl%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-montecarlo-eg%{?_isa} = %{version}-%{release}
+Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description graf3d-eve
 This package contains a library for defining event displays in ROOT.
@@ -542,6 +661,16 @@ This package contains a library for defining event displays in ROOT.
 %package graf3d-gl
 Summary:	GL renderer for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description graf3d-gl
 This package contains the GL renderer for ROOT. This library provides
@@ -552,6 +681,14 @@ rendering of histograms, and similar. Included is also a high quality
 %package graf3d-gviz3d
 Summary:	Graphviz 3D library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d-gl%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
 
 %description graf3d-gviz3d
 This package contains the 3-dimensional graphviz library for ROOT.
@@ -559,6 +696,10 @@ This package contains the 3-dimensional graphviz library for ROOT.
 %package graf3d-x3d
 Summary:	X 3D renderer for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 
 %description graf3d-x3d
 This package contains the X 3D renderer for ROOT. This library provides
@@ -568,6 +709,14 @@ a low quality 3D viewer for ROOT defined geometries.
 %package gui
 Summary:	GUI library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+#		Dynamic dependencies
 Requires:	%{name}-graf-x11%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
 
@@ -577,6 +726,13 @@ This package contains a library for defining graphical user interfaces.
 %package gui-fitpanel
 Summary:	GUI element for fits in ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description gui-fitpanel
 This package contains a library to show a pop-up dialog when fitting
@@ -585,6 +741,14 @@ various kinds of data.
 %package gui-ged
 Summary:	GUI element for editing various ROOT objects
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description gui-ged
@@ -594,6 +758,11 @@ various ROOT objects.
 %package guibuilder
 Summary:	GUI editor library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description guibuilder
 This package contains a library for editing graphical user interfaces
@@ -603,6 +772,11 @@ in ROOT.
 %package gui-qt
 Summary:	Qt GUI for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-qt%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 
 %description gui-qt
 This package contains the Qt GUI for ROOT.
@@ -611,6 +785,11 @@ This package contains the Qt GUI for ROOT.
 %package gui-recorder
 Summary:	Interface for recording and replaying events in ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description gui-recorder
 This library provides interface for recording and replaying events in ROOT.
@@ -623,6 +802,11 @@ and can be replayed again anytime.
 %package hbook
 Summary:	Hbook library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description hbook
 This package contains the Hbook library for ROOT, allowing you to
@@ -631,6 +815,11 @@ access legacy Hbook files (NTuples and Histograms from PAW).
 %package hist
 Summary:	Histogram library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-hist-painter%{?_isa} = %{version}-%{release}
 
 %description hist
@@ -639,6 +828,13 @@ This package contains a library for histogramming in ROOT.
 %package hist-painter
 Summary:	Histogram painter plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description hist-painter
 This package contains a painter of histograms for ROOT.
@@ -646,6 +842,9 @@ This package contains a painter of histograms for ROOT.
 %package spectrum
 Summary:	Spectra analysis library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 
 %description spectrum
 This package contains the Spectrum library for ROOT.
@@ -653,6 +852,10 @@ This package contains the Spectrum library for ROOT.
 %package spectrum-painter
 Summary:	Spectrum painter plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 
 %description spectrum-painter
 This package contains a painter of spectra for ROOT.
@@ -660,6 +863,16 @@ This package contains a painter of spectra for ROOT.
 %package hist-factory
 Summary:	RooFit PDFs from ROOT histograms
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description hist-factory
 Create RooFit probability density functions from ROOT histograms.
@@ -667,6 +880,9 @@ Create RooFit probability density functions from ROOT histograms.
 %package html
 Summary:	HTML documentation generator for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	graphviz
 
 %description html
@@ -676,6 +892,8 @@ from marked up sources.
 %package io
 Summary:	Input/output of ROOT objects
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description io
 This package provides I/O routines for ROOT objects.
@@ -683,6 +901,9 @@ This package provides I/O routines for ROOT objects.
 %package io-dcache
 Summary:	dCache input/output library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description io-dcache
 This package contains the dCache extension for ROOT.
@@ -690,6 +911,9 @@ This package contains the dCache extension for ROOT.
 %package io-gfal
 Summary:	Grid File Access Library input/output library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description io-gfal
 This package contains the Grid File Access Library extension for ROOT.
@@ -698,6 +922,9 @@ This package contains the Grid File Access Library extension for ROOT.
 %package io-hdfs
 Summary:	Hadoop File System input/output library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description io-hdfs
 This package contains the Hadoop File System extension for ROOT.
@@ -706,6 +933,9 @@ This package contains the Hadoop File System extension for ROOT.
 %package io-rfio
 Summary:	Remote File input/output library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description io-rfio
 This package contains the Remote File IO extension for ROOT.
@@ -713,6 +943,10 @@ This package contains the Remote File IO extension for ROOT.
 %package io-sql
 Summary:	SQL input/output library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description io-sql
 This package contains the SQL extension for ROOT, that allows
@@ -722,6 +956,9 @@ TFile interface.
 %package io-xml
 Summary:	XML reader library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description io-xml
 This package contains the XML reader library for ROOT.
@@ -729,6 +966,10 @@ This package contains the XML reader library for ROOT.
 %package foam
 Summary:	A Compact Version of the Cellular Event Generator
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description foam
 The general-purpose self-adapting Monte Carlo (MC) event
@@ -741,6 +982,8 @@ easier to use for the average user.
 Summary:	FFTW library for ROOT
 Group:		Applications/Engineering
 License:	GPLv2+
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description fftw
 This package contains the Fast Fourier Transform extension for ROOT.
@@ -749,6 +992,10 @@ It uses the very fast fftw (version 3) library.
 %package fumili
 Summary:	Fumili library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description fumili
 This package contains the fumili library for ROOT. This provides an
@@ -757,6 +1004,8 @@ alternative fitting algorithm for ROOT.
 %package genvector
 Summary:	Generalized vector library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description genvector
 This package contains the Genvector library for ROOT. This provides
@@ -765,6 +1014,9 @@ a generalized vector library.
 %package mathcore
 Summary:	Core mathematics library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
 
 %description mathcore
@@ -774,6 +1026,9 @@ This package contains the MathCore library for ROOT.
 Summary:	GSL interface library for ROOT
 Group:		Applications/Engineering
 License:	GPLv2+
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description mathmore
 This package contains the MathMore library for ROOT. This provides
@@ -784,6 +1039,9 @@ is licensed under GPLv2+ due to its use of GSL.
 %package matrix
 Summary:	Matrix library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description matrix
 This package contains the Matrix library for ROOT.
@@ -791,6 +1049,11 @@ This package contains the Matrix library for ROOT.
 %package minuit
 Summary:	Minuit library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description minuit
 This package contains the MINUIT library for ROOT. This provides a
@@ -799,6 +1062,10 @@ fitting algorithm for ROOT.
 %package minuit2
 Summary:	Minuit version 2 library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description minuit2
 This package contains the MINUIT version 2 library for ROOT. This
@@ -807,6 +1074,15 @@ provides an fitting algorithm for ROOT.
 %package mlp
 Summary:	Multi-layer perceptron extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description mlp
 This package contains the mlp library for ROOT. This library provides
@@ -815,6 +1091,10 @@ a multi-layer perceptron neural network package for ROOT.
 %package physics
 Summary:	Physics library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description physics
 This package contains the physics library for ROOT.
@@ -822,6 +1102,9 @@ This package contains the physics library for ROOT.
 %package quadp
 Summary:	QuadP library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description quadp
 This package contains the QuadP library for ROOT. This provides the a
@@ -832,6 +1115,8 @@ subject to linear constraints.
 %package smatrix
 Summary:	Sparse matrix library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description smatrix
 This package contains the Smatrix library for ROOT.
@@ -839,6 +1124,13 @@ This package contains the Smatrix library for ROOT.
 %package splot
 Summary:	Splot library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description splot
 A common method used in High Energy Physics to perform measurements
@@ -872,6 +1164,10 @@ discriminating variables.
 Summary:	Random number generator library
 Group:		Applications/Engineering
 License:	GPLv2+
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description unuran
 Contains universal (also called automatic or black-box) algorithms
@@ -900,6 +1196,11 @@ modern compilers (e.g. gcc 4.7) vectorisable.
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description memstat
 This package contains the memory statistics tool for debugging memory
@@ -908,6 +1209,14 @@ leaks and such.
 %package table
 Summary:	Table library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description table
 This package contains the Table library for ROOT.
@@ -915,6 +1224,12 @@ This package contains the Table library for ROOT.
 %package montecarlo-eg
 Summary:	Event generator library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description montecarlo-eg
 This package contains an event generator library for ROOT.
@@ -923,6 +1238,9 @@ This package contains an event generator library for ROOT.
 %package montecarlo-pythia8
 Summary:	Pythia version 8 plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-montecarlo-eg%{?_isa} = %{version}-%{release}
 
 %description montecarlo-pythia8
 This package contains the Pythia version 8 plug-in for ROOT. This
@@ -934,6 +1252,11 @@ package provide the ROOT user with transparent interface to the Pythia
 %package montecarlo-vmc
 Summary:	Virtual Monte-Carlo (simulation) library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-montecarlo-eg%{?_isa} = %{version}-%{release}
 
 %description montecarlo-vmc
 This package contains the VMC library for ROOT.
@@ -941,6 +1264,10 @@ This package contains the VMC library for ROOT.
 %package net
 Summary:	Net library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 
 %description net
 This package contains the ROOT networking library.
@@ -948,6 +1275,8 @@ This package contains the ROOT networking library.
 %package net-rpdutils
 Summary:	Authentication utilities used by rootd and proofd
 Group:		Applications/Engineering
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description net-rpdutils
 This package contains authentication utilities used by rootd and proofd.
@@ -955,6 +1284,8 @@ This package contains authentication utilities used by rootd and proofd.
 %package net-bonjour
 Summary:	Bonjour extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description net-bonjour
 This package contains a bonjour extension for ROOT.
@@ -962,6 +1293,10 @@ This package contains a bonjour extension for ROOT.
 %package net-auth
 Summary:	Authentication extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description net-auth
 This package contains the basic authentication algorithms used by ROOT.
@@ -970,6 +1305,9 @@ This package contains the basic authentication algorithms used by ROOT.
 Summary:	Davix extension for ROOT
 Group:		Applications/Engineering
 Requires:	davix-libs%{?_isa} >= 0.2.8
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description net-davix
 This package contains the davix extension for ROOT, that provides
@@ -978,6 +1316,9 @@ access to http based storage such as webdav and S3.
 %package net-globus
 Summary:	Globus extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-auth%{?_isa} = %{version}-%{release}
 Requires:	globus-proxy-utils
 
 %description net-globus
@@ -987,6 +1328,10 @@ authentication and authorization against Globus.
 %package net-krb5
 Summary:	Kerberos (version 5) extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-auth%{?_isa} = %{version}-%{release}
 Requires:	krb5-workstation
 
 %description net-krb5
@@ -996,6 +1341,8 @@ allows authentication and authorization using Kerberos tokens.
 %package net-ldap
 Summary:	LDAP extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description net-ldap
 This package contains the LDAP extension for ROOT. This gives you
@@ -1004,6 +1351,14 @@ access to LDAP directories via ROOT.
 %package net-http
 Summary:	HTTP server extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description net-http
 This package contains the HTTP server extension for ROOT. It provides
@@ -1013,6 +1368,10 @@ an http interface to arbitrary ROOT applications.
 %package netx
 Summary:	NetX extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description netx
 This package contains the NetX extension for ROOT, i.e. a client for
@@ -1023,6 +1382,16 @@ provided.
 %package proof
 Summary:	PROOF extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 Obsoletes:	%{name}-clarens < 5.34.01
 Obsoletes:	%{name}-peac < 5.34.01
 
@@ -1033,6 +1402,14 @@ client to use in a PROOF environment.
 %package proof-bench
 Summary:	PROOF benchmarking
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description proof-bench
 This package contains the steering class for PROOF benchmarks.
@@ -1040,6 +1417,11 @@ This package contains the steering class for PROOF benchmarks.
 %package proof-pq2
 Summary:	PROOF Quick Query (pq2)
 Group:		Applications/Engineering
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
 
 %description proof-pq2
 Shell-based interface to the PROOF dataset handling.
@@ -1047,6 +1429,15 @@ Shell-based interface to the PROOF dataset handling.
 %package proof-sessionviewer
 Summary:	GUI to browse an interactive PROOF session
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description proof-sessionviewer
 This package contains a library for browsing an interactive PROOF
@@ -1056,6 +1447,12 @@ session in ROOT.
 %package xproof
 Summary:	XPROOF extension for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+#		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
 Requires:	xrootd-server%{?_isa}
 
@@ -1068,6 +1465,18 @@ client to be used in a PROOF environment.
 Summary:	ROOT extension for modeling expected distributions
 Group:		Applications/Engineering
 License:	BSD
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-foam%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathmore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description roofit
 The RooFit packages provide a toolkit for modeling the expected
@@ -1085,6 +1494,9 @@ suitable for adoption in different disciplines as well.
 %package sql-mysql
 Summary:	MySQL client plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description sql-mysql
 This package contains the MySQL plugin for ROOT. This plugin
@@ -1095,6 +1507,9 @@ ROOT environment.
 %package sql-odbc
 Summary:	ODBC plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description sql-odbc
 This package contains the ODBC (Open DataBase Connectivity) plugin
@@ -1104,6 +1519,9 @@ supports the ODBC protocol.
 %package sql-sqlite
 Summary:	Sqlite client plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description sql-sqlite
 This package contains the sqlite plugin for ROOT. This plugin
@@ -1114,6 +1532,9 @@ ROOT environment.
 %package sql-pgsql
 Summary:	PostgreSQL client plugin for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description sql-pgsql
 This package contains the PostGreSQL plugin for ROOT. This plugin
@@ -1125,6 +1546,17 @@ ROOT environment.
 Summary:	Toolkit for multivariate data analysis
 Group:		Applications/Engineering
 License:	BSD
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mlp%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description tmva
 The Toolkit for Multivariate Analysis (TMVA) provides a
@@ -1149,6 +1581,10 @@ compared.
 %package tree
 Summary:	Tree library for ROOT
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 
 %description tree
 This package contains the Tree library for ROOT.
@@ -1156,6 +1592,15 @@ This package contains the Tree library for ROOT.
 %package tree-player
 Summary:	Library to loop over a ROOT tree
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description tree-player
 This package contains a plugin to loop over a ROOT tree.
@@ -1163,6 +1608,17 @@ This package contains a plugin to loop over a ROOT tree.
 %package tree-viewer
 Summary:	GUI to browse a ROOT tree
 Group:		Applications/Engineering
+Requires:	%{name}-cint%{?_isa} = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description tree-viewer
 This package contains a plugin for browsing a ROOT tree in ROOT.
@@ -1390,20 +1846,20 @@ unset QTINC
 %endif
 	    --fail-on-missing
 
-make OPTFLAGS="%{optflags}" \
-	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags}
+make %{?_smp_mflags} \
+	OPTFLAGS="%{optflags}" EXTRA_LDFLAGS="%{?__global_ldflags}"
 
 %if %{?rhel}%{!?rhel:0} == 5
 # Build PyROOT for python 2.6
 mkdir python
 cp bindings/python/ROOT.py python
 cp bindings/python/cppyy.py python
-make OPTFLAGS="%{optflags}" \
-	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
+make %{?_smp_mflags} \
+	OPTFLAGS="%{optflags}" EXTRA_LDFLAGS="%{?__global_ldflags}" \
 	MODULES="build cint/cint core/utils bindings/python" \
 	PYTHONINCDIR=/usr/include/python2.6 PYTHONLIB=-lpython2.6 \
 	PYROOTLIB=python/libPyROOT.so \
-	ROOTPY="python/ROOT.py python/cppyy.py"
+	ROOTPY="python/ROOT.py python/cppyy.py" python/libPyROOT.so
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 15
@@ -1411,18 +1867,19 @@ make OPTFLAGS="%{optflags}" \
 mkdir python
 cp bindings/python/ROOT.py python
 cp bindings/python/cppyy.py python
-make OPTFLAGS="%{optflags}" \
-	EXTRA_LDFLAGS="%{?__global_ldflags}" %{?_smp_mflags} \
+make %{?_smp_mflags} \
+	OPTFLAGS="%{optflags}" EXTRA_LDFLAGS="%{?__global_ldflags}" \
 	MODULES="build cint/cint core/utils bindings/python" \
 	PYTHONINCDIR=`pkg-config --cflags python3 | sed 's/-I//'` \
 	PYTHONLIB=`pkg-config --libs python3` \
 	PYROOTLIB=python/libPyROOT.so \
-	ROOTPY="python/ROOT.py python/cppyy.py"
+	ROOTPY="python/ROOT.py python/cppyy.py" python/libPyROOT.so
 %endif
 
 %install
 rm -rf %{buildroot}
-make install DESTDIR=%{buildroot}
+make %{?_smp_mflags} install DESTDIR=%{buildroot} \
+	OPTFLAGS="%{optflags}" EXTRA_LDFLAGS="%{?__global_ldflags}"
 
 # Move python modules to the sitelib
 mkdir -p %{buildroot}%{python_sitearch}
@@ -1616,8 +2073,8 @@ echo Unix.*.Root.PluginPath: ${PWD}/etc/plugins >> .rootrc
 echo *.*.Root.TTFontPath: ${PWD}/fonts >> .rootrc
 sed "s!@PWD@!${PWD}!g" %{SOURCE2} > html.C
 LD_LIBRARY_PATH=${PWD}/lib:${PWD}/cint/cint/include:${PWD}/cint/cint/stl \
-ROOTSYS=${PWD} ./bin/root.exe -l -b -q html.C
-rm .rootrc
+PATH=${PWD}/bin:${PATH} ROOTSYS=${PWD} ./bin/root.exe -b -l -n -q -x html.C
+rm .rootrc html.C
 mv htmldoc %{buildroot}%{_pkgdocdir}/html
 
 # Create includelist files ...
@@ -2520,6 +2977,10 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Fri Sep 25 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-3
+- Add versioned dependencies between packages
+- Reenable hadoop/hdfs support for F23+
+
 * Wed Sep 16 2015 David Abdurachmanov <davidlt@cern.ch> - 5.34.32-2
 - Disable run-time dependency on gccxml in Reflex (allows installing on aarch64) (#1263206)
 - Enable Cintex on aarch64

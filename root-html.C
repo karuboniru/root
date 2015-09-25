@@ -22,10 +22,10 @@
 					"TGraphPainter","GraphPainter",
 					"TGraphPainter()");
   delete (TFile*) gROOT->ProcessLine(".x tutorials/hsimple.C");
+  gSystem->Exec("mv hsimple.root tutorials/hsimple.root");
   THtml html;
-  html.SetProductName("ROOT");
   html.SetEtcDir("@PWD@/etc/html");
-  html.SetHomepage("http://root.cern.ch");
+  html.SetSourceDir(".");
   html.LoadAllLibs();
   html.SetBatch(kTRUE);
   html.MakeAll();
