@@ -45,7 +45,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2977,6 +2977,9 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Tue Nov 10 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.32-4
+- Rebuilt for https://fedoraproject.org/wiki/Changes/python3.5
+
 * Fri Sep 25 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-3
 - Add versioned dependencies between packages
 - Reenable hadoop/hdfs support for F23+
