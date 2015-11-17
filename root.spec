@@ -45,7 +45,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -89,10 +89,12 @@ Patch7:		%{name}-hdfs.patch
 Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
+#		Adapt to GFAL 2.10
+Patch10:	%{name}-gfal2.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc(64) during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
-ExcludeArch:	ppc ppc64
+ExcludeArch:	ppc ppc64 ppc64le
 #		The cint interpreter is not fully ported to arm
 #		https://sft.its.cern.ch/jira/browse/ROOT-5398
 #		https://sft.its.cern.ch/jira/browse/ROOT-5399
@@ -1637,6 +1639,7 @@ fi
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2977,6 +2980,10 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Tue Nov 17 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-5
+- Adapt to gfal 2.10 - uses a different #define
+- Exclude ppc64le - has the same issues with cint as ppc and ppc64
+
 * Tue Nov 10 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 5.34.32-4
 - Rebuilt for https://fedoraproject.org/wiki/Changes/python3.5
 
