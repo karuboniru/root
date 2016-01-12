@@ -45,7 +45,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2980,6 +2980,9 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Tue Jan 12 2016 Vít Ondruch <vondruch@redhat.com> - 5.34.32-6
+- Rebuilt for https://fedoraproject.org/wiki/Changes/Ruby_2.3
+
 * Tue Nov 17 2015 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.32-5
 - Adapt to gfal 2.10 - uses a different #define
 - Exclude ppc64le - has the same issues with cint as ppc and ppc64
