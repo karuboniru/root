@@ -45,7 +45,7 @@
 Name:		root
 Version:	5.34.32
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	7%{?dist}
+Release:	8%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
@@ -2980,6 +2980,9 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Sat Jan 16 2016 Mamoru TASAKA <mtasaka@fedoraproject.org> - 5.34.32-8
+- Rebuild again for https://fedoraproject.org/wiki/Changes/Ruby_2.3
+
 * Thu Jan 14 2016 Adam Jackson <ajax@redhat.com> - 5.34.32-7
 - Rebuild for glew 1.13
 
