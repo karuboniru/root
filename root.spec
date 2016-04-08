@@ -43,16 +43,16 @@
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
 Name:		root
-Version:	5.34.32
+Version:	5.34.36
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	9%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 Group:		Applications/Engineering
 License:	LGPLv2+
-URL:		http://root.cern.ch/		
+URL:		https://root.cern.ch/
 #		The upstream source is modified to exclude proprietary fonts:
-#		wget -N ftp://root.cern.ch/root/root_v%{version}.source.tar.gz
+#		wget -N https://root.cern.ch/download/root_v%{version}.source.tar.gz
 #		tar -z -x -f root_v%{version}.source.tar.gz
 #		find root/fonts -type f -a '!' '(' -name 'STIX*' -o -name DroidSansFallback.ttf ')' -exec rm {} ';'
 #		mv root root-%{version}
@@ -90,11 +90,15 @@ Patch8:		%{name}-dont-link-jvm.patch
 #		Use local copy of input file during documentation generation
 Patch9:		%{name}-usa.patch
 #		Adapt to GFAL 2.10
+#		https://github.com/root-mirror/root/pull/106
 Patch10:	%{name}-gfal2.patch
+#		Public header #includes private header
+#		https://github.com/root-mirror/root/pull/88
+Patch11:	%{name}-private-public.patch
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 #		The build segfaults on ppc(64) during an invocation of cint:
 #		https://savannah.cern.ch/bugs/index.php?70542
-ExcludeArch:	ppc ppc64 ppc64le
+ExcludeArch:	ppc %{power64}
 #		The cint interpreter is not fully ported to arm
 #		https://sft.its.cern.ch/jira/browse/ROOT-5398
 #		https://sft.its.cern.ch/jira/browse/ROOT-5399
@@ -1640,6 +1644,7 @@ fi
 %patch8 -p1
 %patch9 -p1
 %patch10 -p1
+%patch11 -p1
 
 find . '(' -name '*.cxx' -o -name '*.cpp' -o -name '*.C' -o -name '*.c' -o \
 	   -name '*.h' -o -name '*.hh' -o -name '*.hi' -o -name '*.py' -o \
@@ -2954,7 +2959,7 @@ fi
 %{_datadir}/%{name}/plugins/TSQLServer/P050_TODBCServer.C
 
 %files sql-sqlite -f includelist-sql-sqlite
-%{_libdir}/%{name}/libSQLite.*
+%{_libdir}/%{name}/libRSQLite.*
 %{_datadir}/%{name}/plugins/TSQLServer/P060_TSQLiteServer.C
 
 %files sql-pgsql -f includelist-sql-pgsql
@@ -2980,6 +2985,9 @@ fi
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
 
 %changelog
+* Fri Apr 08 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.34.36-1
+- Update to 5.34.36
+
 * Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 5.34.32-9
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
