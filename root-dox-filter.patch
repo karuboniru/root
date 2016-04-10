@@ -1,0 +1,86 @@
+diff -ur root-6.06.02.orig/documentation/doxygen/filter.cxx root-6.06.02/documentation/doxygen/filter.cxx
+--- root-6.06.02.orig/documentation/doxygen/filter.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/documentation/doxygen/filter.cxx	2016-03-20 18:25:55.319293945 +0100
+@@ -98,6 +98,7 @@
+ 
+    // Source file.
+    if (gSource) {
++      size_t spos = 0;
+       while (fgets(gLine,255,f)) {
+          gLineString = gLine;
+ 
+@@ -106,10 +107,11 @@
+              gLineString.find("/** \\class")  != string::npos ||
+              gLineString.find("///! \\class") != string::npos) gClass = true;
+ 
+-         if (gLineString.find("End_Macro") != string::npos) {
++         if (gInMacro && gLineString.find("End_Macro") != string::npos) {
+             ReplaceAll(gLineString,"End_Macro","");
+             gImageSource = false;
+             gInMacro = 0;
++            spos = 0;
+             if (m) {
+                fclose(m);
+                m = 0;
+@@ -122,8 +124,9 @@
+          }
+ 
+          if (gInMacro) {
++            if (spos) gLineString = gLineString.substr(spos);
+             if (gInMacro == 1) {
+-               if (EndsWith(gLineString,".C\n")) {
++               if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
+                   ExecuteMacro();
+                   gInMacro++;
+                } else {
+@@ -153,14 +156,27 @@
+             }
+          }
+ 
+-         if (gLineString.find("Begin_Macro") != string::npos) {
++         if (gLineString.find("Begin_Macro") != string::npos &&
++             gLineString.find("End_Macro") == string::npos) {
++            if (BeginsWith(gLineString, "///")) {
++               spos = gLineString.find_first_not_of(' ', 3);
++            }
+             if (gLineString.find("source") != string::npos) gImageSource = true;
+             gImageID++;
+             gInMacro++;
+             gLineString = "\n";
+          }
+ 
+-         printf("%s",gLineString.c_str());
++         size_t l = gLineString.length();
++         size_t b = 0;
++         do {
++            size_t e = gLineString.find('\n', b);
++            if (e != string::npos) e++;
++            if (spos) printf("%-*s%s", spos, "///",
++                              gLineString.substr(b, e - b).c_str());
++            else printf("%s", gLineString.substr(b, e - b).c_str());
++            b = e;
++         } while (b < l);
+       }
+       fclose(f);
+       return 0;
+@@ -203,7 +219,8 @@
+    if (gSource) {
+       while (fgets(gLine,255,f)) {
+          gLineString = gLine;
+-         if (gLineString.find("ClassImp") != string::npos) {
++         if (gLineString.find("ClassImp") != string::npos ||
++             gLineString.find("NamespaceImp") != string::npos) {
+             i1         = gLineString.find("(")+1;
+             i2         = gLineString.find(")")-1;
+             gClassName = gLineString.substr(i1,i2-i1+1);
+@@ -238,8 +255,8 @@
+ 
+    // Build the ROOT command to be executed.
+    gLineString.insert(0, StringFormat("root -l -b -q \"makeimage.C(\\\""));
+-   int l = gLineString.length();
+-   gLineString.replace(l-2,1,StringFormat("C\\\",\\\"%s\\\",\\\"%s\\\")\"", gImageName.c_str(), gOutDir.c_str()));
++   size_t l = gLineString.length();
++   gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\")\"", gImageName.c_str(), gOutDir.c_str()));
+ 
+    ExecuteCommand(gLineString);
+ 

@@ -1,0 +1,187 @@
+diff -Nur root-6.06.02.orig/CMakeLists.txt root-6.06.02/CMakeLists.txt
+--- root-6.06.02.orig/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/CMakeLists.txt	2016-04-04 13:15:41.550400890 +0200
+@@ -252,6 +252,12 @@
+   endif()
+   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
+                          REGEX system.rootrc EXCLUDE
++                         REGEX system.rootauthrc EXCLUDE
++                         REGEX system.rootdaemonrc EXCLUDE
++                         REGEX rootd.rc.d EXCLUDE
++                         REGEX proofd.rc.d EXCLUDE
++                         REGEX rootd.xinetd EXCLUDE
++                         REGEX proofd.xinetd EXCLUDE
+                          REGEX root.mimes EXCLUDE)
+   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
+   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
+diff -Nur root-6.06.02.orig/cmake/modules/RootConfiguration.cmake root-6.06.02/cmake/modules/RootConfiguration.cmake
+--- root-6.06.02.orig/cmake/modules/RootConfiguration.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/RootConfiguration.cmake	2016-04-04 13:15:41.491400432 +0200
+@@ -404,7 +404,13 @@
+ set(dicttype ${ROOT_DICTTYPE})
+ 
+ #---RConfigure-------------------------------------------------------------------------------------------------
+-set(setresuid undef)
++CHECK_CXX_SOURCE_COMPILES("#include <unistd.h>
++  int main() { int i = setresuid(0, 0, 0); return 0;}" found_setresuid)
++if(found_setresuid)
++  set(setresuid define)
++else()
++  set(setresuid undef)
++endif()
+ if(mathmore)
+   set(hasmathmore define)
+ else()
+@@ -523,7 +529,16 @@
+ execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
+ 
+ configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/system.rootrc @ONLY NEWLINE_STYLE UNIX)
++configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
++configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
++
++configure_file(${CMAKE_SOURCE_DIR}/config/rootd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d @ONLY NEWLINE_STYLE UNIX)
++configure_file(${CMAKE_SOURCE_DIR}/config/rootd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd @ONLY NEWLINE_STYLE UNIX)
++configure_file(${CMAKE_SOURCE_DIR}/config/proofd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d @ONLY NEWLINE_STYLE UNIX)
++configure_file(${CMAKE_SOURCE_DIR}/config/proofd.xinetd.in ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd @ONLY NEWLINE_STYLE UNIX)
++
+ configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
++
+ if(ruby)
+   file(APPEND ${CMAKE_BINARY_DIR}/include/RConfigOptions.h "\#define R__RUBY_MAJOR ${RUBY_MAJOR_VERSION}\n\#define R__RUBY_MINOR ${RUBY_MINOR_VERSION}\n")
+ endif()
+@@ -665,8 +680,21 @@
+ 
+ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
+               ${CMAKE_BINARY_DIR}/etc/system.rootrc
++              ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
++              ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
+               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+ 
++install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.rc.d
++              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.rc.d
++              PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
++                          GROUP_EXECUTE GROUP_READ
++                          WORLD_EXECUTE WORLD_READ
++              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
++
++install(FILES ${CMAKE_BINARY_DIR}/etc/daemons/rootd.xinetd
++              ${CMAKE_BINARY_DIR}/etc/daemons/proofd.xinetd
++              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/daemons)
++
+ install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
+ 
+ if(NOT gnuinstall)
+diff -Nur root-6.06.02.orig/graf2d/x11/CMakeLists.txt root-6.06.02/graf2d/x11/CMakeLists.txt
+--- root-6.06.02.orig/graf2d/x11/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/x11/CMakeLists.txt	2016-04-04 13:15:47.557447569 +0200
+@@ -9,4 +9,9 @@
+ ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ 
+ ROOT_LINKER_LIBRARY(${libname} *.cxx  *.c G__${libname}.cxx LIBRARIES Core ${X11_LIBRARIES} ${X11_Xpm_LIB} ${CMAKE_THREAD_LIBS_INIT})
+-ROOT_INSTALL_HEADERS()
++
++if(AIX)
++  include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
++endif()
++
++ROOT_INSTALL_HEADERS(OPTIONS REGEX inc/X11 EXCLUDE)
+diff -Nur root-6.06.02.orig/main/CMakeLists.txt root-6.06.02/main/CMakeLists.txt
+--- root-6.06.02.orig/main/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/main/CMakeLists.txt	2016-04-04 13:15:41.568401030 +0200
+@@ -7,6 +7,7 @@
+   ROOT_EXECUTABLE(rootn.exe rmain.cxx LIBRARIES New Core MathCore Rint)
+   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
+   ROOT_EXECUTABLE(ssh2rpd ssh2rpd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c )
++  ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
+ endif()
+ ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
+ ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
+diff -Nur root-6.06.02.orig/net/CMakeLists.txt root-6.06.02/net/CMakeLists.txt
+--- root-6.06.02.orig/net/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/net/CMakeLists.txt	2016-04-04 13:15:41.576401092 +0200
+@@ -1,6 +1,7 @@
+ 
+ add_subdirectory(net)
+ add_subdirectory(auth)  # special CMakeListst.txt
++add_subdirectory(rootd)
+ 
+ if(bonjour)
+   add_subdirectory(bonjour)
+diff -Nur root-6.06.02.orig/net/rootd/CMakeLists.txt root-6.06.02/net/rootd/CMakeLists.txt
+--- root-6.06.02.orig/net/rootd/CMakeLists.txt	1970-01-01 01:00:00.000000000 +0100
++++ root-6.06.02/net/rootd/CMakeLists.txt	2016-04-04 13:15:41.577401100 +0200
+@@ -0,0 +1,9 @@
++############################################################################
++# CMakeLists.txt file for building ROOT net/rootd package
++# @author Pere Mato, CERN
++############################################################################
++
++ROOT_EXECUTABLE(rootd *.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c
++                      LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS})
++
++ROOT_INSTALL_HEADERS()
+diff -Nur root-6.06.02.orig/proof/pq2/CMakeLists.txt root-6.06.02/proof/pq2/CMakeLists.txt
+--- root-6.06.02.orig/proof/pq2/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/pq2/CMakeLists.txt	2016-04-04 13:15:41.580401123 +0200
+@@ -3,4 +3,7 @@
+ # @author Pere Mato, CERN
+ ############################################################################
+ 
+-ROOT_INSTALL_HEADERS()
+\ No newline at end of file
++ROOT_EXECUTABLE(pq2 *.cxx LIBRARIES Core Proof Hist Matrix Tree
++  RIO Net Thread MathCore)
++
++ROOT_INSTALL_HEADERS()
+diff -Nur root-6.06.02.orig/proof/proofd/CMakeLists.txt root-6.06.02/proof/proofd/CMakeLists.txt
+--- root-6.06.02.orig/proof/proofd/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/proofd/CMakeLists.txt	2016-04-04 13:15:41.583401147 +0200
+@@ -4,6 +4,7 @@
+ ############################################################################
+ 
+ include_directories(${XROOTD_INCLUDE_DIRS})
++include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+ add_definitions(${XROOTD_CFLAGS})
+ ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-bool-conversion)
+ 
+@@ -11,14 +12,16 @@
+   ROOT_LINKER_LIBRARY(XrdProofd XProofProtUtils.cxx LIBRARIES ${XROOTD_LIBRARIES})
+ else()
+   ROOT_EXECUTABLE(proofd proofd.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c
+-                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS} )
++                         LIBRARIES ${XROOTD_LIBRARIES} rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} ${CRYPTLIBS})
+   if (NOT XROOTD_NOMAIN)
+      ROOT_EXECUTABLE(xproofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
+                          LIBRARIES ${XROOTD_LIBRARIES} ${SYSLIBS})
+   endif ()
+   ROOT_LINKER_LIBRARY(XrdProofd X*.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
+                          LIBRARIES ${XROOTD_LIBRARIES} rpdutil ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_DL_LIBS})
+-  set_target_properties(XrdProofd PROPERTIES LINK_INTERFACE_LIBRARIES "" )
++  set_target_properties(XrdProofd PROPERTIES LINK_INTERFACE_LIBRARIES "")
++  ROOT_EXECUTABLE(proofexecv proofexecv.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
++                         LIBRARIES ${SYSLIBS})
+ endif()
+ 
+ if(builtin_xrootd)
+@@ -38,4 +41,4 @@
+ endif()
+ 
+ 
+-ROOT_INSTALL_HEADERS()
++ROOT_INSTALL_HEADERS(OPTIONS REGEX inc/X EXCLUDE)
+diff -Nur root-6.06.02.orig/proof/proofx/CMakeLists.txt root-6.06.02/proof/proofx/CMakeLists.txt
+--- root-6.06.02.orig/proof/proofx/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/proofx/CMakeLists.txt	2016-04-04 13:15:41.595401240 +0200
+@@ -1,4 +1,3 @@
+-
+ ############################################################################
+ # CMakeLists.txt file for building ROOT proof/proofx package
+ # @author Pere Mato, CERN
+@@ -14,6 +13,7 @@
+ endif()
+ 
+ include_directories(${XROOTD_INCLUDE_DIRS})
++include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/../proofd/inc)
+ link_directories(${XROOTD_LIBRARY_DIR})
+ add_definitions(${XROOTD_CFLAGS})
+ 

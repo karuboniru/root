@@ -1,0 +1,877 @@
+diff -ur root-6.06.02.orig/graf2d/graf/src/TLatex.cxx root-6.06.02/graf2d/graf/src/TLatex.cxx
+--- root-6.06.02.orig/graf2d/graf/src/TLatex.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/graf/src/TLatex.cxx	2016-03-20 18:30:30.836024753 +0100
+@@ -185,14 +185,19 @@
+ ## <a name="L8"></a> Accents
+ Several kind of accents are available:
+ 
+-   #hat    = Begin_Latex #hat{a} End_Latex
+-   #check  = Begin_Latex #check{a} End_Latex
+-   #acute  = Begin_Latex #acute{a} End_Latex
+-   #grave  = Begin_Latex #grave{a} End_Latex
+-   #dot    = Begin_Latex #dot{a} End_Latex
+-   #ddot   = Begin_Latex #ddot{a} End_Latex
+-   #tilde  = Begin_Latex #tilde{a} End_Latex
+-
++Begin_Macro(source)
++{
++   TCanvas *cl = new TCanvas("cl","cl",10,10,700,350);
++   TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
++   Tl.DrawText(.1, .8, "#hat{a} :");   Tl.DrawLatex(.5, .8, "#hat{a}");
++   Tl.DrawText(.1, .7, "#check{a} :"); Tl.DrawLatex(.5, .7, "#check{a}");
++   Tl.DrawText(.1, .6, "#acure{a} :"); Tl.DrawLatex(.5, .6, "#acute{a}");
++   Tl.DrawText(.1, .5, "#grave{a} :"); Tl.DrawLatex(.5, .5, "#grave{a}");
++   Tl.DrawText(.1, .4, "#dot{a} :");   Tl.DrawLatex(.5, .4, "#dot{a}");
++   Tl.DrawText(.1, .3, "#ddot{a} :");  Tl.DrawLatex(.5, .3, "#ddot{a}");
++   Tl.DrawText(.1, .2, "#tilde{a} :"); Tl.DrawLatex(.5, .2, "#tilde{a}");
++}
++End_Macro
+ 
+ The special sign: `#slash` draws a slash on top of the text between brackets:
+ 
+diff -ur root-6.06.02.orig/hist/hist/src/TF1.cxx root-6.06.02/hist/hist/src/TF1.cxx
+--- root-6.06.02.orig/hist/hist/src/TF1.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TF1.cxx	2016-03-20 18:30:30.871025101 +0100
+@@ -949,9 +949,9 @@
+ /// Getting the error via TF1::DerivativeError:
+ ///   (total error = roundoff error + interpolation error)
+ /// the estimate of the roundoff error is taken as follows:
+-///Begin_Latex
+-///    err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+-///End_Latex
++/// \f[
++///    err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
++/// \f]
+ /// where k is the double precision, ai are coefficients used in
+ /// central difference formulas
+ /// interpolation error is decreased by making the step size h smaller.
+diff -ur root-6.06.02.orig/hist/hist/src/TGraphAsymmErrors.cxx root-6.06.02/hist/hist/src/TGraphAsymmErrors.cxx
+--- root-6.06.02.orig/hist/hist/src/TGraphAsymmErrors.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TGraphAsymmErrors.cxx	2016-03-20 18:30:30.872025110 +0100
+@@ -360,27 +360,33 @@
+ ///
+ /// If the histograms are not filled with unit weights, the number of effective
+ /// entries is used to normalise the bin contents which might lead to wrong results.
+-/// Begin_Latex effective entries = #frac{(#sum w_{i})^{2}}{#sum w_{i}^{2}}End_Latex
+-///
++/// \f[
++/// \text{effective entries} = \frac{(\sum w_{i})^{2}}{\sum w_{i}^{2}}
++/// \f]
+ /// The points are assigned a x value at the center of each histogram bin.
+-/// The y values are Begin_Latex eff = #frac{pass}{total} End_Latex for all options except for the
++/// The y values are \f$\text{eff} = \frac{\text{pass}}{\text{total}}\f$
++/// for all options except for the
+ /// bayesian methods where the result depends on the chosen option.
+ ///
+-/// If the denominator becomes 0 or pass >  total, the corresponding bin is
++/// If the denominator becomes 0 or pass > total, the corresponding bin is
+ /// skipped.
+ ///
+ /// 2) calculating ratios of two Poisson means (option 'pois'):
+ /// --------------------------------------------------------------
+ ///
+ /// The two histograms are interpreted as independent Poisson processes and the ratio
+-/// Begin_Latex #tau = #frac{n_{1}}{n_{2}} = #frac{#varepsilon}{1 - #varepsilon} with #varepsilon = #frac{n_{1}}{n_{1} + n_{2}} End_Latex
+-/// The histogram 'pass' is interpreted as n_{1} and the total histogram
+-/// is used for n_{2}
++/// \f[
++/// \tau = \frac{n_{1}}{n_{2}} = \frac{\varepsilon}{1 - \varepsilon}
++/// \f]
++/// with \f$\varepsilon = \frac{n_{1}}{n_{1} + n_{2}}\f$.
++/// The histogram 'pass' is interpreted as \f$n_{1}\f$ and the total histogram
++/// is used for \f$n_{2}\f$.
+ ///
+ /// The (asymmetric) uncertainties of the Poisson ratio are linked to the uncertainties
+ /// of efficiency by a parameter transformation:
+-/// Begin_Latex #Delta #tau_{low/up} = #frac{1}{(1 - #varepsilon)^{2}} #Delta #varepsilon_{low/up} End_Latex
+-///
++/// \f[
++/// \Delta \tau_{low/up} = \frac{1}{(1 - \varepsilon)^{2}} \Delta \varepsilon_{low/up}
++/// \f]
+ /// The x errors span each histogram bin (lowedge ... lowedge+width)
+ /// The y errors depend on the chosen statistic methode which can be determined
+ /// by the options given below. For a detailed description of the used statistic
+@@ -413,8 +419,7 @@
+ /// oscillation on the actual coverage probability a couple of approximations and
+ /// methodes has been developped. For a detailed discussion, please have a look at
+ /// this statistical paper:
+-/// <a href="http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf"
+-/// > http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf</a>
++/// http://www-stat.wharton.upenn.edu/~tcai/paper/Binomial-StatSci.pdf
+ 
+ void TGraphAsymmErrors::Divide(const TH1* pass, const TH1* total, Option_t *opt)
+ {
+diff -ur root-6.06.02.orig/hist/hist/src/THnSparse.cxx root-6.06.02/hist/hist/src/THnSparse.cxx
+--- root-6.06.02.orig/hist/hist/src/THnSparse.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/THnSparse.cxx	2016-03-20 18:30:30.872025110 +0100
+@@ -764,8 +764,7 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Get square of the error of bin addressed by linidx as
+-/// BEGIN_LATEX #sum weight^{2}
+-/// END_LATEX
++/// \f$\sum weight^{2}\f$
+ /// If errors are not enabled (via Sumw2() or CalculateErrors())
+ /// return contents.
+ 
+diff -ur root-6.06.02.orig/math/mathcore/inc/Math/GaussIntegrator.h root-6.06.02/math/mathcore/inc/Math/GaussIntegrator.h
+--- root-6.06.02.orig/math/mathcore/inc/Math/GaussIntegrator.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/inc/Math/GaussIntegrator.h	2016-03-20 18:30:30.910025487 +0100
+@@ -92,31 +92,28 @@
+     Method:
+        For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
+        and 16-point Gaussian quadrature approximations to
+-   Begin_Latex
+-      I = #int^{b}_{a} f(x)dx
+-   End_Latex
++   \f[
++      I = \int^{b}_{a} f(x)dx
++   \f]
+       and define
+-   Begin_Latex
+-      r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
+-   End_Latex
++   \f[
++      r(a,b) = \frac{\left|g_{16}(a,b)-g_{8}(a,b)\right|}{1+\left|g_{16}(a,b)\right|}
++   \f]
+       Then,
+-   Begin_Latex
+-      G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
+-   End_Latex
+-      where, starting with x0 = A and finishing with xk = B,
+-      the subdivision points xi(i=1,2,...) are given by
+-   Begin_Latex
+-      x_{i} = x_{i-1} + #lambda(B-x_{i-1})
+-   End_Latex
+-   Begin_Latex
+-      #lambda
+-   End_Latex
+-      is equal to the first member of the
+-      sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
++   \f[
++      G = \sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
++   \f]
++      where, starting with \f$x_{0} = A\f$ and finishing with \f$x_{k} = B\f$,
++      the subdivision points \f$x_{i}(i=1,2,...)\f$ are given by
++   \f[
++      x_{i} = x_{i-1} + \lambda(B-x_{i-1})
++   \f]
++      \f$\lambda\f$ is equal to the first member of the
++      sequence 1,1/2,1/4,... for which \f$r(x_{i-1}, x_{i}) < EPS\f$.
+       If, at any stage in the process of subdivision, the ratio
+-  Begin_Latex
+-      q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
+-  End_Latex
++  \f[
++      q = \left|\frac{x_{i}-x_{i-1}}{B-A}\right|
++  \f]
+       is so small that 1+0.005q is indistinguishable from 1 to
+       machine accuracy, an error exit occurs with the function value
+       set equal to zero.
+@@ -131,13 +128,13 @@
+       |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
+       precisely, if k is the number of sub-intervals contributing to the
+       approximation (see Method), and if
+-      Begin_Latex
+-      I_{abs} = #int^{B}_{A} #||{f(x)}dx
+-      End_Latex
++   \f[
++      I_{abs} = \int^{B}_{A} \left|f(x)\right|dx
++   \f]
+       then the relation
+-   Begin_Latex
+-    #frac{#||{G-I}}{I_{abs}+k} < EPS
+-   End_Latex
++   \f[
++      \frac{\left|G-I\right|}{I_{abs}+k} < EPS
++   \f]
+       will nearly always be true, provided the routine terminates without
+       printing an error message. For functions f having no singularities in
+       the closed interval [A,B] the accuracy will usually be much higher than
+@@ -156,9 +153,9 @@
+ 
+    /** Returns Integral of function on an infinite interval.
+       This function computes, to an attempted specified accuracy, the value of the integral:
+-   Begin_Latex
+-      I = #int^{#infinity}_{-#infinity} f(x)dx
+-   End_Latex
++   \f[
++      I = \int^{\infty}_{-\infty} f(x)dx
++   \f]
+       Usage:
+         In any arithmetic expression, this function has the approximate value
+         of the integral I.
+@@ -169,9 +166,9 @@
+ 
+    /** Returns Integral of function on an upper semi-infinite interval.
+       This function computes, to an attempted specified accuracy, the value of the integral:
+-   Begin_Latex
+-      I = #int^{#infinity}_{A} f(x)dx
+-   End_Latex
++   \f[
++      I = \int^{\infty}_{A} f(x)dx
++   \f]
+       Usage:
+         In any arithmetic expression, this function has the approximate value
+         of the integral I.
+@@ -183,9 +180,9 @@
+ 
+    /** Returns Integral of function on a lower semi-infinite interval.
+        This function computes, to an attempted specified accuracy, the value of the integral:
+-   Begin_Latex
+-      I = #int^{B}_{#infinity} f(x)dx
+-   End_Latex
++   \f[
++      I = \int^{B}_{-\infty} f(x)dx
++   \f]
+       Usage:
+          In any arithmetic expression, this function has the approximate value
+          of the integral I.
+diff -ur root-6.06.02.orig/math/mathcore/inc/Math/RichardsonDerivator.h root-6.06.02/math/mathcore/inc/Math/RichardsonDerivator.h
+--- root-6.06.02.orig/math/mathcore/inc/Math/RichardsonDerivator.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/inc/Math/RichardsonDerivator.h	2016-03-20 18:30:30.910025487 +0100
+@@ -88,10 +88,13 @@
+       computed by Richardson's extrapolation method (use 2 derivative estimates
+       to compute a third, more accurate estimation)
+       first, derivatives with steps h and h/2 are computed by central difference formulas
+-     Begin_Latex
+-      D(h) = #frac{f(x+h) - f(x-h)}{2h}
+-     End_Latex
+-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
++     \f[
++      D(h) = \frac{f(x+h) - f(x-h)}{2h}
++     \f]
++      the final estimate
++     \f[
++      D = \frac{4D(h/2) - D(h)}{3}
++     \f]
+        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
+ 
+       the argument eps may be specified to control the step size (precision).
+@@ -103,9 +106,9 @@
+       Getting the error via TF1::DerivativeError:
+         (total error = roundoff error + interpolation error)
+       the estimate of the roundoff error is taken as follows:
+-     Begin_Latex
+-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+-     End_Latex
++     \f[
++         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
++     \f]
+       where k is the double precision, ai are coefficients used in
+       central difference formulas
+       interpolation error is decreased by making the step size h smaller.
+@@ -141,10 +144,13 @@
+       computed by Richardson's extrapolation method (use 2 derivative estimates
+       to compute a third, more accurate estimation)
+       first, derivatives with steps h and h/2 are computed by central difference formulas
+-     Begin_Latex
+-         D(h) = #frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
+-     End_Latex
+-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
++     \f[
++         D(h) = \frac{f(x+h) - 2f(x) + f(x-h)}{h^{2}}
++     \f]
++      the final estimate
++     \f[
++         D = \frac{4D(h/2) - D(h)}{3}
++     \f]
+        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
+ 
+       the argument eps may be specified to control the step size (precision).
+@@ -156,9 +162,9 @@
+       Getting the error via TF1::DerivativeError:
+         (total error = roundoff error + interpolation error)
+       the estimate of the roundoff error is taken as follows:
+-     Begin_Latex
+-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+-     End_Latex
++     \f[
++         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
++     \f]
+       where k is the double precision, ai are coefficients used in
+       central difference formulas
+       interpolation error is decreased by making the step size h smaller.
+@@ -177,10 +183,13 @@
+       computed by Richardson's extrapolation method (use 2 derivative estimates
+       to compute a third, more accurate estimation)
+       first, derivatives with steps h and h/2 are computed by central difference formulas
+-     Begin_Latex
+-         D(h) = #frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
+-     End_Latex
+-      the final estimate Begin_Latex D = #frac{4D(h/2) - D(h)}{3} End_Latex
++     \f[
++         D(h) = \frac{f(x+2h) - 2f(x+h) + 2f(x-h) - f(x-2h)}{2h^{3}}
++     \f]
++      the final estimate
++     \f[
++         D = \frac{4D(h/2) - D(h)}{3}
++     \f]
+        "Numerical Methods for Scientists and Engineers", H.M.Antia, 2nd edition"
+ 
+       the argument eps may be specified to control the step size (precision).
+@@ -192,9 +201,9 @@
+       Getting the error via TF1::DerivativeError:
+         (total error = roundoff error + interpolation error)
+       the estimate of the roundoff error is taken as follows:
+-     Begin_Latex
+-         err = k#sqrt{f(x)^{2} + x^{2}deriv^{2}}#sqrt{#sum ai^{2}},
+-     End_Latex
++     \f[
++         err = k\sqrt{f(x)^{2} + x^{2}deriv^{2}}\sqrt{\sum ai^{2}},
++     \f]
+       where k is the double precision, ai are coefficients used in
+       central difference formulas
+       interpolation error is decreased by making the step size h smaller.
+diff -ur root-6.06.02.orig/math/mathmore/src/KelvinFunctions.cxx root-6.06.02/math/mathmore/src/KelvinFunctions.cxx
+--- root-6.06.02.orig/math/mathmore/src/KelvinFunctions.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathmore/src/KelvinFunctions.cxx	2016-03-20 18:30:30.911025497 +0100
+@@ -34,35 +34,33 @@
+ double kEulerGamma = 0.577215664901532860606512090082402431042;
+ 
+ 
+-/* Begin_Html
+-<center><h2>KelvinFunctions</h2></center>
++/**
++\class KelvinFunctions
+ 
+-<p>
+ This class calculates the Kelvin functions Ber(x), Bei(x), Ker(x),
+ Kei(x), and their first derivatives.
+-</p>
+-
+-End_Html */
++*/
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Begin_Latex
+-/// Ber(x) = Ber_{0}(x) = Re#left[J_{0}#left(x e^{3#pii/4}#right)#right]
+-/// End_Latex
+-/// where x is real, and Begin_Latex J_{0}(z) End_Latex is the zeroth-order Bessel
++/// \f[
++/// Ber(x) = Ber_{0}(x) = Re\left[J_{0}\left(x e^{3\pi i/4}\right)\right]
++/// \f]
++/// where x is real, and \f$J_{0}(z)\f$ is the zeroth-order Bessel
+ /// function of the first kind.
+ ///
+ /// If x < fgMin (=20), Ber(x) is computed according to its polynomial
+ /// approximation
+-/// Begin_Latex
+-/// Ber(x) = 1 + #sum_{n #geq 1}#frac{(-1)^{n}(x/2)^{4n}}{[(2n)!]^{2}}
+-/// End_Latex
++/// \f[
++/// Ber(x) = 1 + \sum_{n \geq 1}\frac{(-1)^{n}(x/2)^{4n}}{[(2n)!]^{2}}
++/// \f]
+ /// For x > fgMin, Ber(x) is computed according to its asymptotic
+ /// expansion:
+-/// Begin_Latex
+-/// Ber(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}} [F1(x) cos#alpha + G1(x) sin#alpha] - #frac{1}{#pi}Kei(x)
+-/// End_Latex
+-/// where Begin_Latex #alpha = #frac{x}{#sqrt{2}} - #frac{#pi}{8} End_Latex.
+-/// See also F1(x) and G1(x).
++/// \f[
++/// Ber(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}} [F1(x) cos\alpha + G1(x) sin\alpha] - \frac{1}{\pi}Kei(x)
++/// \f]
++/// where \f$\alpha = \frac{x}{\sqrt{2}} - \frac{\pi}{8}\f$.
++///
++/// See also F1() and G1().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -102,24 +100,25 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Begin_Latex
+-/// Bei(x) = Bei_{0}(x) = Im#left[J_{0}#left(x e^{3#pii/4}#right)#right]
+-/// End_Latex
+-/// where x is real, and Begin_Latex J_{0}(z) End_Latex is the zeroth-order Bessel
++/// \f[
++/// Bei(x) = Bei_{0}(x) = Im\left[J_{0}\left(x e^{3\pi i/4}\right)\right]
++/// \f]
++/// where x is real, and \f$J_{0}(z)\f$ is the zeroth-order Bessel
+ /// function of the first kind.
+ ///
+ /// If x < fgMin (=20), Bei(x) is computed according to its polynomial
+ /// approximation
+-/// Begin_Latex
+-/// Bei(x) = #sum_{n #geq 0}#frac{(-1)^{n}(x/2)^{4n+2}}{[(2n+1)!]^{2}}
+-/// End_Latex
++/// \f[
++/// Bei(x) = \sum_{n \geq 0}\frac{(-1)^{n}(x/2)^{4n+2}}{[(2n+1)!]^{2}}
++/// \f]
+ /// For x > fgMin, Bei(x) is computed according to its asymptotic
+ /// expansion:
+-/// Begin_Latex
+-/// Bei(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}} [F1(x) sin#alpha + G1(x) cos#alpha] - #frac{1}{#pi}Ker(x)
+-/// End_Latex
+-/// where Begin_Latex #alpha = #frac{x}{#sqrt{2}} - #frac{#pi}{8} End_Latex
+-/// See also F1(x) and G1(x).
++/// \f[
++/// Bei(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}} [F1(x) sin\alpha + G1(x) cos\alpha] - \frac{1}{\pi}Ker(x)
++/// \f]
++/// where \f$\alpha = \frac{x}{\sqrt{2}} - \frac{\pi}{8}\f$.
++///
++/// See also F1() and G1().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -161,29 +160,30 @@
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Begin_Latex
+-/// Ker(x) = Ker_{0}(x) = Re#left[K_{0}#left(x e^{3#pii/4}#right)#right]
+-/// End_Latex
+-/// where x is real, and Begin_Latex K_{0}(z) End_Latex is the zeroth-order modified
++/// \f[
++/// Ker(x) = Ker_{0}(x) = Re\left[K_{0}\left(x e^{3\pi i/4}\right)\right]
++/// \f]
++/// where x is real, and \f$K_{0}(z)\f$ is the zeroth-order modified
+ /// Bessel function of the second kind.
+ ///
+ /// If x < fgMin (=20), Ker(x) is computed according to its polynomial
+ /// approximation
+-/// Begin_Latex
+-/// Ker(x) = -#left(ln #frac{|x|}{2} + #gamma#right) Ber(x) + #left(#frac{#pi}{4} - #delta#right) Bei(x) + #sum_{n #geq 0} #frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} #left(#frac{x}{2}#right)^{4n}
+-/// End_Latex
+-/// where Begin_Latex #gamma = 0.577215664... End_Latex is the Euler-Mascheroni constant,
+-/// Begin_Latex #delta = #pi End_Latex for x < 0 and is otherwise zero, and
+-/// Begin_Latex
+-/// H_{n} = #sum_{k = 1}^{n} #frac{1}{k}
+-/// End_Latex
++/// \f[
++/// Ker(x) = -\left(ln \frac{|x|}{2} + \gamma\right) Ber(x) + \left(\frac{\pi}{4} - \delta\right) Bei(x) + \sum_{n \geq 0} \frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} \left(\frac{x}{2}\right)^{4n}
++/// \f]
++/// where \f$\gamma = 0.577215664...\f$ is the Euler-Mascheroni constant,
++/// \f$\delta = \pi\f$ for x < 0 and is otherwise zero, and
++/// \f[
++/// H_{n} = \sum_{k = 1}^{n} \frac{1}{k}
++/// \f]
+ /// For x > fgMin, Ker(x) is computed according to its asymptotic
+ /// expansion:
+-/// Begin_Latex
+-/// Ker(x) = #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} [F2(x) cos#beta + G2(x) sin#beta]
+-/// End_Latex
+-/// where Begin_Latex #beta = #frac{x}{#sqrt{2}} + #frac{#pi}{8} End_Latex
+-/// See also F2(x) and G2(x).
++/// \f[
++/// Ker(x) = \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} [F2(x) cos\beta + G2(x) sin\beta]
++/// \f]
++/// where \f$\beta = \frac{x}{\sqrt{2}} + \frac{\pi}{8}\f$.
++///
++/// See also F2() and G2().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -227,29 +227,30 @@
+ 
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Begin_Latex
+-/// Kei(x) = Kei_{0}(x) = Im#left[K_{0}#left(x e^{3#pii/4}#right)#right]
+-/// End_Latex
+-/// where x is real, and Begin_Latex K_{0}(z) End_Latex is the zeroth-order modified
++/// \f[
++/// Kei(x) = Kei_{0}(x) = Im\left[K_{0}\left(x e^{3\pi i/4}\right)\right]
++/// \f]
++/// where x is real, and \f$K_{0}(z)\f$ is the zeroth-order modified
+ /// Bessel function of the second kind.
+ ///
+ /// If x < fgMin (=20), Kei(x) is computed according to its polynomial
+ /// approximation
+-/// Begin_Latex
+-/// Kei(x) = -#left(ln #frac{x}{2} + #gamma#right) Bei(x) - #left(#frac{#pi}{4} - #delta#right) Ber(x) + #sum_{n #geq 0} #frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} #left(#frac{x}{2}#right)^{4n+2}
+-/// End_Latex
+-/// where Begin_Latex #gamma = 0.577215664... End_Latex is the Euler-Mascheroni constant,
+-/// Begin_Latex #delta = #pi End_Latex for x < 0 and is otherwise zero, and
+-/// Begin_Latex
+-/// H_{n} = #sum_{k = 1}^{n} #frac{1}{k}
+-/// End_Latex
++/// \f[
++/// Kei(x) = -\left(ln \frac{x}{2} + \gamma\right) Bei(x) - \left(\frac{\pi}{4} - \delta\right) Ber(x) + \sum_{n \geq 0} \frac{(-1)^{n}}{[(2n)!]^{2}} H_{2n} \left(\frac{x}{2}\right)^{4n+2}
++/// \f]
++/// where \f$\gamma = 0.577215664...\f$ is the Euler-Mascheroni constant,
++/// \f$\delta = \pi\f$ for x < 0 and is otherwise zero, and
++/// \f[
++/// H_{n} = \sum_{k = 1}^{n} \frac{1}{k}
++/// \f]
+ /// For x > fgMin, Kei(x) is computed according to its asymptotic
+ /// expansion:
+-/// Begin_Latex
+-/// Kei(x) = - #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} [F2(x) sin#beta + G2(x) cos#beta]
+-/// End_Latex
+-/// where Begin_Latex #beta = #frac{x}{#sqrt{2}} + #frac{#pi}{8} End_Latex
+-/// See also F2(x) and G2(x).
++/// \f[
++/// Kei(x) = - \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} [F2(x) sin\beta + G2(x) cos\beta]
++/// \f]
++/// where \f$\beta = \frac{x}{\sqrt{2}} + \frac{\pi}{8}\f$.
++///
++/// See also F2() and G2().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -298,10 +299,10 @@
+ /// If x < fgMin (=20), DBer(x) is computed according to the derivative of
+ /// the polynomial approximation of Ber(x). Otherwise it is computed
+ /// according to its asymptotic expansion
+-/// Begin_Latex
+-/// #frac{d}{dx} Ber(x) = M cos#left(#theta - #frac{#pi}{4}#right)
+-/// End_Latex
+-/// See also M(x) and Theta(x).
++/// \f[
++/// \frac{d}{dx} Ber(x) = M cos\left(\theta - \frac{\pi}{4}\right)
++/// \f]
++/// See also M() and Theta().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -343,10 +344,10 @@
+ /// If x < fgMin (=20), DBei(x) is computed according to the derivative of
+ /// the polynomial approximation of Bei(x). Otherwise it is computed
+ /// according to its asymptotic expansion
+-/// Begin_Latex
+-/// #frac{d}{dx} Bei(x) = M sin#left(#theta - #frac{#pi}{4}#right)
+-/// End_Latex
+-/// See also M(x) and Theta(x).
++/// \f[
++/// \frac{d}{dx} Bei(x) = M sin\left(\theta - \frac{\pi}{4}\right)
++/// \f]
++/// See also M() and Theta().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -388,10 +389,10 @@
+ /// If x < fgMin (=20), DKer(x) is computed according to the derivative of
+ /// the polynomial approximation of Ker(x). Otherwise it is computed
+ /// according to its asymptotic expansion
+-/// Begin_Latex
+-/// #frac{d}{dx} Ker(x) = N cos#left(#phi - #frac{#pi}{4}#right)
+-/// End_Latex
+-/// See also N(x) and Phi(x).
++/// \f[
++/// \frac{d}{dx} Ker(x) = N cos\left(\phi - \frac{\pi}{4}\right)
++/// \f]
++/// See also N() and Phi().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -436,10 +437,10 @@
+ /// If x < fgMin (=20), DKei(x) is computed according to the derivative of
+ /// the polynomial approximation of Kei(x). Otherwise it is computed
+ /// according to its asymptotic expansion
+-/// Begin_Latex
+-/// #frac{d}{dx} Kei(x) = N sin#left(#phi - #frac{#pi}{4}#right)
+-/// End_Latex
+-/// See also N(x) and Phi(x).
++/// \f[
++/// \frac{d}{dx} Kei(x) = N sin\left(\phi - \frac{\pi}{4}\right)
++/// \f]
++/// See also N() and Phi().
+ ///
+ /// Begin_Macro
+ /// {
+@@ -481,9 +482,9 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the calculations of the Kelvin
+ /// functions Bei(x) and Ber(x) (and their derivatives). F1(x) is given by
+-/// Begin_Latex
+-/// F1(x) = 1 + #sum_{n #geq 1} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos#left(#frac{n#pi}{4}#right)
+-/// End_Latex
++/// \f[
++/// F1(x) = 1 + \sum_{n \geq 1} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos\left(\frac{n\pi}{4}\right)
++/// \f]
+ 
+ double KelvinFunctions::F1(double x)
+ {
+@@ -510,9 +511,9 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the calculations of the Kelvin
+ /// functions Kei(x) and Ker(x) (and their derivatives). F2(x) is given by
+-/// Begin_Latex
+-/// F2(x) = 1 + #sum_{n #geq 1} (-1)^{n} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos#left(#frac{n#pi}{4}#right)
+-/// End_Latex
++/// \f[
++/// F2(x) = 1 + \sum_{n \geq 1} (-1)^{n} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} cos\left(\frac{n\pi}{4}\right)
++/// \f]
+ 
+ double KelvinFunctions::F2(double x)
+ {
+@@ -541,9 +542,9 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the calculations of the Kelvin
+ /// functions Bei(x) and Ber(x) (and their derivatives). G1(x) is given by
+-/// Begin_Latex
+-/// G1(x) = #sum_{n #geq 1} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin#left(#frac{n#pi}{4}#right)
+-/// End_Latex
++/// \f[
++/// G1(x) = \sum_{n \geq 1} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin\left(\frac{n\pi}{4}\right)
++/// \f]
+ 
+ double KelvinFunctions::G1(double x)
+ {
+@@ -568,9 +569,9 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the calculations of the Kelvin
+ /// functions Kei(x) and Ker(x) (and their derivatives). G2(x) is given by
+-/// Begin_Latex
+-/// G2(x) = #sum_{n #geq 1} (-1)^{n} #frac{#prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin#left(#frac{n#pi}{4}#right)
+-/// End_Latex
++/// \f[
++/// G2(x) = \sum_{n \geq 1} (-1)^{n} \frac{\prod_{m=1}^{n}(2m - 1)^{2}}{n! (8x)^{n}} sin\left(\frac{n\pi}{4}\right)
++/// \f]
+ 
+ double KelvinFunctions::G2(double x)
+ {
+@@ -597,9 +598,9 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the asymptotic expansions of DBer(x) and
+ /// DBei(x). M(x) is given by
+-/// Begin_Latex
+-/// M(x) = #frac{e^{x/#sqrt{2}}}{#sqrt{2#pix}}#left(1 + #frac{1}{8#sqrt{2} x} + #frac{1}{256 x^{2}} - #frac{399}{6144#sqrt{2} x^{3}} + O#left(#frac{1}{x^{4}}#right)#right)
+-/// End_Latex
++/// \f[
++/// M(x) = \frac{e^{x/\sqrt{2}}}{\sqrt{2\pi x}}\left(1 + \frac{1}{8\sqrt{2} x} + \frac{1}{256 x^{2}} - \frac{399}{6144\sqrt{2} x^{3}} + O\left(\frac{1}{x^{4}}\right)\right)
++/// \f]
+ 
+ double KelvinFunctions::M(double x)
+ {
+@@ -612,10 +613,10 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the asymptotic expansions of DBer(x) and
+-/// DBei(x). Begin_Latex #theta(x) #End_Latex is given by
+-/// Begin_Latex
+-/// #theta(x) = #frac{x}{#sqrt{2}} - #frac{#pi}{8} - #frac{1}{8#sqrt{2} x} - #frac{1}{16 x^{2}} - #frac{25}{384#sqrt{2} x^{3}} + O#left(#frac{1}{x^{5}}#right)
+-/// End_Latex
++/// DBei(x). \f$\theta(x)\f$ is given by
++/// \f[
++/// \theta(x) = \frac{x}{\sqrt{2}} - \frac{\pi}{8} - \frac{1}{8\sqrt{2} x} - \frac{1}{16 x^{2}} - \frac{25}{384\sqrt{2} x^{3}} + O\left(\frac{1}{x^{5}}\right)
++/// \f]
+ 
+ double KelvinFunctions::Theta(double x)
+ {
+@@ -628,10 +629,10 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the asymptotic expansions of DKer(x) and
+-/// DKei(x). (x) is given by
+-/// Begin_Latex
+-/// N(x) = #sqrt{#frac{#pi}{2x}} e^{-x/#sqrt{2}} #left(1 - #frac{1}{8#sqrt{2} x} + #frac{1}{256 x^{2}} + #frac{399}{6144#sqrt{2} x^{3}} + O#left(#frac{1}{x^{4}}#right)#right)
+-/// End_Latex
++/// DKei(x). N(x) is given by
++/// \f[
++/// N(x) = \sqrt{\frac{\pi}{2x}} e^{-x/\sqrt{2}} \left(1 - \frac{1}{8\sqrt{2} x} + \frac{1}{256 x^{2}} + \frac{399}{6144\sqrt{2} x^{3}} + O\left(\frac{1}{x^{4}}\right)\right)
++/// \f]
+ 
+ double KelvinFunctions::N(double x)
+ {
+@@ -644,10 +645,10 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Utility function appearing in the asymptotic expansions of DKer(x) and
+-/// DKei(x). Begin_Latex #phi(x) #End_Latex is given by
+-/// Begin_Latex
+-/// #phi(x) = - #frac{x}{#sqrt{2}} - #frac{#pi}{8} + #frac{1}{8#sqrt{2} x} - #frac{1}{16 x^{2}} + #frac{25}{384#sqrt{2} x^{3}} + O#left(#frac{1}{x^{5}}#right)
+-/// End_Latex
++/// DKei(x). \f$\phi(x)\f$ is given by
++/// \f[
++/// \phi(x) = - \frac{x}{\sqrt{2}} - \frac{\pi}{8} + \frac{1}{8\sqrt{2} x} - \frac{1}{16 x^{2}} + \frac{25}{384\sqrt{2} x^{3}} + O\left(\frac{1}{x^{5}}\right)
++/// \f]
+ 
+ double KelvinFunctions::Phi(double x)
+ {
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/HybridResult.h root-6.06.02/roofit/roostats/inc/RooStats/HybridResult.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/HybridResult.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/HybridResult.h	2016-03-20 18:30:30.945025834 +0100
+@@ -85,7 +85,7 @@
+       /// The error on the "confidence level" of the alternative hypothesis
+       Double_t CLsplusbError() const;
+       
+-      /// The error on the ratio CLs+b/CLb
++      /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
+       Double_t CLsError() const;
+ 
+    private:
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/HypoTestResult.h root-6.06.02/roofit/roostats/inc/RooStats/HypoTestResult.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/HypoTestResult.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/HypoTestResult.h	2016-03-20 18:30:30.972026102 +0100
+@@ -37,11 +37,12 @@
+    Any tool inheriting from HypoTestCalculator can return a HypoTestResult.
+    As such, it stores a p-value for the null-hypothesis (eg. background-only) 
+    and an alternate hypothesis (eg. signal+background).  
+-   The p-values can also be transformed into confidence levels (CLb, CLsplusb) in a trivial way.
+-   The ratio of the CLsplusb to CLb is often called CLs, and is considered useful, though it is 
+-   not a probability.
+-   Finally, the p-value of the null can be transformed into a number of equivalent Gaussian sigma using the 
+-   Significance method.
++   The p-values can also be transformed into confidence levels
++   (\f$CL_{b}\f$, \f$CL_{s+b}\f$) in a trivial way.
++   The ratio of the \f$CL_{s+b}\f$ to \f$CL_{b}\f$ is often called
++   \f$CL_{s}\f$, and is considered useful, though it is not a probability.
++   Finally, the p-value of the null can be transformed into a number of
++   equivalent Gaussian sigma using the Significance method.
+ 
+    The p-value of the null for a given test statistic is rigorously defined and
+    this is the starting point for the following conventions.
+@@ -52,17 +53,17 @@
+ observed value of the test statistic. This is the more standard
+ convention and avoids confusion when doing inverted tests.
+ 
+-For exclusion, we also want the formula
+-CLs = CLs+b / CLb to hold which therefore defines our conventions
+-for CLs+b and CLb. CLs was specifically invented for exclusion
++For exclusion, we also want the formula \f$CL_{s} = CL_{s+b} / CL_{b}\f$
++to hold which therefore defines our conventions for \f$CL_{s+b}\f$ and
++\f$CL_{b}\f$. \f$CL_{s}\f$ was specifically invented for exclusion
+ and therefore all quantities need be related through the assignments
+-as they are for exclusion: **CLs+b = p_{s+b}; CLb = p_b**. This
++as they are for exclusion: \f$CL_{s+b} = p_{s+b}\f$; \f$CL_{b} = p_{b}\f$. This
+ is derived by considering the scenarios of a powerful and not powerful
+-inverted test, where for the not so powerful test, CLs must be
++inverted test, where for the not so powerful test, \f$CL_{s}\f$ must be
+ close to one.
+ 
+ For results of Hypothesis tests,
+-CLs has no similar direct interpretation as for exclusion and can
++\f$CL_{s}\f$ has no similar direct interpretation as for exclusion and can
+ be larger than one.
+ 
+ */
+@@ -101,7 +102,7 @@
+       /// Convert  AlternatePValue into a "confidence level"
+       virtual Double_t CLsplusb() const { return !fBackgroundIsAlt ? AlternatePValue() : NullPValue(); }
+ 
+-      /// CLs is simply CLs+b/CLb (not a method, but a quantity)
++      /// \f$CL_{s}\f$ is simply \f$CL_{s+b}/CL_{b}\f$ (not a method, but a quantity)
+       virtual Double_t CLs() const {
+          double thisCLb = CLb();
+          if (thisCLb == 0) {
+@@ -144,7 +145,7 @@
+       /// The error on the "confidence level" of the alternative hypothesis
+       Double_t CLsplusbError() const;
+ 
+-      /// The error on the ratio CLs+b/CLb
++      /// The error on the ratio \f$CL_{s+b}/CL_{b}\f$
+       Double_t CLsError() const;
+ 
+       /// The error on the Null p-value
+diff -ur root-6.06.02.orig/roofit/roostats/src/HybridResult.cxx root-6.06.02/roofit/roostats/src/HybridResult.cxx
+--- root-6.06.02.orig/roofit/roostats/src/HybridResult.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/src/HybridResult.cxx	2016-03-20 18:30:30.973026112 +0100
+@@ -100,11 +100,9 @@
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////
+-
++/// Returns \f$1 - CL_{b}\f$ : the B p-value
+ double HybridResult::NullPValue() const
+ {
+-   // return 1-CL_b : the B p-value
+-
+    if (fComputationsNulDoneFlag==false) {
+       int nToys = fTestStat_b.size();
+       if (nToys==0) {
+@@ -131,11 +129,9 @@
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////
+-
++/// Returns \f$CL_{s+b}\f$ : the S+B p-value
+ double HybridResult::AlternatePValue() const
+ {
+-   // return CL_s+b : the S+B p-value
+-
+    if (fComputationsAltDoneFlag==false) {
+       int nToys = fTestStat_b.size();
+       if (nToys==0) {
+@@ -162,40 +158,37 @@
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////
+-
++/// Returns an estimate of the error on \f$CL_{b}\f$ assuming a binomial
++/// error on \f$CL_{b}\f$:
++/// \f[
++/// \sigma_{CL_{b}} = \sqrt{CL_{b} \left( 1 - CL_{b} \right) / n_{toys}}
++/// \f]
+ Double_t HybridResult::CLbError() const
+ {
+-  // Returns an estimate of the error on CLb assuming a binomial error on
+-  // CLb:
+-  // BEGIN_LATEX
+-  // #sigma_{CL_{b}} &=& #sqrt{CL_{b} #left( 1 - CL_{b} #right) / n_{toys}}
+-  // END_LATEX
+   unsigned const int n = fTestStat_b.size();
+   return TMath::Sqrt(CLb() * (1. - CLb()) / n);
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////
+-
++/// Returns an estimate of the error on \f$CL_{s+b}\f$ assuming a binomial
++/// error on \f$CL_{s+b}\f$:
++/// \f[
++/// \sigma_{CL_{s+b}} = \sqrt{CL_{s+b} \left( 1 - CL_{s+b} \right) / n_{toys}}
++/// \f]
+ Double_t HybridResult::CLsplusbError() const
+ {
+-  // Returns an estimate of the error on CLsplusb assuming a binomial
+-  // error on CLsplusb:
+-  // BEGIN_LATEX
+-  // #sigma_{CL_{s+b}} &=& #sqrt{CL_{s+b} #left( 1 - CL_{s+b} #right) / n_{toys}}
+-  // END_LATEX
+   unsigned const int n = fTestStat_sb.size();
+   return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////
+-
++/// Returns an estimate of the error on \f$CL_{s}\f$ through combination
++/// of the errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
++/// \f[
++/// \sigma_{CL_s} = CL_s \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
++/// \f]
+ Double_t HybridResult::CLsError() const
+ {
+-  // Returns an estimate of the error on CLs through combination of the
+-  // errors on CLb and CLsplusb:
+-  // BEGIN_LATEX
+-  // #sigma_{CL_s} &=& CL_s #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
+-  // END_LATEX
+   unsigned const int n_b = fTestStat_b.size();
+   unsigned const int n_sb = fTestStat_sb.size();
+   
+diff -ur root-6.06.02.orig/roofit/roostats/src/HypoTestResult.cxx root-6.06.02/roofit/roostats/src/HypoTestResult.cxx
+--- root-6.06.02.orig/roofit/roostats/src/HypoTestResult.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/src/HypoTestResult.cxx	2016-03-20 18:30:30.973026112 +0100
+@@ -229,8 +229,8 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// compute CLb error
+-/// Clb =  1 - NullPValue() 
++/// compute \f$CL_{b}\f$ error
++/// \f$CL_{b}\f$ = 1 - NullPValue()
+ /// must use opposite condition that routine above
+ 
+ Double_t HypoTestResult::CLbError() const {
+@@ -251,12 +251,12 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Returns an estimate of the error on CLs through combination of the
+-/// errors on CLb and CLsplusb:
+-/// BEGIN_LATEX
+-/// #sigma_{CL_s} = CL_s
+-/// #sqrt{#left( #frac{#sigma_{CL_{s+b}}}{CL_{s+b}} #right)^2 + #left( #frac{#sigma_{CL_{b}}}{CL_{b}} #right)^2}
+-/// END_LATEX
++/// Returns an estimate of the error on \f$CL_{s}\f$ through combination of the
++/// errors on \f$CL_{b}\f$ and \f$CL_{s+b}\f$:
++/// \f[
++/// \sigma_{CL_s} = CL_s
++/// \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
++/// \f]
+ 
+ Double_t HypoTestResult::CLsError() const {
+    if(!fAltDistr || !fNullDistr) return 0.0;

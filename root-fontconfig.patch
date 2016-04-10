@@ -1,7 +1,7 @@
-diff -ur root-5.34.32.orig/core/base/src/TApplication.cxx root-5.34.32/core/base/src/TApplication.cxx
---- root-5.34.32.orig/core/base/src/TApplication.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/core/base/src/TApplication.cxx	2015-06-30 00:15:36.347566719 +0200
-@@ -273,22 +273,11 @@
+diff -ur root-6.06.02.orig/core/base/src/TApplication.cxx root-6.06.02/core/base/src/TApplication.cxx
+--- root-6.06.02.orig/core/base/src/TApplication.cxx	2016-03-13 19:55:12.009036203 +0100
++++ root-6.06.02/core/base/src/TApplication.cxx	2016-03-13 19:55:23.296139611 +0100
+@@ -265,18 +265,11 @@
     LoadGraphicsLibs();
  
     // Try to load TrueType font renderer. Only try to load if not in batch
@@ -9,11 +9,7 @@ diff -ur root-5.34.32.orig/core/base/src/TApplication.cxx root-5.34.32/core/base
 +   // mode and Root.UseTTFonts is true. Abort silently
     // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
 -   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--#ifdef TTFFONTDIR
--                                       TTFFONTDIR);
--#else
--                                       "$(ROOTSYS)/fonts");
--#endif
+-                                       TROOT::GetTTFFontDir());
 -   char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 -   // Check for use of DFSG - fonts
 -   if (!ttfont)
@@ -26,7 +22,7 @@ diff -ur root-5.34.32.orig/core/base/src/TApplication.cxx root-5.34.32/core/base
        if (gClassTable->GetDict("TGX11TTF")) {
           // in principle we should not have linked anything against libGX11TTF
           // but with ACLiC this can happen, initialize TGX11TTF by hand
-@@ -302,7 +291,6 @@
+@@ -290,7 +283,6 @@
        }
     }
  #endif
@@ -34,23 +30,35 @@ diff -ur root-5.34.32.orig/core/base/src/TApplication.cxx root-5.34.32/core/base
  
     // Create WM dependent application environment
     if (fAppImp)
-diff -ur root-5.34.32.orig/graf2d/graf/inc/TTF.h root-5.34.32/graf2d/graf/inc/TTF.h
---- root-5.34.32.orig/graf2d/graf/inc/TTF.h	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf2d/graf/inc/TTF.h	2015-06-30 00:15:36.360566569 +0200
-@@ -70,9 +70,8 @@
-    static FT_BBox     fgCBox;                  // string control box
-    static FT_CharMap  fgCharMap[kTTMaxFonts];  // font character map
-    static Int_t       fgCurFontIdx;            // current font index
--   static Int_t       fgSymbItaFontIdx;        // Symbol italic font index
-    static Int_t       fgFontCount;             // number of fonts loaded
--   static char       *fgFontName[kTTMaxFonts]; // font name
-+   static Int_t       fgFontID[kTTMaxFonts];   // font ID
-    static FT_Face     fgFace[kTTMaxFonts];     // font face
-    static TTGlyph     fgGlyphs[kMaxGlyphs];    // glyphs
-    static Bool_t      fgHinting;               // use hinting (true by default)
-diff -ur root-5.34.32.orig/graf2d/graf/Module.mk root-5.34.32/graf2d/graf/Module.mk
---- root-5.34.32.orig/graf2d/graf/Module.mk	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf2d/graf/Module.mk	2015-06-30 00:15:36.360566569 +0200
+diff -ur root-6.06.02.orig/graf2d/graf/CMakeLists.txt root-6.06.02/graf2d/graf/CMakeLists.txt
+--- root-6.06.02.orig/graf2d/graf/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/graf/CMakeLists.txt	2016-03-13 19:56:57.341001209 +0100
+@@ -12,7 +12,7 @@
+ 
+ include_directories(${FREETYPE_INCLUDE_DIRS})
+ 
+-ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARY} mathtext DEPENDENCIES Hist Matrix MathCore RIO)
++ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx LIBRARIES ${FREETYPE_LIBRARIES} ${ZLIB_LIBRARY} mathtext fontconfig DEPENDENCIES Hist Matrix MathCore RIO)
+ 
+ if(builtin_freetype)
+   add_dependencies(${libname} FREETYPE)
+diff -ur root-6.06.02.orig/graf2d/graf/inc/TTF.h root-6.06.02/graf2d/graf/inc/TTF.h
+--- root-6.06.02.orig/graf2d/graf/inc/TTF.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/graf/inc/TTF.h	2016-03-13 19:55:23.296139611 +0100
+@@ -86,9 +86,8 @@
+    static FT_BBox        fgCBox;                  // string control box
+    static FT_CharMap     fgCharMap[kTTMaxFonts];  // font character map
+    static Int_t          fgCurFontIdx;            // current font index
+-   static Int_t          fgSymbItaFontIdx;        // Symbol italic font index
+    static Int_t          fgFontCount;             // number of fonts loaded
+-   static char          *fgFontName[kTTMaxFonts]; // font name
++   static Int_t          fgFontID[kTTMaxFonts];   // font ID
+    static FT_Face        fgFace[kTTMaxFonts];     // font face
+    static TTF::TTGlyph   fgGlyphs[kMaxGlyphs];    // glyphs
+    static Bool_t         fgHinting;               // use hinting (true by default)
+diff -ur root-6.06.02.orig/graf2d/graf/Module.mk root-6.06.02/graf2d/graf/Module.mk
+--- root-6.06.02.orig/graf2d/graf/Module.mk	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/graf/Module.mk	2016-03-13 19:55:23.296139611 +0100
 @@ -46,7 +46,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libGraf.$(SOEXT) $@ \
@@ -58,49 +66,45 @@ diff -ur root-5.34.32.orig/graf2d/graf/Module.mk root-5.34.32/graf2d/graf/Module
 -		   "$(GRAFLIBEXTRA) $(MATHTEXTLIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 +		   "$(GRAFLIBEXTRA) $(MATHTEXTLIB) $(FREETYPELDFLAGS) $(FREETYPELIB) -lfontconfig"
  
- $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP)
- 		$(MAKEDIR)
-diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/TTF.cxx
---- root-5.34.32.orig/graf2d/graf/src/TTF.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf2d/graf/src/TTF.cxx	2015-07-02 10:10:03.352185217 +0200
-@@ -26,6 +26,7 @@
+ $(call pcmrule,GRAF)
+ 	$(noop)
+diff -ur root-6.06.02.orig/graf2d/graf/src/TTF.cxx root-6.06.02/graf2d/graf/src/TTF.cxx
+--- root-6.06.02.orig/graf2d/graf/src/TTF.cxx	2016-03-13 19:55:12.024036341 +0100
++++ root-6.06.02/graf2d/graf/src/TTF.cxx	2016-03-13 19:55:23.297139620 +0100
+@@ -25,6 +25,8 @@
  #include "TMath.h"
  #include "TError.h"
  
 +#include <fontconfig/fontconfig.h>
- 
++
  // to scale fonts to the same size as the old TT version
  const Float_t kScale = 0.93376068;
-@@ -40,10 +41,9 @@
- Int_t       TTF::fgWidth          = 0;
- Int_t       TTF::fgAscent         = 0;
- Int_t       TTF::fgCurFontIdx     = -1;
--Int_t       TTF::fgSymbItaFontIdx = -1;
- Int_t       TTF::fgFontCount      = 0;
- Int_t       TTF::fgNumGlyphs      = 0;
--char       *TTF::fgFontName[kTTMaxFonts];
-+Int_t       TTF::fgFontID[kTTMaxFonts];
- FT_Matrix  *TTF::fgRotMatrix;
- FT_Library  TTF::fgLibrary;
- FT_BBox     TTF::fgCBox;
-@@ -75,6 +75,16 @@
+ 
+@@ -38,10 +40,9 @@
+ Int_t          TTF::fgWidth          = 0;
+ Int_t          TTF::fgAscent         = 0;
+ Int_t          TTF::fgCurFontIdx     = -1;
+-Int_t          TTF::fgSymbItaFontIdx = -1;
+ Int_t          TTF::fgFontCount      = 0;
+ Int_t          TTF::fgNumGlyphs      = 0;
+-char          *TTF::fgFontName[kTTMaxFonts];
++Int_t          TTF::fgFontID[kTTMaxFonts];
+ FT_Matrix     *TTF::fgRotMatrix;
+ FT_Library     TTF::fgLibrary;
+ FT_BBox        TTF::fgCBox;
+@@ -72,6 +73,11 @@
        return;
     }
  
 +   // Add root's font directory
 +   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-+# ifdef TTFFONTDIR
-+                                       TTFFONTDIR
-+# else
-+                                       "$(ROOTSYS)/fonts"
-+# endif
-+                                      );
++                                       TROOT::GetTTFFontDir());
 +   FcConfigAppFontAddDir (NULL, (const FcChar8*)ttpath);
 +
     // load default font (arialbd)
     SetTextFont(62);
  }
-@@ -87,7 +97,6 @@
+@@ -84,7 +90,6 @@
     if (!fgInit) return;
  
     for (int i = 0; i < fgFontCount; i++) {
@@ -108,7 +112,7 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
        FT_Done_Face(fgFace[i]);
     }
     if (fgRotMatrix) delete fgRotMatrix;
-@@ -112,12 +121,19 @@
+@@ -109,12 +114,19 @@
           charmap  = fgFace[fgCurFontIdx]->charmaps[i];
           platform = charmap->platform_id;
           encoding = charmap->encoding_id;
@@ -132,7 +136,7 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
           {
              fgCharMap[fgCurFontIdx] = charmap;
              if (FT_Set_Charmap(fgFace[fgCurFontIdx], fgCharMap[fgCurFontIdx]))
-@@ -381,27 +397,147 @@
+@@ -378,27 +390,147 @@
  
     if (!fontname || !fontname[0]) {
        Warning("TTF::SetTextFont",
@@ -293,7 +297,7 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
        }
     }
  
-@@ -409,161 +545,216 @@
+@@ -406,151 +538,215 @@
     if (fgFontCount >= kTTMaxFonts) {
        Error("TTF::SetTextFont", "too many fonts opened (increase kTTMaxFont = %d)",
              kTTMaxFonts);
@@ -306,13 +310,7 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
  
 -   // try to load font (font must be in Root.TTFontPath resource)
 -   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--# ifdef TTFFONTDIR
--                                       TTFFONTDIR
--# else
--                                       "$(ROOTSYS)/fonts"
--# endif
--                                      );
- 
+-                                       TROOT::GetTTFFontDir());
 -   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 +   char *ttfont = NULL;
 +   int ttindex = 0;
@@ -541,29 +539,30 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
 -   return 0;
 -}
 -
--//______________________________________________________________________________
+-////////////////////////////////////////////////////////////////////////////////
+-/// Set specified font.
+-/// List of the currently supported fonts (screen and PostScript)
+-///
+-/// | Font ID |   X11                     |     TTF          |
+-/// |---------|---------------------------|------------------|
+-/// |      1  | times-medium-i-normal     | timesi.ttf       |
+-/// |      2  | times-bold-r-normal       | timesbd.ttf      |
+-/// |      3  | times-bold-i-normal       | timesi.ttf       |
+-/// |      4  | helvetica-medium-r-normal | arial.ttf        |
+-/// |      5  | helvetica-medium-o-normal | ariali.ttf       |
+-/// |      6  | helvetica-bold-r-normal   | arialbd.ttf      |
+-/// |      7  | helvetica-bold-o-normal   | arialbi.ttf      |
+-/// |      8  | courier-medium-r-normal   | cour.ttf         |
+-/// |      9  | courier-medium-o-normal   | couri.ttf        |
+-/// |     10  | courier-bold-r-normal     | courbd.ttf       |
+-/// |     11  | courier-bold-o-normal     | courbi.ttf       |
+-/// |     12  | symbol-medium-r-normal    | symbol.ttf       |
+-/// |     13  | times-medium-r-normal     | times.ttf        |
+-/// |     14  |                           | wingding.ttf     |
+-/// |     15  | symbol oblique is emulated from symbol.ttf | |
+-
 -void TTF::SetTextFont(Font_t fontnumber)
 -{
--   // Set specified font.
--   // List of the currently supported fonts (screen and PostScript)
--   // =============================================================
--   //   Font ID       X11                        TTF
--   //        1 : times-medium-i-normal       timesi.ttf
--   //        2 : times-bold-r-normal         timesbd.ttf
--   //        3 : times-bold-i-normal         timesi.ttf
--   //        4 : helvetica-medium-r-normal   arial.ttf
--   //        5 : helvetica-medium-o-normal   ariali.ttf
--   //        6 : helvetica-bold-r-normal     arialbd.ttf
--   //        7 : helvetica-bold-o-normal     arialbi.ttf
--   //        8 : courier-medium-r-normal     cour.ttf
--   //        9 : courier-medium-o-normal     couri.ttf
--   //       10 : courier-bold-r-normal       courbd.ttf
--   //       11 : courier-bold-o-normal       courbi.ttf
--   //       12 : symbol-medium-r-normal      symbol.ttf
--   //       13 : times-medium-r-normal       times.ttf
--   //       14 :                             wingding.ttf
--   //       15 : symbol oblique is emulated from symbol.ttf
--
 -   // Added by cholm for use of DFSG - fonts - based on Kevins fix.
 -   // Table of Microsoft and (for non-MSFT operating systems) backup
 -   // FreeFont TTF fonts.
@@ -612,12 +611,7 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
 -      // try to load font (font must be in Root.TTFontPath resource)
 -      // to see which fontset we have available
 -      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--#ifdef TTFFONTDIR
--                                          TTFFONTDIR
--#else
--                                          "$(ROOTSYS)/fonts"
--#endif
--                                         );
+-                                          TROOT::GetTTFFontDir());
 -      char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
 -      if (ttfont) {
 -         delete [] ttfont;
@@ -636,10 +630,20 @@ diff -ur root-5.34.32.orig/graf2d/graf/src/TTF.cxx root-5.34.32/graf2d/graf/src/
 -   if (ret == 0 && fontid != 12) fontset = thisset;
  }
  
- //______________________________________________________________________________
-diff -ur root-5.34.32.orig/graf2d/postscript/Module.mk root-5.34.32/graf2d/postscript/Module.mk
---- root-5.34.32.orig/graf2d/postscript/Module.mk	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf2d/postscript/Module.mk	2015-06-30 00:15:36.361566558 +0200
+ ////////////////////////////////////////////////////////////////////////////////
+diff -ur root-6.06.02.orig/graf2d/postscript/CMakeLists.txt root-6.06.02/graf2d/postscript/CMakeLists.txt
+--- root-6.06.02.orig/graf2d/postscript/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/postscript/CMakeLists.txt	2016-03-13 19:57:59.333569158 +0100
+@@ -5,5 +5,5 @@
+ 
+ ROOT_GENERATE_DICTIONARY(G__PostScript *.h MODULE Postscript LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ 
+-ROOT_LINKER_LIBRARY(Postscript *.cxx G__PostScript.cxx LIBRARIES  ${ZLIB_LIBRARY} mathtext DEPENDENCIES Graf)
++ROOT_LINKER_LIBRARY(Postscript *.cxx G__PostScript.cxx LIBRARIES  ${ZLIB_LIBRARY} mathtext fontconfig DEPENDENCIES Graf)
+ ROOT_INSTALL_HEADERS()
+diff -ur root-6.06.02.orig/graf2d/postscript/Module.mk root-6.06.02/graf2d/postscript/Module.mk
+--- root-6.06.02.orig/graf2d/postscript/Module.mk	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/postscript/Module.mk	2016-03-13 19:55:23.298139629 +0100
 @@ -50,7 +50,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libPostscript.$(SOEXT) $@ \
@@ -647,12 +651,12 @@ diff -ur root-5.34.32.orig/graf2d/postscript/Module.mk root-5.34.32/graf2d/posts
 -		   "$(POSTSCRIPTLIBEXTRA) $(MATHTEXTLIB) $(FREETYPELDFLAGS) $(FREETYPELIB)"
 +		   "$(POSTSCRIPTLIBEXTRA) $(MATHTEXTLIB) $(FREETYPELDFLAGS) $(FREETYPELIB) -lfontconfig"
  
- $(POSTSCRIPTDS): $(POSTSCRIPTH) $(POSTSCRIPTL) $(ROOTCINTTMPDEP)
- 		$(MAKEDIR)
-diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/graf2d/postscript/src/TPostScript.cxx
---- root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf2d/postscript/src/TPostScript.cxx	2015-07-02 10:07:45.737737725 +0200
-@@ -238,6 +238,7 @@
+ $(call pcmrule,POSTSCRIPT)
+ 	$(noop)
+diff -ur root-6.06.02.orig/graf2d/postscript/src/TPostScript.cxx root-6.06.02/graf2d/postscript/src/TPostScript.cxx
+--- root-6.06.02.orig/graf2d/postscript/src/TPostScript.cxx	2016-03-13 19:55:12.024036341 +0100
++++ root-6.06.02/graf2d/postscript/src/TPostScript.cxx	2016-03-13 19:55:23.298139629 +0100
+@@ -229,6 +229,7 @@
  #include <string.h>
  #include <ctype.h>
  #include <wchar.h>
@@ -660,10 +664,10 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
  
  #include "Riostream.h"
  #include "Byteswap.h"
-@@ -1511,63 +1512,179 @@
- {
-    // Embed font in PS file.
+@@ -1528,56 +1529,179 @@
  
+ void TPostScript::FontEmbed(void)
+ {
 -   static const char *fonttable[32][2] = {
 -      { "Root.TTFont.0", "FreeSansBold.otf" },
 -      { "Root.TTFont.1", "FreeSerifItalic.otf" },
@@ -703,19 +707,13 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
  
 -   // try to load font (font must be in Root.TTFontPath resource)
 -   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--#ifdef TTFFONTDIR
--                                       TTFFONTDIR
--#else // TTFFONTDIR
--                                       "$(ROOTSYS)/fonts"
--#endif // TTFFONTDIR
--                                       );
+-                                       TROOT::GetTTFFontDir());
 -
     for (Int_t fontid = 1; fontid < 30; fontid++) {
-       if (fontid != 15) {
+       if (fontid != 15 && MustEmbed[fontid-1]) {
 -         const char *filename = gEnv->GetValue(
 -                                               fonttable[fontid][0], fonttable[fontid][1]);
--         char *ttfont = gSystem->Which(ttpath, filename,
--                                       kReadPermission);
+-         char *ttfont = gSystem->Which(ttpath, filename, kReadPermission);
 +
 +         char *ttfont = NULL;
 +
@@ -881,8 +879,8 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
 +         FcPatternDestroy (match);
 +         FcPatternDestroy (pat);
 +         if (set) FcCharSetDestroy (set);
- 
-          if(!ttfont) {
++
+          if (!ttfont) {
 -            Error("TPostScript::FontEmbed",
 -                  "font %d (filename `%s') not found in path",
 -                  fontid, filename);
@@ -891,7 +889,7 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
           } else {
              if (FontEmbedType2(ttfont)) {
                 // nothing
-@@ -1576,9 +1693,8 @@
+@@ -1586,9 +1710,8 @@
              } else if(FontEmbedType42(ttfont)) {
                 // nothing
              } else {
@@ -903,7 +901,7 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
              }
              delete [] ttfont;
           }
-@@ -2571,10 +2687,10 @@
+@@ -2536,10 +2659,10 @@
        { "Root.PSFont.5",             "/Helvetica-Oblique" },
        { "Root.PSFont.6",             "/Helvetica-Bold" },
        { "Root.PSFont.7",             "/Helvetica-BoldOblique" },
@@ -918,7 +916,7 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
        { "Root.PSFont.12",            "/Symbol" },
        { "Root.PSFont.13",            "/Times-Roman" },
        { "Root.PSFont.14",            "/ZapfDingbats" },
-@@ -2781,10 +2897,10 @@
+@@ -2745,10 +2868,10 @@
        { "Root.PSFont.9", "/FreeMonoOblique" },
        { "Root.PSFont.10", "/FreeMonoBold" },
        { "Root.PSFont.11", "/FreeMonoBoldOblique" },
@@ -932,9 +930,20 @@ diff -ur root-5.34.32.orig/graf2d/postscript/src/TPostScript.cxx root-5.34.32/gr
        { "Root.PSFont.STIXGen", "/STIXGeneral" },
        { "Root.PSFont.STIXGenIt", "/STIXGeneral-Italic" },
        { "Root.PSFont.STIXGenBd", "/STIXGeneral-Bold" },
-diff -ur root-5.34.32.orig/graf3d/gl/Module.mk root-5.34.32/graf3d/gl/Module.mk
---- root-5.34.32.orig/graf3d/gl/Module.mk	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf3d/gl/Module.mk	2015-06-30 00:15:36.362566546 +0200
+diff -ur root-6.06.02.orig/graf3d/gl/CMakeLists.txt root-6.06.02/graf3d/gl/CMakeLists.txt
+--- root-6.06.02.orig/graf3d/gl/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf3d/gl/CMakeLists.txt	2016-03-13 19:59:09.289210061 +0100
+@@ -32,6 +32,6 @@
+ 
+ ROOT_GENERATE_DICTIONARY(G__GL ${headers} MODULE RGL LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ 
+-ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
++ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} fontconfig DEPENDENCIES Hist Gui Ged)
+ 
+ ROOT_INSTALL_HEADERS(${installoptions})
+diff -ur root-6.06.02.orig/graf3d/gl/Module.mk root-6.06.02/graf3d/gl/Module.mk
+--- root-6.06.02.orig/graf3d/gl/Module.mk	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf3d/gl/Module.mk	2016-03-13 19:55:23.299139638 +0100
 @@ -78,7 +78,7 @@
  		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
  		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
@@ -942,20 +951,20 @@ diff -ur root-5.34.32.orig/graf3d/gl/Module.mk root-5.34.32/graf3d/gl/Module.mk
 -		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 +		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
  
- $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP)
- 		$(MAKEDIR)
-diff -ur root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.32/graf3d/gl/src/TGLFontManager.cxx
---- root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf3d/gl/src/TGLFontManager.cxx	2015-07-02 10:19:18.521853256 +0200
-@@ -36,6 +36,7 @@
+ $(call pcmrule,GL)
+ 	$(noop)
+diff -ur root-6.06.02.orig/graf3d/gl/src/TGLFontManager.cxx root-6.06.02/graf3d/gl/src/TGLFontManager.cxx
+--- root-6.06.02.orig/graf3d/gl/src/TGLFontManager.cxx	2016-03-13 19:55:12.025036350 +0100
++++ root-6.06.02/graf3d/gl/src/TGLFontManager.cxx	2016-03-13 19:55:23.299139638 +0100
+@@ -37,6 +37,7 @@
  # include "FTGLBitmapFont.h"
  #endif
  
 +#include <fontconfig/fontconfig.h>
  
- //______________________________________________________________________________
- // TGLFont
-@@ -413,7 +414,7 @@
+ /** \class TGLFont
+ \ingroup opengl
+@@ -420,7 +421,7 @@
  ClassImp(TGLFontManager);
  
  TObjArray   TGLFontManager::fgFontFileArray;
@@ -964,16 +973,12 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.32/graf3d/
  TGLFontManager::FontSizeVec_t TGLFontManager::fgFontSizeArray;
  Bool_t  TGLFontManager::fgStaticInitDone = kFALSE;
  
-@@ -444,21 +445,175 @@
+@@ -451,17 +452,175 @@
     FontMap_i it = fFontMap.find(TGLFont(size, fileID, mode));
     if (it == fFontMap.end())
     {
 -      TString ttpath, file;
--# ifdef TTFFONTDIR
--      ttpath = gEnv->GetValue("Root.TTGLFontPath", TTFFONTDIR );
--# else
--      ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
--# endif
+-      ttpath = gEnv->GetValue("Root.TTGLFontPath", TROOT::GetTTFFontDir());
 -      {
 -         //For extenede we have both ttf and otf.
 -         char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
@@ -1153,7 +1158,7 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.32/graf3d/
        FTFont* ftfont = 0;
        switch (mode)
        {
-@@ -482,10 +637,14 @@
+@@ -485,10 +644,14 @@
              ftfont = new FTGLTextureFont(file);
              break;
           default:
@@ -1168,16 +1173,16 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.32/graf3d/
        ftfont->FaceSize(size);
        const TGLFont &mf = fFontMap.insert(std::make_pair(TGLFont(size, fileID, mode, ftfont, 0), 1)).first->first;
        out.CopyAttributes(mf);
-@@ -567,8 +726,6 @@
+@@ -571,8 +734,6 @@
  {
     if (fgStaticInitDone == kFALSE) InitStatics();
  
 -   assert(fgExtendedFontStart > 0 && "GetExtendedFontStartIndex, invalid index");
--   
+-
     return fgExtendedFontStart;
  }
  
-@@ -636,28 +793,6 @@
+@@ -642,28 +803,6 @@
     fgFontFileArray.Add(new TObjString("wingding")); // 140
     fgFontFileArray.Add(new TObjString("symbol"));   // 150
  
@@ -1206,9 +1211,9 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLFontManager.cxx root-5.34.32/graf3d/
     fgFontFileArray.Add(new TObjString("STIXGeneral.otf"));          // 200
     fgFontFileArray.Add(new TObjString("STIXGeneralItalic.otf"));    // 210
     fgFontFileArray.Add(new TObjString("STIXGeneralBol.otf"));       // 220
-diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/TGLText.cxx
---- root-5.34.32.orig/graf3d/gl/src/TGLText.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/graf3d/gl/src/TGLText.cxx	2015-07-02 10:23:10.490205011 +0200
+diff -ur root-6.06.02.orig/graf3d/gl/src/TGLText.cxx root-6.06.02/graf3d/gl/src/TGLText.cxx
+--- root-6.06.02.orig/graf3d/gl/src/TGLText.cxx	2016-03-13 19:55:12.026036359 +0100
++++ root-6.06.02/graf3d/gl/src/TGLText.cxx	2016-03-13 19:55:23.299139638 +0100
 @@ -34,6 +34,8 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -1218,7 +1223,7 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/
  #define FTGL_BITMAP  0
  #define FTGL_PIXMAP  1
  #define FTGL_OUTLINE 2
-@@ -173,33 +175,92 @@
+@@ -178,27 +180,92 @@
  {
     int fontid = fontnumber / 10;
  
@@ -1241,12 +1246,8 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/
 -
 -   // try to load font (font must be in Root.TTFontPath resource)
 -   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--# ifdef TTFFONTDIR
--                                        TTFFONTDIR
--# else
--                                        "$(ROOTSYS)/fonts"
--# endif
--                                        );
+-                                       TROOT::GetTTFFontDir());
+-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
 +   FcPattern *pat, *match;
 +   FcResult result;
 +   char *ttfont;
@@ -1327,8 +1328,7 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/
 +      FcPatternAddInteger (pat, FC_SLANT, FC_SLANT_ROMAN);
 +      break;
 +   }
- 
--   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
++
 +   FcConfigSubstitute (NULL, pat, FcMatchPattern);
 +   FcDefaultSubstitute (pat);
 +   match = FcFontMatch (NULL, pat, &result);
@@ -1337,7 +1337,7 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/
  
     if (fGLTextFont) delete fGLTextFont;
  
-@@ -207,7 +268,9 @@
+@@ -206,7 +273,9 @@
  
     fGLTextFont = new FTGLPolygonFont(ttfont);
  
@@ -1345,24 +1345,18 @@ diff -ur root-5.34.32.orig/graf3d/gl/src/TGLText.cxx root-5.34.32/graf3d/gl/src/
 +   FcPatternDestroy (pat);
 +
     if (!fGLTextFont->FaceSize(1))
--      Error("SetGLTextFont","Cannot set FTGL::FaceSize"),
+       Error("SetGLTextFont","Cannot set FTGL::FaceSize");
 -   delete [] ttfont;
-+      Error("SetGLTextFont","Cannot set FTGL::FaceSize");
  }
-diff -ur root-5.34.32.orig/gui/gui/src/TGApplication.cxx root-5.34.32/gui/gui/src/TGApplication.cxx
---- root-5.34.32.orig/gui/gui/src/TGApplication.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/gui/gui/src/TGApplication.cxx	2015-06-30 00:15:36.363566535 +0200
-@@ -83,25 +83,12 @@
+diff -ur root-6.06.02.orig/gui/gui/src/TGApplication.cxx root-6.06.02/gui/gui/src/TGApplication.cxx
+--- root-6.06.02.orig/gui/gui/src/TGApplication.cxx	2016-03-13 19:55:12.026036359 +0100
++++ root-6.06.02/gui/gui/src/TGApplication.cxx	2016-03-13 19:55:23.300139647 +0100
+@@ -83,20 +83,12 @@
     gROOT->SetBatch(kFALSE);
  
     if (strcmp(appClassName, "proofserv")) {
 -      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
--#ifdef TTFFONTDIR
--                                          TTFFONTDIR);
--#else
--                                          "$(ROOTSYS)/fonts");
--#endif
--
+-                                          TROOT::GetTTFFontDir());
 -      char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
 -      // Added by cholm for use of DFSG - fonts - based on fix by Kevin
 -      if (!ttfont)
@@ -1379,11 +1373,11 @@ diff -ur root-5.34.32.orig/gui/gui/src/TGApplication.cxx root-5.34.32/gui/gui/sr
     }
  
     // Create the canvas colors early so they are allocated before
-diff -ur root-5.34.32.orig/gui/gui/src/TGSpeedo.cxx root-5.34.32/gui/gui/src/TGSpeedo.cxx
---- root-5.34.32.orig/gui/gui/src/TGSpeedo.cxx	2015-06-23 17:56:20.000000000 +0200
-+++ root-5.34.32/gui/gui/src/TGSpeedo.cxx	2015-06-30 00:15:36.363566535 +0200
+diff -ur root-6.06.02.orig/gui/gui/src/TGSpeedo.cxx root-6.06.02/gui/gui/src/TGSpeedo.cxx
+--- root-6.06.02.orig/gui/gui/src/TGSpeedo.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/gui/gui/src/TGSpeedo.cxx	2016-03-13 19:55:23.300139647 +0100
 @@ -119,8 +119,7 @@
- 
+ {
     TString sc;
     Float_t step, mark[5];
 -   TString fp = gEnv->GetValue("Root.TTFontPath", "");

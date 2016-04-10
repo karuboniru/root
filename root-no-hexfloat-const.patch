@@ -1,0 +1,12 @@
+diff -ur root-6.06.02.orig/math/mathcore/src/mixmax.h root-6.06.02/math/mathcore/src/mixmax.h
+--- root-6.06.02.orig/math/mathcore/src/mixmax.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/src/mixmax.h	2016-04-05 23:27:14.026856518 +0200
+@@ -134,7 +134,7 @@
+ #define MOD_REM(k) ((k) % MERSBASE )  // latest Intel CPU is supposed to do this in one CPU cycle, but on my machines it seems to be 20% slower than the best tricks
+ #define MOD_MERSENNE(k) MOD_PAYNE(k)
+ 
+-#define INV_MERSBASE (0x1p-61)
++#define INV_MERSBASE (4.336808689942017736029811203479766845703125e-19) // (0x1p-61)
+ 
+ 
+ // the charpoly is irreducible for the combinations of N and SPECIAL and has maximal period for N=508, 256, half period for 1260, and 1/12 period for 3150

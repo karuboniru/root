@@ -1,6 +1,6 @@
-diff -ur root-6.04.02.orig/proof/proofx/inc/TXSocket.h root-6.04.02/proof/proofx/inc/TXSocket.h
---- root-6.04.02.orig/proof/proofx/inc/TXSocket.h	2015-07-14 12:54:01.000000000 +0200
-+++ root-6.04.02/proof/proofx/inc/TXSocket.h	2015-07-24 23:17:46.482814148 +0200
+diff -ur root-6.06.02.orig/proof/proofx/inc/TXSocket.h root-6.06.02/proof/proofx/inc/TXSocket.h
+--- root-6.06.02.orig/proof/proofx/inc/TXSocket.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/proofx/inc/TXSocket.h	2016-04-03 11:21:57.879553149 +0200
 @@ -43,8 +43,8 @@
  #ifndef ROOT_TSocket
  #include "TSocket.h"
@@ -48,7 +48,7 @@ diff -ur root-6.04.02.orig/proof/proofx/inc/TXSocket.h root-6.04.02/proof/proofx
     Bool_t              IsServProofd();
     virtual void        RemoveClientID() { }
     virtual void        SetClientID(Int_t) { }
-@@ -215,10 +216,7 @@
+@@ -215,11 +216,9 @@
     void                SendUrgent(Int_t type, Int_t int1, Int_t int2);
  
     // Interrupt the low level socket
@@ -58,12 +58,14 @@ diff -ur root-6.04.02.orig/proof/proofx/inc/TXSocket.h root-6.04.02/proof/proofx
 -                                        if (i && fAWait) fASem.Post(); }
 +   void                SetInterrupt(Bool_t i = kTRUE);
     inline Bool_t       IsInterrupt()  { R__LOCKGUARD(fAMtx); return fRDInterrupt; }
++
     // Set / Check async msg queue waiting status
     inline void         SetAWait(Bool_t w = kTRUE) { R__LOCKGUARD(fAMtx); fAWait = w; }
-diff -ur root-6.04.02.orig/proof/proofx/src/TXProofMgr.cxx root-6.04.02/proof/proofx/src/TXProofMgr.cxx
---- root-6.04.02.orig/proof/proofx/src/TXProofMgr.cxx	2015-07-14 12:54:01.000000000 +0200
-+++ root-6.04.02/proof/proofx/src/TXProofMgr.cxx	2015-07-25 00:18:56.528053529 +0200
-@@ -39,6 +39,8 @@
+    inline Bool_t       IsAWait()  { R__LOCKGUARD(fAMtx); return fAWait; }
+diff -ur root-6.06.02.orig/proof/proofx/src/TXProofMgr.cxx root-6.06.02/proof/proofx/src/TXProofMgr.cxx
+--- root-6.06.02.orig/proof/proofx/src/TXProofMgr.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/proofx/src/TXProofMgr.cxx	2016-04-03 11:09:26.464327948 +0200
+@@ -40,6 +40,8 @@
  #include "TSysEvtHandler.h"
  #include "XProofProtocol.h"
  
@@ -72,50 +74,61 @@ diff -ur root-6.04.02.orig/proof/proofx/src/TXProofMgr.cxx root-6.04.02/proof/pr
  ClassImp(TXProofMgr)
  
  //
-diff -ur root-6.04.02.orig/proof/proofx/src/TXSocket.cxx root-6.04.02/proof/proofx/src/TXSocket.cxx
---- root-6.04.02.orig/proof/proofx/src/TXSocket.cxx	2015-07-14 12:54:01.000000000 +0200
-+++ root-6.04.02/proof/proofx/src/TXSocket.cxx	2015-07-24 23:23:46.982746510 +0200
-@@ -924,6 +924,36 @@
+diff -ur root-6.06.02.orig/proof/proofx/src/TXSocket.cxx root-6.06.02/proof/proofx/src/TXSocket.cxx
+--- root-6.06.02.orig/proof/proofx/src/TXSocket.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/proof/proofx/src/TXSocket.cxx	2016-04-03 11:58:23.937790633 +0200
+@@ -912,6 +912,46 @@
  }
  
- //____________________________________________________________________________
+ ////////////////////////////////////////////////////////////////////////////////
++/// Getter for logical connection ID
++
 +Int_t TXSocket::GetLogConnID() const
 +{
 +   return (fConn ? fConn->GetLogConnID() : -1);
 +}
 +
-+//____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
++/// Getter for last error
++
 +Int_t TXSocket::GetOpenError() const
 +{
 +   return (fConn ? fConn->GetOpenError() : -1);
 +}
 +
-+//____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
++/// Getter for server type
++
 +Int_t TXSocket::GetServType() const
 +{
 +   return (fConn ? fConn->GetServType() : -1);
 +}
 +
-+//____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
++/// Getter for session ID
++
 +Int_t TXSocket::GetSessionID() const
 +{
 +   return (fConn ? fConn->GetSessionID() : -1);
 +}
 +
-+//____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
++/// Getter for validity status
++
 +Bool_t TXSocket::IsValid() const
 +{
 +   return (fConn ? (fConn->IsValid()) : kFALSE);
 +}
 +
-+//____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
+ /// Return kTRUE if the remote server is a 'proofd'
+ 
  Bool_t TXSocket::IsServProofd()
- {
-    // Return kTRUE if the remote server is a 'proofd'
-@@ -1643,6 +1673,15 @@
+@@ -1633,6 +1673,16 @@
  }
  
- //______________________________________________________________________________
+ ////////////////////////////////////////////////////////////////////////////////
++
 +void TXSocket::SetInterrupt(Bool_t i)
 +{
 +   R__LOCKGUARD(fAMtx);
@@ -124,19 +137,20 @@ diff -ur root-6.04.02.orig/proof/proofx/src/TXSocket.cxx root-6.04.02/proof/proo
 +   if (i && fAWait) fASem.Post();
 +}
 +
-+//______________________________________________________________________________
- Int_t TXSocket::Send(const TMessage &mess)
- {
-    // Send a TMessage object. Returns the number of bytes in the TMessage
-@@ -1933,6 +1972,11 @@
++////////////////////////////////////////////////////////////////////////////////
+ /// Send a TMessage object. Returns the number of bytes in the TMessage
+ /// that were sent and -1 in case of error.
+ 
+@@ -1923,6 +1973,12 @@
  }
  
- //_____________________________________________________________________________
+ ////////////////////////////////////////////////////////////////////////////////
++
 +Int_t TXSocket::GetLowSocket() const {
 +   return (fConn ? fConn->GetLowSocket() : -1);
 +}
 +
-+//_____________________________________________________________________________
++////////////////////////////////////////////////////////////////////////////////
+ /// Init environment variables for XrdClient
+ 
  void TXSocket::InitEnvs()
- {
-    // Init environment variables for XrdClient
