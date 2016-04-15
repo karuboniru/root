@@ -4,6 +4,7 @@
 %global ruby 0
 
 %global oce 1
+%global pythia8 1
 %global xrootd 1
 
 %if %{?fedora}%{!?fedora:0} >= 20
@@ -19,10 +20,13 @@
 
 %{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
 
+# Do not create .orig files when patching source
+%global _default_patch_flags --no-backup-if-mismatch
+
 Name:		root
 Version:	6.06.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -140,7 +144,8 @@ Patch41:	%{name}-no-testdata.patch
 #		Avoid using std::bind with lambdas (fixed upstream)
 Patch42:	%{name}-avoid-std-bind-lambda.patch
 
-#		Building on s390 runs out of memory in koji
+#		s390 is not supported by cling: "error: unknown target
+#		triple 's390-ibm-linux', please use -triple or -arch"
 ExcludeArch:	s390
 #		ppc/ppc64/ppc64le does not yet work
 #		https://sft.its.cern.ch/jira/browse/ROOT-6434
@@ -222,7 +227,9 @@ BuildRequires:	emacs-el
 BuildRequires:	gcc-gfortran
 BuildRequires:	graphviz-devel
 BuildRequires:	expat-devel
+%if %{pythia8}
 BuildRequires:	pythia8-devel >= 8.1.80
+%endif
 BuildRequires:	numpy
 BuildRequires:	dos2unix
 BuildRequires:	doxygen
@@ -1119,6 +1126,7 @@ Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 %description montecarlo-eg
 This package contains an event generator library for ROOT.
 
+%if %{pythia8}
 %package montecarlo-pythia8
 Summary:	Pythia version 8 plugin for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1129,6 +1137,7 @@ This package contains the Pythia version 8 plug-in for ROOT. This
 package provide the ROOT user with transparent interface to the Pythia
 (version 8) event generators for hadronic interactions. If the term
 "hadronic" does not ring any bells, this package is not for you.
+%endif
 
 %package montecarlo-vmc
 Summary:	Virtual Monte-Carlo (simulation) library for ROOT
@@ -1572,10 +1581,6 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch41 -p1
 %patch42 -p1
 
-# Avoid installing original files changed by patches
-find -path '*/inc/*' -a -name '*.orig' -exec rm {} ';'
-find cmake/modules -name '*.orig' -exec rm {} ';'
-
 chmod 644 math/mathcore/src/mixmax.h math/mathcore/src/mixmax.cxx
 
 # Remove bundled sources in order to be sure they are not used
@@ -1629,12 +1634,18 @@ pushd builddir
 # Avoid overlinking (this used to be the default with the old configure script)
 LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 
-%ifarch s390x
+%ifarch s390 s390x
 # llvm/clang does not support -march=z900, z990, z9-109, z9-ec
-CFLAGS=`sed 's!-march=z9\S* !-march=z10 !g' <<< "%{optflags}"`
-CXXFLAGS=`sed 's!-march=z9\S* !-march=z10 !g' <<< "%{optflags}"`
-FFLAGS=`sed 's!-march=z9\S* !-march=z10 !g' <<< "%{optflags} -I%{_fmoddir}"`
-FCFLAGS=`sed 's!-march=z9\S* !-march=z10 !g' <<< "%{optflags} -I%{_fmoddir}"`
+%global optflags %(sed 's/-march=z9\\S* /-march=z10 /g' <<< '%{optflags}')
+%endif
+
+%ifarch ppc %{power64} s390 s390x
+# On some architectures JIT compilation fails if the stack protector is used
+# https://llvm.org/bugs/show_bug.cgi?id=22248
+# https://llvm.org/bugs/show_bug.cgi?id=26226
+# IncrementalExecutor::executeFunction:
+#   symbol '__stack_chk_guard' unresolved while linking
+%global optflags %(sed 's/-fstack-protector\\S* //g' <<< '%{optflags}')
 %endif
 
 %cmake -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
@@ -1702,7 +1713,11 @@ FCFLAGS=`sed 's!-march=z9\S* !-march=z10 !g' <<< "%{optflags} -I%{_fmoddir}"`
        -Doracle:BOOL=OFF \
        -Dpgsql:BOOL=ON \
        -Dpythia6:BOOL=OFF \
+%if %{pythia8}
        -Dpythia8:BOOL=ON \
+%else
+       -Dpythia8:BOOL=OFF \
+%endif
        -Dpython:BOOL=ON \
        -Dqt:BOOL=ON \
        -Dqtgsi:BOOL=ON \
@@ -1975,12 +1990,18 @@ ln -s ../../files files
 popd
 # Exclude some tests that can not be run
 # - test-stressIOPlugins-*
-#   requires network access
-# - test-stressproof and tutorial-tree-run_h1analysis
-#   uses huge indata files - more than 3 GB (srpm would be too big)
+#   requires network access (by design since they test the remote file IO)
+# - tutorial-tree-run_h1analysis
+#   requires network access: http://root.cern.ch/files/h1/
+# - tutorial-r-*
+#   occasionally causes random crashes
 # - tutorial-multicore-mp*
-#   currently fails on ix86 (works on x86_64)
-make test ARGS="%{?_smp_mflags} --output-on-failure -E 'test-stressIOPlugins-.*|test-stressproof|tutorial-tree-run_h1analysis|tutorial-multicore-mp.*'"
+#   currently fails on ix86 and arm
+excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-r-.*"
+%ifarch %{ix86} %{arm}
+excluded="${excluded}|tutorial-multicore-mp.*"
+%endif
+make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
 
 %post
@@ -2203,8 +2224,10 @@ fi
 %postun table -p /sbin/ldconfig
 %post montecarlo-eg -p /sbin/ldconfig
 %postun montecarlo-eg -p /sbin/ldconfig
+%if %{pythia8}
 %post montecarlo-pythia8 -p /sbin/ldconfig
 %postun montecarlo-pythia8 -p /sbin/ldconfig
+%endif
 %post montecarlo-vmc -p /sbin/ldconfig
 %postun montecarlo-vmc -p /sbin/ldconfig
 %post net -p /sbin/ldconfig
@@ -2758,9 +2781,11 @@ fi
 %{_datadir}/%{name}/pdg_table.txt
 %doc %{_pkgdocdir}/cfortran.doc
 
+%if %{pythia8}
 %files montecarlo-pythia8 -f includelist-montecarlo-pythia8
 %{_libdir}/%{name}/libEGPythia8.*
 %{_libdir}/%{name}/libEGPythia8_rdict.pcm
+%endif
 
 %files montecarlo-vmc -f includelist-montecarlo-vmc
 %{_libdir}/%{name}/libVMC.*
@@ -2963,6 +2988,9 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Fri Apr 15 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.02-2
+- Rebuild for OCE-0.17.1
+
 * Fri Apr 08 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.02-1
 - Update to 6.06.02 (F24+, EPEL7)
 - Change to cmake configuration (was using ./configure)
