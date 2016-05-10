@@ -18,7 +18,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootConfiguration.cmake root-6.06.02/c
 --- root-6.06.02.orig/cmake/modules/RootConfiguration.cmake	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/cmake/modules/RootConfiguration.cmake	2016-04-04 13:15:41.491400432 +0200
 @@ -404,7 +404,13 @@
- set(dicttype ${ROOT_DICTTYPE})
+ set(perl ${PERL_EXECUTABLE})
  
  #---RConfigure-------------------------------------------------------------------------------------------------
 -set(setresuid undef)

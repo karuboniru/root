@@ -482,6 +482,29 @@ diff -Nur root-6.06.02.orig/core/base/src/TPluginManager.cxx root-6.06.02/core/b
 diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/TROOT.cxx
 --- root-6.06.02.orig/core/base/src/TROOT.cxx	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/core/base/src/TROOT.cxx	2016-03-20 14:37:23.735597777 +0100
+@@ -543,6 +543,22 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
+    // Initialize Operating System interface
+    InitSystem();
+ 
++   // Initialize static directory functions
++   GetRootSys();
++   GetBinDir();
++   GetLibDir();
++   GetIncludeDir();
++   GetEtcDir();
++   GetDataDir();
++   GetDocDir();
++   GetMacroDir();
++   GetTutorialsDir();
++   GetSourceDir();
++   GetIconPath();
++   GetTTFFontDir();
++
++   gRootDir = GetRootSys().Data();
++
+    TDirectory::Build();
+ 
+    // Initialize interface to CINT C++ interpreter
 @@ -1722,21 +1722,9 @@
                 "after the call to TROOT::InitInterpreter()!");
        }
@@ -550,20 +573,14 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
  #endif
     }
  
-@@ -2521,14 +2486,258 @@
+@@ -2521,14 +2486,252 @@
  }
  
  ////////////////////////////////////////////////////////////////////////////////
 +
 +#ifdef ROOTPREFIX
 +static Bool_t IgnorePrefix() {
-+   static Bool_t ignorePrefix = kFALSE;
-+   static Bool_t init = kFALSE;
-+   if (!init) {
-+      if (gSystem->Getenv("ROOTIGNOREPREFIX"))
-+         ignorePrefix = kTRUE;
-+      init = kTRUE;
-+   }
++   static Bool_t ignorePrefix = gSystem->Getenv("ROOTIGNOREPREFIX");
 +   return ignorePrefix;
 +}
 +#endif
@@ -1255,7 +1272,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  #endif
  
     // when libSystem.B.dylib is loaded we have finished loading all dylibs
-@@ -600,13 +606,9 @@
+@@ -600,13 +606,8 @@
     SetRootSys();
  #endif
  
@@ -1268,7 +1285,6 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
 -#endif
 +   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
 +   gRootDir = "/usr/local/root";
-+   gRootDir = TROOT::GetRootSys().Data();
  
     return kFALSE;
  }
@@ -1593,7 +1609,7 @@ diff -Nur root-6.06.02.orig/core/winnt/src/TWinNTSystem.cxx root-6.06.02/core/wi
  #endif
  
     UpdateRegistry(this, buf);
-@@ -1112,23 +1099,19 @@
+@@ -1112,23 +1099,17 @@
  
     fSigcnt = 0;
  
@@ -1624,8 +1640,6 @@ diff -Nur root-6.06.02.orig/core/winnt/src/TWinNTSystem.cxx root-6.06.02/core/wi
 -#else
 -   gRootDir= ROOTPREFIX;
 -#endif
-+
-+   gRootDir = TROOT::GetRootSys().Data();
  
     // Increase the accuracy of Sleep() without needing to link to winmm.lib
     typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );

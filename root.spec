@@ -24,9 +24,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.06.02
+Version:	6.06.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -78,8 +78,6 @@ Patch13:	%{name}-fflags.patch
 Patch14:	%{name}-unuran.patch
 #		Use systme gl2ps
 Patch15:	%{name}-gl2ps.patch
-#		Hex float constants are c++17 (can not use with c++11/c++14)
-Patch16:	%{name}-no-hexfloat-const.patch
 #		Use the same soname for cmake and configure
 Patch17:	%{name}-soname.patch
 #		Save memory during build
@@ -222,8 +220,10 @@ BuildRequires:	OCE-devel
 BuildRequires:	R-Rcpp-devel
 BuildRequires:	R-RInside-devel
 BuildRequires:	readline-devel
+BuildRequires:	tbb-devel
 BuildRequires:	emacs
 BuildRequires:	emacs-el
+BuildRequires:	gcc-c++
 BuildRequires:	gcc-gfortran
 BuildRequires:	graphviz-devel
 BuildRequires:	expat-devel
@@ -372,6 +372,7 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 #		not work with the system libraries. The bundled llvm and
 #		clang are compiled using -fvisibility=hidden, and are not
 #		visible outside of the libCling module.
+Requires:	gcc-c++
 Provides:	bundled(clang-libs)
 Provides:	bundled(llvm-libs)
 Obsoletes:	%{name}-cint7 < 5.26.00c
@@ -1553,7 +1554,6 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
-%patch16 -p1
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
@@ -1655,23 +1655,33 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -DCMAKE_INSTALL_ELISPDIR:PATH=%{_emacs_sitelispdir}/%{name} \
        -Dgnuinstall:BOOL=ON \
        -Dbuiltin_afterimage:BOOL=OFF \
-       -Dbuiltin_ftgl:BOOL=OFF \
+       -Dbuiltin_cfitsio:BOOL=OFF \
+       -Dbuiltin_davix:BOOL=OFF \
+       -Dbuiltin_fftw3:BOOL=OFF \
        -Dbuiltin_freetype:BOOL=OFF \
+       -Dbuiltin_ftgl:BOOL=OFF \
        -Dbuiltin_gl2ps:BOOL=OFF \
        -Dbuiltin_glew:BOOL=OFF \
+       -Dbuiltin_gsl:BOOL=OFF \
+       -Dbuiltin_llvm:BOOL=ON \
        -Dbuiltin_lzma:BOOL=OFF \
+       -Dbuiltin_openssl:BOOL=OFF \
        -Dbuiltin_pcre:BOOL=OFF \
+       -Dbuiltin_tbb:BOOL=OFF \
        -Dbuiltin_unuran:BOOL=OFF \
+       -Dbuiltin_xrootd:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
        -Dafdsmgrd:BOOL=OFF \
        -Dafs:BOOL=OFF \
        -Dalien:BOOL=OFF \
-       -Dalloc:BOOL=OFF \
        -Dasimage:BOOL=ON \
        -Dastiff:BOOL=ON \
        -Dbonjour:BOOL=ON \
        -Dcastor:BOOL=OFF \
+       -Dccache:BOOL=OFF \
        -Dchirp:BOOL=OFF \
+       -Dcling:BOOL=ON \
+       -Dcocoa:BOOL=OFF \
 %if %{?fedora}%{!?fedora:0} >= 24
        -Dcxx14:BOOL=ON \
 %else
@@ -1679,9 +1689,11 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 %endif
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
+       -Dexceptions:BOOL=ON \
        -Dexplicitlink:BOOL=ON \
        -Dfftw3:BOOL=ON \
        -Dfitsio:BOOL=ON \
+       -Dfortran:BOOL=ON \
        -Dgdml:BOOL=ON \
        -Dgenvector:BOOL=ON \
 %if %{oce}
@@ -1692,7 +1704,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dgfal:BOOL=ON \
        -Dglite:BOOL=OFF \
        -Dglobus:BOOL=ON \
-       -Dgsl-shared:BOOL=ON \
+       -Dgsl_shared:BOOL=ON \
        -Dgviz:BOOL=ON \
 %if %{hadoop}
        -Dhdfs:BOOL=ON \
@@ -1700,6 +1712,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dhdfs:BOOL=OFF \
 %endif
        -Dhttp:BOOL=ON \
+       -Djemalloc:BOOL=OFF \
        -Dkrb5:BOOL=ON \
        -Dldap:BOOL=ON \
        -Dlibcxx:BOOL=OFF \
@@ -1707,10 +1720,12 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dmemstat:BOOL=ON \
        -Dminuit2:BOOL=ON \
        -Dmonalisa:BOOL=OFF \
+       -Dmt:BOOL=ON \
        -Dmysql:BOOL=ON \
        -Dodbc:BOOL=ON \
        -Dopengl:BOOL=ON \
        -Doracle:BOOL=OFF \
+       -Dpch:BOOL=ON \
        -Dpgsql:BOOL=ON \
        -Dpythia6:BOOL=OFF \
 %if %{pythia8}
@@ -1724,6 +1739,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dr:BOOL=ON \
        -Drfio:BOOL=ON \
        -Droofit:BOOL=ON \
+       -Droot7:BOOL=OFF \
        -Drpath:BOOL=OFF \
 %if %{ruby}
        -Druby:BOOL=ON \
@@ -1731,7 +1747,6 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Druby:BOOL=OFF \
 %endif
        -Dsapdb:BOOL=OFF \
-       -Dsearch-usrlocal:BOOL=OFF \
        -Dshadowpw:BOOL=ON \
        -Dshared:BOOL=ON \
        -Dsoversion:BOOL=ON \
@@ -1739,11 +1754,13 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dsrp:BOOL=OFF \
        -Dssl:BOOL=ON \
        -Dtable:BOOL=ON \
+       -Dtbb:BOOL=ON \
+       -Dtcmalloc:BOOL=OFF \
+       -Dthread:BOOL=ON \
        -Dtmva:BOOL=ON \
        -Dunuran:BOOL=ON \
        -Dvc:BOOL=OFF \
        -Dvdt:BOOL=ON \
-       -Dwerror:BOOL=OFF \
        -Dx11:BOOL=ON \
        -Dxft:BOOL=ON \
        -Dxml:BOOL=ON \
@@ -2988,6 +3005,11 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Mon May 09 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-1
+- Update to 6.06.04
+- Drop patch root-no-hexfloat-const.patch
+- Add requires on gcc-c++ to root-cling
+
 * Fri Apr 15 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.02-2
 - Rebuild for OCE-0.17.1
 

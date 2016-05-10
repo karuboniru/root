@@ -84,18 +84,6 @@ diff -Nur root-6.06.02.orig/cmake/modules/Findhdfs.cmake root-6.06.02/cmake/modu
  find_library(HDFS_LIBRARY NAMES hdfs HINTS ${HDFS_DIR}/lib/native $ENV{HDFS_DIR}/lib/native)
  
  set(HDFS_INCLUDE_DIRS ${HDFS_INCLUDE_DIR})
-diff -Nur root-6.06.02.orig/cmake/modules/FindOCC.cmake root-6.06.02/cmake/modules/FindOCC.cmake
---- root-6.06.02.orig/cmake/modules/FindOCC.cmake	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/cmake/modules/FindOCC.cmake	2016-03-20 17:08:52.184461642 +0100
-@@ -11,7 +11,7 @@
- 
- find_path(OCC_INCLUDE_DIR
-           NAMES Standard_Real.hxx
--          HINTS ${_occdirs} /usr/include/opencascade
-+          HINTS ${_occdirs} /usr/include/opencascade /usr/include/oce
-           PATH_SUFFIXES inc
-           DOC "Specify the directory containing Standard_Real.hxx")
- 
 diff -Nur root-6.06.02.orig/cmake/modules/FindPCRE.cmake root-6.06.02/cmake/modules/FindPCRE.cmake
 --- root-6.06.02.orig/cmake/modules/FindPCRE.cmake	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/cmake/modules/FindPCRE.cmake	2016-03-20 17:08:52.184461642 +0100
