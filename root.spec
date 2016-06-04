@@ -7,7 +7,7 @@
 %global pythia8 1
 %global xrootd 1
 
-%if %{?fedora}%{!?fedora:0} >= 20
+%if %{?fedora}%{!?fedora:0} >= 20 && %{?fedora}%{!?fedora:0} <= 23
 # libhdfs is currently only available on intel architectures in Fedora
 %ifarch %{ix86} x86_64
 %global hadoop 1
@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -347,6 +347,9 @@ Requires:	font(droidsansfallback)
 %endif
 %if %{ruby} == 0
 Obsoletes:	%{name}-ruby < 6.00.00
+%endif
+%if %{hadoop} == 0
+Obsoletes:	%{name}-io-hdfs < 6.06.04-2
 %endif
 
 %description core
@@ -3005,6 +3008,9 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Sat Jun 04 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-2
+- Disable hadoop/hdfs support for F24+ (hadoop was retired)
+
 * Mon May 09 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-1
 - Update to 6.06.04
 - Drop patch root-no-hexfloat-const.patch
