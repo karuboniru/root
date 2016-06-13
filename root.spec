@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -78,6 +78,8 @@ Patch13:	%{name}-fflags.patch
 Patch14:	%{name}-unuran.patch
 #		Use systme gl2ps
 Patch15:	%{name}-gl2ps.patch
+#		More CMAKE_Fortran_FLAGS case issues
+Patch16:	%{name}-more-fflags.patch
 #		Use the same soname for cmake and configure
 Patch17:	%{name}-soname.patch
 #		Save memory during build
@@ -1557,6 +1559,7 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
+%patch16 -p1
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
@@ -1912,6 +1915,14 @@ rm %{buildroot}%{_pkgdocdir}/ChangeLog-2-24
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
+
+# Remove mathtext and minicern references from cmake files
+sed -e 's/ mathtext / /' -e /mathtext/d \
+    -e 's/ minicern / /' -e /minicern/d \
+    -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
+sed -e '/Import target "mathtext"/,/FILES_FOR_mathtext/d' -e 's/;mathtext//' \
+    -e '/Import target "minicern"/,/FILES_FOR_minicern/d' -e 's/;minicern//' \
+    -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 
 # Only used on Windows
 rm %{buildroot}%{_datadir}/%{name}/macros/fileopen.C
@@ -3008,6 +3019,10 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Mon Jun 13 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-3
+- Remove mathtext and minicern references from cmake files
+- Fix the spelling of CMAKE_Fortran_FLAGS in a few places
+
 * Sat Jun 04 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-2
 - Disable hadoop/hdfs support for F24+ (hadoop was retired)
 
