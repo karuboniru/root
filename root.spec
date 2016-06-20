@@ -7,7 +7,7 @@
 %global pythia8 1
 %global xrootd 1
 
-%if %{?fedora}%{!?fedora:0} >= 20 && %{?fedora}%{!?fedora:0} <= 23
+%if %{?fedora}%{!?fedora:0} >= 20
 # libhdfs is currently only available on intel architectures in Fedora
 %ifarch %{ix86} x86_64
 %global hadoop 1
@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -143,6 +143,9 @@ Patch40:	%{name}-stressgraphics.patch
 Patch41:	%{name}-no-testdata.patch
 #		Avoid using std::bind with lambdas (fixed upstream)
 Patch42:	%{name}-avoid-std-bind-lambda.patch
+
+#		Add GuiTypes.h, KeySymbols.h and Buttons.h to dict (backport)
+Patch43:	%{name}-keysymbols.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -1586,6 +1589,7 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch40 -p1
 %patch41 -p1
 %patch42 -p1
+%patch43 -p1
 
 chmod 644 math/mathcore/src/mixmax.h math/mathcore/src/mixmax.cxx
 
@@ -3019,6 +3023,11 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Sun Jun 19 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-4
+- Add GuiTypes.h, KeySymbols.h and Buttons.h to dict (backport)
+- Minor updates to patches - mostly backported from upstream
+- Reenable hadoop/hdfs support for F24+
+
 * Mon Jun 13 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-3
 - Remove mathtext and minicern references from cmake files
 - Fix the spelling of CMAKE_Fortran_FLAGS in a few places

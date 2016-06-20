@@ -41,16 +41,19 @@ diff -ur root-6.06.02.orig/test/stressHistogram.cxx root-6.06.02/test/stressHist
 diff -ur root-6.06.02.orig/test/stressRooFit.cxx root-6.06.02/test/stressRooFit.cxx
 --- root-6.06.02.orig/test/stressRooFit.cxx	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/test/stressRooFit.cxx	2016-03-30 05:39:17.330313983 +0200
-@@ -78,7 +78,8 @@
+@@ -78,9 +78,10 @@
           cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
           return 1;
        }
 -      fref = new TWebFile(refFile) ;
 +      TFile::SetCacheFileDir(".");
-+      fref = new TFile(refFile,"CACHEREAD") ;
++      fref = TFile::Open(refFile,"CACHEREAD") ;
      } else {
-       fref = new TFile(refFile,writeRef?"RECREATE":"") ;
+-      fref = new TFile(refFile,writeRef?"RECREATE":"") ;
++      fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
      }
+     if (fref->IsZombie()) {
+       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
 diff -ur root-6.06.02.orig/test/stressTMVA.cxx root-6.06.02/test/stressTMVA.cxx
 --- root-6.06.02.orig/test/stressTMVA.cxx	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/test/stressTMVA.cxx	2016-03-30 06:11:11.630058265 +0200
