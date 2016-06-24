@@ -167,6 +167,7 @@ BuildRequires:	ftgl-devel
 BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
+BuildRequires:	perl-generators
 BuildRequires:	zlib-devel
 BuildRequires:	xz-devel
 BuildRequires:	libAfterImage-devel >= 1.20
