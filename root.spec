@@ -24,9 +24,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.06.04
+Version:	6.06.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -54,9 +54,9 @@ Patch2:		%{name}-fontconfig.patch
 Patch3:		%{name}-type1-embed.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
 Patch4:		%{name}-dont-link-jvm.patch
-#		Adapt to GFAL 2.10
-#		https://github.com/root-mirror/root/pull/106
-Patch5:		%{name}-gfal2.patch
+#		Remove gcc ABI check
+#		with the abitags patch above it is not needed
+Patch5:		%{name}-no-abi-check.patch
 #		Public header #includes private header
 #		https://github.com/root-mirror/root/pull/88
 Patch6:		%{name}-private-public.patch
@@ -144,9 +144,6 @@ Patch41:	%{name}-no-testdata.patch
 #		Avoid using std::bind with lambdas (fixed upstream)
 Patch42:	%{name}-avoid-std-bind-lambda.patch
 
-#		Add GuiTypes.h, KeySymbols.h and Buttons.h to dict (backport)
-Patch43:	%{name}-keysymbols.patch
-
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
 ExcludeArch:	s390
@@ -167,7 +164,6 @@ BuildRequires:	ftgl-devel
 BuildRequires:	glew-devel
 BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
-BuildRequires:	perl-generators
 BuildRequires:	zlib-devel
 BuildRequires:	xz-devel
 BuildRequires:	libAfterImage-devel >= 1.20
@@ -240,6 +236,7 @@ BuildRequires:	numpy
 BuildRequires:	dos2unix
 BuildRequires:	doxygen
 BuildRequires:	graphviz
+BuildRequires:	perl-generators
 #		Some of the tests call lsb_release
 BuildRequires:	redhat-lsb-core
 BuildRequires:	font(freesans)
@@ -1095,11 +1092,12 @@ variates from the desired distribution.
 
 %package vdt
 Summary:	VDT mathematical library
+BuildArch:	noarch
 
 %description vdt
-VDT is a library of mathematical functions, implemented in double and
+VDT is a library of mathematical functions implemented in double and
 single precision. The implementation is fast and with the aid of
-modern compilers (e.g. gcc 4.7) vectorisable.
+modern compilers (e.g. gcc 4.7) vectorizable.
 
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
@@ -1590,9 +1588,6 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch40 -p1
 %patch41 -p1
 %patch42 -p1
-%patch43 -p1
-
-chmod 644 math/mathcore/src/mixmax.h math/mathcore/src/mixmax.cxx
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1622,6 +1617,11 @@ rm -rf documentation/doxygen/mathjax.tar.gz
 sed /mathjax.tar.gz/d -i documentation/doxygen/Makefile
 sed 's!\(MATHJAX_RELPATH\s*=\).*!\1 file:///usr/share/javascript/mathjax!' \
     -i documentation/doxygen/Doxyfile
+%if %{?fedora}%{!?fedora:0} >= 24
+#  * string_view
+rm core/metautils/inc/libcpp_string_view.h \
+   core/metautils/inc/RWrap_libcpp_string_view.h
+%endif
 
 # Remove bundled fonts provided by the OS distributions
 %if %{?fedora}%{!?fedora:0} >= 11
@@ -3024,6 +3024,11 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Sun Jul 10 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.06-1
+- Update to 6.06.06
+- Drop patches root-gfal2.patch and root-keysymbols.patch
+- Make root-vdt package noarch
+
 * Sun Jun 19 2016 Mattias Ellert <mattias.ellert@fysast.uu.se> - 6.06.04-4
 - Add GuiTypes.h, KeySymbols.h and Buttons.h to dict (backport)
 - Minor updates to patches - mostly backported from upstream

@@ -1446,9 +1446,9 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
 +#else
 +   clingArgs.push_back(std::string("-I") + TROOT__GetEtcDir());
 +#endif
-    clingArgs.push_back("-D__ROOTCLING__");
-    clingArgs.push_back("-fsyntax-only");
-    clingArgs.push_back("-Xclang");
+    // We do not want __ROOTCLING__ in the pch!
+    if (!onepcm) {
+       clingArgs.push_back("-D__ROOTCLING__");
 @@ -4162,10 +4159,14 @@
     }
  
@@ -3038,7 +3038,7 @@ diff -Nur root-6.06.02.orig/tmva/tmva/CMakeLists.txt root-6.06.02/tmva/tmva/CMak
 +++ root-6.06.02/tmva/tmva/CMakeLists.txt	2016-03-20 14:37:24.104601259 +0100
 @@ -48,11 +48,7 @@
  ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
-                     DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO)
+                     DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
  
 -install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
 -                            COMPONENT headers
