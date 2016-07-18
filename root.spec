@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -379,6 +379,7 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 #		clang are compiled using -fvisibility=hidden, and are not
 #		visible outside of the libCling module.
 Requires:	gcc-c++
+Requires:	redhat-rpm-config
 Provides:	bundled(clang-libs)
 Provides:	bundled(llvm-libs)
 Obsoletes:	%{name}-cint7 < 5.26.00c
@@ -1888,6 +1889,20 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_vendorarchdir}`/libRuby.so \
 # These should be in PATH
 mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
+# Avoid /usr/bin/env shebangs
+sed 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
+sed 's!/usr/bin/env python!/usr/bin/python!' \
+    -i %{buildroot}%{_bindir}/rootbrowse \
+       %{buildroot}%{_bindir}/rootcp \
+       %{buildroot}%{_bindir}/rooteventselector \
+       %{buildroot}%{_bindir}/rootls \
+       %{buildroot}%{_bindir}/rootmkdir \
+       %{buildroot}%{_bindir}/rootmv \
+       %{buildroot}%{_bindir}/rootprint \
+       %{buildroot}%{_bindir}/rootrm \
+       %{buildroot}%{python_sitelib}/cmdLineUtils.py \
+       %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py
+
 # Remove some junk
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.xinetd
@@ -3024,6 +3039,9 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Mon Jul 18 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.06-2
+- Add requires on redhat-rpm-config to root-cling
+
 * Sun Jul 10 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.06-1
 - Update to 6.06.06
 - Drop patches root-gfal2.patch and root-keysymbols.patch
