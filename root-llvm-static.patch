@@ -1,0 +1,11 @@
+diff -ur root-6.06.02.orig/interpreter/CMakeLists.txt root-6.06.02/interpreter/CMakeLists.txt
+--- root-6.06.02.orig/interpreter/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/interpreter/CMakeLists.txt	2016-04-06 19:43:31.596966193 +0200
+@@ -59,6 +59,7 @@
+   endif()
+ endif()
+ set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
++set(BUILD_SHARED_LIBS "NO")
+ #--- Do not build cling as part of llvm.
+ set(LLVM_NOCLING "YES")
+ 

@@ -1,0 +1,254 @@
+diff -Nur root-6.06.02.orig/cmake/modules/Findgl2ps.cmake root-6.06.02/cmake/modules/Findgl2ps.cmake
+--- root-6.06.02.orig/cmake/modules/Findgl2ps.cmake	1970-01-01 01:00:00.000000000 +0100
++++ root-6.06.02/cmake/modules/Findgl2ps.cmake	2016-03-20 18:08:33.673986381 +0100
+@@ -0,0 +1,21 @@
++# - Locate gl2ps library
++# Defines:
++#
++#  GL2PS_FOUND
++#  GL2PS_INCLUDE_DIR
++#  GL2PS_INCLUDE_DIRS (not cached)
++#  GL2PS_LIBRARIES
++
++find_path(GL2PS_INCLUDE_DIR NAMES gl2ps.h HINTS ${GL2PS_DIR}/include $ENV{GL2PS_DIR}/include /usr/include)
++find_library(GL2PS_LIBRARY NAMES gl2ps HINTS ${GL2PS_DIR}/lib $ENV{GL2PS_DIR}/lib)
++
++set(GL2PS_INCLUDE_DIRS ${GL2PS_INCLUDE_DIR})
++set(GL2PS_LIBRARIES ${GL2PS_LIBRARY})
++
++
++# handle the QUIETLY and REQUIRED arguments and set GL2PS_FOUND to TRUE if
++# all listed variables are TRUE
++INCLUDE(FindPackageHandleStandardArgs)
++FIND_PACKAGE_HANDLE_STANDARD_ARGS(GL2PS DEFAULT_MSG GL2PS_LIBRARY GL2PS_INCLUDE_DIR)
++
++mark_as_advanced(GL2PS_FOUND GL2PS_INCLUDE_DIR GL2PS_LIBRARY)
+diff -Nur root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake root-6.06.02/cmake/modules/RootBuildOptions.cmake
+--- root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake	2016-03-20 17:54:50.896874682 +0100
++++ root-6.06.02/cmake/modules/RootBuildOptions.cmake	2016-03-20 18:14:26.140474123 +0100
+@@ -70,6 +70,7 @@
+ ROOT_BUILD_OPTION(builtin_fftw3 OFF "Built the FFTW3 library internally (downloading tarfile from the Web)")
+ ROOT_BUILD_OPTION(builtin_ftgl ON "Built included libFTGL, or use system libftgl")
+ ROOT_BUILD_OPTION(builtin_freetype OFF "Built included libfreetype, or use system libfreetype")
++ROOT_BUILD_OPTION(builtin_gl2ps OFF "Build included libgl2ps, or use system libgl2ps")
+ ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW")
+ ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
+ ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")
+diff -Nur root-6.06.02.orig/cmake/modules/RootConfiguration.cmake root-6.06.02/cmake/modules/RootConfiguration.cmake
+--- root-6.06.02.orig/cmake/modules/RootConfiguration.cmake	2016-03-20 17:53:02.394804968 +0100
++++ root-6.06.02/cmake/modules/RootConfiguration.cmake	2016-03-20 18:08:33.674986391 +0100
+@@ -153,6 +153,11 @@
+ set(opengllib ${OPENGL_gl_LIBRARY})
+ set(openglincdir ${OPENGL_INCLUDE_DIR})
+ 
++set(builtingl2ps ${value${builtin_gl2ps}})
++set(gl2pslibdir ${GL2PS_LIBRARY_DIR})
++set(gl2pslib ${GL2PS_LIBRARY})
++set(gl2psincdir ${GL2PS_INCLUDE_DIR})
++
+ set(buildldap ${value${ldap}})
+ set(ldaplibdir ${LDAP_LIBRARY_DIR})
+ set(ldaplib ${LDAP_LIBRARY})
+diff -Nur root-6.06.02.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.06.02/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.06.02.orig/cmake/modules/SearchInstalledSoftware.cmake	2016-03-20 17:53:02.394804968 +0100
++++ root-6.06.02/cmake/modules/SearchInstalledSoftware.cmake	2016-03-20 18:08:33.690986549 +0100
+@@ -334,6 +334,16 @@
+   endif()
+ endif()
+ 
++#---Check for gl2ps ------------------------------------------------------------------
++if(NOT builtin_gl2ps)
++  message(STATUS "Looking for gl2ps")
++  find_Package(gl2ps)
++  if(NOT GL2PS_FOUND)
++    message(STATUS "gl2ps not found. Switching on builtin_gl2ps option")
++    set(builtin_gl2ps ON CACHE BOOL "" FORCE)
++  endif()
++endif()
++
+ #---Check for Graphviz installation-------------------------------------------------------
+ if(gviz)
+   message(STATUS "Looking for Graphviz")
+diff -Nur root-6.06.02.orig/config/Makefile.in root-6.06.02/config/Makefile.in
+--- root-6.06.02.orig/config/Makefile.in	2016-03-20 17:53:02.468805698 +0100
++++ root-6.06.02/config/Makefile.in	2016-03-20 18:08:33.690986549 +0100
+@@ -142,6 +142,11 @@
+ OPENGLLIB      := @opengllib@
+ OPENGLINCDIR   := $(filter-out /usr/include, @openglincdir@)
+ 
++BUILTINGL2PS   := @builtingl2ps@
++GL2PSLIBDIR    := @gl2pslibdir@
++GL2PSCLILIB    := @gl2pslib@
++GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
++
+ BUILDLDAP      := @buildldap@
+ LDAPLIBDIR     := @ldaplibdir@
+ LDAPCLILIB     := @ldaplib@
+diff -Nur root-6.06.02.orig/configure root-6.06.02/configure
+--- root-6.06.02.orig/configure	2016-03-20 17:53:02.513806142 +0100
++++ root-6.06.02/configure	2016-03-20 18:08:33.691986559 +0100
+@@ -53,6 +53,7 @@
+    enable_builtin_afterimage \
+    enable_builtin_ftgl       \
+    enable_builtin_freetype   \
++   enable_builtin_gl2ps      \
+    enable_builtin_glew       \
+    enable_builtin_pcre       \
+    enable_builtin_unuran     \
+@@ -182,6 +183,7 @@
+ enable_winrtdebug=
+ enable_builtin_freetype=no
+ enable_builtin_ftgl=no
++enable_builtin_gl2ps=no
+ enable_builtin_glew=no
+ enable_builtin_pcre=no
+ enable_builtin_unuran=no
+@@ -1704,6 +1706,7 @@
+   builtin-afterimage Build included libAfterImage, or use system libAfterImage
+   builtin-ftgl       Build included libFTGL, or use system libftgl
+   builtin-freetype   Build included libfreetype, or use system libfreetype
++  builtin-gl2ps      Build included libgl2ps, or use system libgl2ps
+   builtin-glew       Build included libGLEW, or use system libGLEW
+   builtin-pcre       Build included libpcre, or use system libpcre
+   builtin-unuran     Build included libunuran, or use system libunuran
+@@ -2047,6 +2050,7 @@
+    logmsg "Will use by default builtin versions of libraries on Win32"
+    enable_builtin_freetype="yes"
+    enable_builtin_ftgl="yes"
++   enable_builtin_gl2ps="yes"
+    enable_builtin_glew="yes"
+    enable_builtin_pcre="yes"
+    enable_builtin_unuran="yes"
+@@ -3180,6 +3184,38 @@
+ 
+ ######################################################################
+ #
++### echo %%% libgl2ps (builtin or system)
++#
++if test "x$enable_builtin_gl2ps" = "xno" ; then
++    check_header "gl2ps.h" "" \
++        $GL2PS ${GL2PS:+$GL2PS/include} /usr/include
++    if test "x$found_dir" = "x" ; then
++        enable_builtin_gl2ps=yes
++    else
++        gl2psinc=$found_hdr
++        gl2psincdir=$found_dir
++    fi
++
++    check_library "libgl2ps" "$enable_shared" "" \
++        $GL2PS ${GL2PS:+$GL2PS/lib} /usr/lib
++    if test "x$found_lib" = "x" ; then
++        gl2pslib=""
++        gl2pslibdir=""
++        enable_builtin_gl2ps="yes"
++    else
++        gl2pslib="$found_lib"
++        gl2pslibdir="$found_dir"
++    fi
++
++    if test "x$gl2psincdir" = "x" || test "x$gl2pslib" = "x"; then
++        enable_builtin_gl2ps="yes"
++    fi
++fi
++message "Checking whether to build included gl2ps"
++result "$enable_builtin_gl2ps"
++
++######################################################################
++#
+ ### echo %%% libpcre (builtin or system) - Mandatory lib
+ #
+ # Mandatory test, must succeed (see http://www.pcre.org/)
+@@ -7593,6 +7629,10 @@
+     -e "s|@ftglincdir@|$ftglincdir|"            \
+     -e "s|@ftgllibdir@|$ftgllibdir|"            \
+     -e "s|@ftgllibs@|$ftgllibs|"                \
++    -e "s|@builtingl2ps@|$enable_builtin_gl2ps|" \
++    -e "s|@gl2psincdir@|$gl2psincdir|"          \
++    -e "s|@gl2pslib@|$gl2pslib|"                \
++    -e "s|@gl2pslibdir@|$gl2pslibdir|"          \
+     -e "s|@glewincdir@|$glewincdir|"            \
+     -e "s|@glewlibdir@|$glewlibdir|"            \
+     -e "s|@glewlibs@|$glewlibs|"                \
+diff -Nur root-6.06.02.orig/graf3d/gl/CMakeLists.txt root-6.06.02/graf3d/gl/CMakeLists.txt
+--- root-6.06.02.orig/graf3d/gl/CMakeLists.txt	2016-03-20 14:47:57.684579337 +0100
++++ root-6.06.02/graf3d/gl/CMakeLists.txt	2016-03-20 18:11:50.286931862 +0100
+@@ -7,12 +7,20 @@
+ ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+ list(REMOVE_ITEM headers  gl2ps.h CsgOps.h TGLIncludes.h TGLWSIncludes.h TGLContextPrivate.h
+                      TGLMarchingCubes.h TKDEAdapter.h TGL5DPainter.h TKDEFGT.h TGLIsoMesh.h)
++set (installoptions OPTIONS REGEX gl2ps.h EXCLUDE)
+ ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
+ 
+ if(WIN32 OR cocoa)
+   list(REMOVE_ITEM headers TX11GL.h)
+   list(REMOVE_ITEM sources TX11GL.cxx)
+-  set(installoptions OPTIONS REGEX "TX11GL" EXCLUDE)
++  set(installoptions ${installoptions} REGEX TX11GL.h EXCLUDE)
++endif()
++
++if(builtin_gl2ps)
++  include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/inc)
++else()
++  list(REMOVE_ITEM sources gl2ps.cxx)
++  include_directories(${GL2PS_INCLUDE_DIRS})
+ endif()
+ 
+ if(WIN32)
+@@ -32,6 +40,6 @@
+ 
+ ROOT_GENERATE_DICTIONARY(G__GL ${headers} MODULE RGL LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
+ 
+-ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} fontconfig DEPENDENCIES Hist Gui Ged)
++ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES} fontconfig DEPENDENCIES Hist Gui Ged)
+ 
+ ROOT_INSTALL_HEADERS(${installoptions})
+diff -Nur root-6.06.02.orig/graf3d/gl/Module.mk root-6.06.02/graf3d/gl/Module.mk
+--- root-6.06.02.orig/graf3d/gl/Module.mk	2016-03-20 14:47:57.684579337 +0100
++++ root-6.06.02/graf3d/gl/Module.mk	2016-03-20 18:12:53.943561781 +0100
+@@ -19,6 +19,7 @@
+ GLDH         := $(GLDS:.cxx=.h)
+ 
+ GLH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
++GLH          := $(filter-out $(MODDIRI)/gl2ps.h, $(GLH))
+ GLS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+ 
+ # Excluded from win32 builds
+@@ -42,6 +43,13 @@
+ # Used by rootcint
+ GLH2         := $(filter-out $(GLH1), $(GLH))
+ 
++ifeq ($(BUILTINGL2PS),yes)
++GL2PSFLAGS   := -I$(MODDIRI)
++else()
++GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
++GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
++endif()
++
+ ifneq ($(OPENGLLIB),)
+ GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
+                 $(XLIBS) -lm
+@@ -78,6 +86,7 @@
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+ 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
+ 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
++		    $(GL2PSLIBDIR) $(GL2PSLIBS) \
+ 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS) -lfontconfig"
+ 
+ $(call pcmrule,GL)
+@@ -107,12 +116,12 @@
+ ##### extra rules ######
+ ifeq ($(ARCH),win32)
+ $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+-                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
++                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
+ $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
+-                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
++                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
+ else
+-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
+-$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
++$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
++$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
+ endif
+ 
+ $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)

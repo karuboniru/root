@@ -1,0 +1,123 @@
+diff -ur root-6.06.02.orig/cmake/modules/RootConfiguration.cmake root-6.06.02/cmake/modules/RootConfiguration.cmake
+--- root-6.06.02.orig/cmake/modules/RootConfiguration.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/RootConfiguration.cmake	2016-03-20 15:54:25.926191321 +0100
+@@ -263,10 +263,6 @@
+ set(hdfslib ${HDFS_LIBRARY})
+ set(hdfsincdir ${HDFS_INCLUDE_DIR})
+ 
+-set(jniincdir ${Java_INCLUDE_DIRS})
+-set(jvmlib ${Java_LIBRARIES})
+-set(jvmlibdir ${Java_LIBRARY_DIR})
+-
+ set(buildalien ${value${alien}})
+ set(alienlibdir ${ALIEN_LIBRARY_DIR})
+ set(alienlib ${ALIEN_LIBRARY})
+diff -ur root-6.06.02.orig/config/Makefile.in root-6.06.02/config/Makefile.in
+--- root-6.06.02.orig/config/Makefile.in	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/config/Makefile.in	2016-03-20 15:54:25.999192031 +0100
+@@ -251,9 +251,6 @@
+ HDFSLIBDIR     := @hdfslibdir@
+ HDFSCLILIB     := @hdfslib@
+ HDFSINCDIR     := $(filter-out /usr/include, @hdfsincdir@)
+-JNIINCDIR      := $(filter-out /usr/include, @jniincdir@) $(filter-out /usr/include, @jniincdir@/linux)
+-JVMCLILIB      := @jvmlib@
+-JVMLIBDIR      := @jvmlibdir@
+ 
+ BUILDALIEN     := @buildalien@
+ ALIENLIBDIR    := @alienlibdir@
+diff -ur root-6.06.02.orig/configure root-6.06.02/configure
+--- root-6.06.02.orig/configure	2016-03-20 14:37:23.733597759 +0100
++++ root-6.06.02/configure	2016-03-20 15:54:26.038192410 +0100
+@@ -1822,8 +1822,6 @@
+   hdfs-incdir        HDFS support, location of hdfs.h
+   hdfs-libdir        HDFS support, location of libhdfs
+   iosvers            iOS SDK version (6.1, 7.0), default will be latest SDK
+-  jni-incdir         HDFS support, location of JNI headers
+-  jvm-libdir         HDFS support, location of JVM library
+   krb5               Kerberos5 support, location of Kerberos distribution
+   krb5-incdir        Kerberos5 support, location of krb5.h
+   krb5-libdir        Kerberos5 support, location of libkrb5
+@@ -2214,8 +2212,6 @@
+       --with-hdfs-incdir=*)    hdfsincdir=$optarg    ; enable_hdfs="yes"    ;;
+       --with-hdfs-libdir=*)    hdfslibdir=$optarg    ; enable_hdfs="yes"    ;;
+       --with-iosvers=*)        iosvers=$optarg       ;;
+-      --with-jni-incdir=*)     jniincdir=$optarg     ;;
+-      --with-jvm-libdir=*)     jvmlibdir=$optarg     ;;
+       --with-krb5=*)           krb5dir=$optarg       ; enable_krb5="yes"    ;;
+       --with-krb5-incdir=*)    krb5incdir=$optarg    ; enable_krb5="yes"    ;;
+       --with-krb5-libdir=*)    krb5libdir=$optarg    ; enable_krb5="yes"    ;;
+@@ -4535,17 +4531,6 @@
+     hdfsinc=$found_hdr
+     hdfsincdir=$found_dir
+ 
+-    if test "x$platform" = "xmacosx" && test -z $JAVA_HOME; then
+-       JAVA_HOME=`/usr/libexec/java_home`
+-    fi
+-
+-    keepincdir=$jniincdir
+-    check_header "jni.h" "$jniincdir" \
+-        ${JAVA_HOME:+$JAVA_HOME/include} \
+-        /usr/java/default/include /usr/include /usr/local/include
+-    jniinc=$found_hdr
+-    jniincdir=$found_dir
+-
+     check_library "libhdfs" "$enable_shared" "$hdfslibdir" \
+         $HDFS ${HDFS:+$HDFS/lib} ${HDFS:+$HDFS/build/libhdfs} \
+         $HADOOP_HOME ${HADOOP_HOME:+$HADOOP_HOME/build/libhdfs} \
+@@ -4553,26 +4538,12 @@
+     hdfslib=$found_lib
+     hdfslibdir=$found_dir
+ 
+-    check_library "libjvm" "$enable_shared" "$jvmlibdir" \
+-        ${JAVA_HOME:+$JAVA_HOME/jre/lib/amd64/server} \
+-        ${JAVA_HOME:+$JAVA_HOME/jre/lib/i386/server} \
+-        ${JAVA_HOME:+$JAVA_HOME/../Libraries} \
+-        /usr/java/default/jre/lib/amd64/server \
+-        /usr/java/default/jre/lib/i386/server /usr/lib /usr/local/lib
+-    jvmlib=$found_lib
+-    jvmlibdir=$found_dir
+-
+-    if test "x$hdfsincdir" = "x" || test "x$hdfslib" = "x" || test "x$jniincdir" = "x" || test "x$jvmlib" = "x"; then
++    if test "x$hdfsincdir" = "x" || test "x$hdfslib" = "x"; then
+         enable_hdfs="no"
+     else
+         case $platform in
+             linux)
+-                check_link "$hdfslib $jvmlib" "$hdfslibdir $jvmlibdir" hdfsConnect
+-                if test $link_result -eq 0 ; then
+-                    enable_hdfs="no"
+-                fi
+-
+-                check_link $jvmlib "$jvmlibdir" JNI_CreateJavaVM
++                check_link "$hdfslib" "$hdfslibdir" hdfsConnect
+                 if test $link_result -eq 0 ; then
+                     enable_hdfs="no"
+                 fi
+@@ -7641,9 +7612,6 @@
+     -e "s|@iosvers@|$iosvers|"                  \
+     -e "s|@iconpath@|$iconpath|"                \
+     -e "s|@incdir@|$incdir|"                    \
+-    -e "s|@jniincdir@|$jniincdir|g"             \
+-    -e "s|@jvmlibdir@|$jvmlibdir|g"             \
+-    -e "s|@jvmlib@|$jvmlib|g"                   \
+     -e "s|@krb5incdir@|$krb5incdir|"            \
+     -e "s|@krb5lib@|$krb5lib|"                  \
+     -e "s|@krb5libdir@|$krb5libdir|"            \
+diff -ur root-6.06.02.orig/io/hdfs/Module.mk root-6.06.02/io/hdfs/Module.mk
+--- root-6.06.02.orig/io/hdfs/Module.mk	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/hdfs/Module.mk	2016-03-20 15:54:26.038192410 +0100
+@@ -44,7 +44,7 @@
+ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+ 		   "$(SOFLAGS)" libHDFS.$(SOEXT) $@ "$(HDFSO) $(HDFSDO)" \
+-		   "$(HDFSLIBEXTRA) $(HDFSLIBDIR) $(HDFSCLILIB) $(JVMLIBDIR) $(JVMCLILIB)"
++		   "$(HDFSLIBEXTRA) $(HDFSLIBDIR) $(HDFSCLILIB)"
+ 
+ $(call pcmrule,HDFS)
+ 	$(noop)
+@@ -72,4 +72,4 @@
+ distclean::     distclean-$(MODNAME)
+ 
+ ##### extra rules ######
+-$(HDFSO) $(HDFSDO): CXXFLAGS += $(HDFSCFLAGS) $(HDFSINCDIR:%=-I%) $(JNIINCDIR:%=-I%)
++$(HDFSO) $(HDFSDO): CXXFLAGS += $(HDFSCFLAGS) $(HDFSINCDIR:%=-I%)
