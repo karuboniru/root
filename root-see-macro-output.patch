@@ -1,0 +1,266 @@
+diff -ur root-6.06.02.orig/tutorials/fit/fit1.C root-6.06.02/tutorials/fit/fit1.C
+--- root-6.06.02.orig/tutorials/fit/fit1.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/fit/fit1.C	2016-03-07 19:06:10.039340647 +0100
+@@ -13,7 +13,6 @@
+ 
+ void fit1() {
+    //Simple fitting example (1-d histogram with an interpreted function)
+-   //To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1_fit1","The Fit Canvas",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/fit/fitslicesy.C root-6.06.02/tutorials/fit/fitslicesy.C
+--- root-6.06.02.orig/tutorials/fit/fitslicesy.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/fit/fitslicesy.C	2016-03-07 19:06:10.038340635 +0100
+@@ -1,7 +1,6 @@
+ void fitslicesy() {
+ //
+ // Illustrates how to use the TH1::FitSlicesY function
+-// To see the output of this macro, click begin_html <a href="gif/fitslicesy.gif" >here</a> end_html
+ //    It uses the TH2F histogram generated in macro hsimple.C
+ //    It invokes FitSlicesY and draw the fitted "mean" and "sigma"
+ //    in 2 sepate pads.
+diff -ur root-6.06.02.orig/tutorials/fit/multifit.C root-6.06.02/tutorials/fit/multifit.C
+--- root-6.06.02.orig/tutorials/fit/multifit.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/fit/multifit.C	2016-03-07 19:06:10.039340647 +0100
+@@ -3,7 +3,6 @@
+ 
+ void multifit() {
+ //  Fitting multiple functions to different ranges of a 1-D histogram
+-// To see the output of this macro, click begin_html <a href="gif/multifit.gif" >here</a> end_html
+ //      Example showing how to fit in a sub-range of an histogram
+ //  An histogram is created and filled with the bin contents and errors
+ //  defined in the table below.
+diff -ur root-6.06.02.orig/tutorials/geom/shapes.C root-6.06.02/tutorials/geom/shapes.C
+--- root-6.06.02.orig/tutorials/geom/shapes.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/geom/shapes.C	2016-03-07 19:06:10.038340635 +0100
+@@ -3,7 +3,6 @@
+ 
+ void shapes() {
+ //The old geometry shapes (see script geodemo.C)
+-//To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
+ //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("glc1","Geometry Shapes",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphics/basic3d.C root-6.06.02/tutorials/graphics/basic3d.C
+--- root-6.06.02.orig/tutorials/graphics/basic3d.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphics/basic3d.C	2016-03-07 19:06:10.029340528 +0100
+@@ -1,6 +1,5 @@
+ void basic3d(){
+    // Show 3-D polylines and markers
+-   // To see the output of this macro, click begin_html <a href="gif/basic3d.gif">here</a> end_html
+    //
+ 
+    TCanvas *c1 = new TCanvas("c1","PolyLine3D & PolyMarker3D Window",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphics/canvas.C root-6.06.02/tutorials/graphics/canvas.C
+--- root-6.06.02.orig/tutorials/graphics/canvas.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphics/canvas.C	2016-03-07 19:06:10.030340540 +0100
+@@ -1,6 +1,5 @@
+ void canvas(){
+ //Example of primitives in a canvas
+-// To see the output of this macro, click begin_html <a href="gif/canvas.gif" >here</a> end_html
+ // One of the first actions in a ROOT session is the creation of a Canvas.
+ // Here we create a Canvas named "c1"
+ //Author: Rene Brun
+diff -ur root-6.06.02.orig/tutorials/graphics/feynman.C root-6.06.02/tutorials/graphics/feynman.C
+--- root-6.06.02.orig/tutorials/graphics/feynman.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphics/feynman.C	2016-03-07 19:06:10.029340528 +0100
+@@ -1,7 +1,6 @@
+ void feynman()
+ {
+    //Draw Feynman diagrams
+-   // To see the output of this macro, click begin_html <a href="gif/feynman.gif">here</a>. end_html
+    //Author: Otto Schaile
+ 
+    TCanvas *c1 = new TCanvas("c1", "A canvas", 10,10, 600, 300);
+diff -ur root-6.06.02.orig/tutorials/graphics/gaxis.C root-6.06.02/tutorials/graphics/gaxis.C
+--- root-6.06.02.orig/tutorials/graphics/gaxis.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphics/gaxis.C	2016-03-07 19:06:10.027340505 +0100
+@@ -1,6 +1,5 @@
+ void gaxis(){
+ //Simple example illustrating how to draw TGaxis objects in various formats.
+-//To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
+ //Author: Rene Brun
+ 
+   TCanvas *c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphics/tornado.C root-6.06.02/tutorials/graphics/tornado.C
+--- root-6.06.02.orig/tutorials/graphics/tornado.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphics/tornado.C	2016-03-07 19:06:10.028340516 +0100
+@@ -1,6 +1,5 @@
+ void tornado() {
+ //Show 3-d polymarkers
+-// To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
+ //Author: Rene Brun
+ 
+     gBenchmark->Start("tornado");
+diff -ur root-6.06.02.orig/tutorials/graphs/gerrors2.C root-6.06.02/tutorials/graphs/gerrors2.C
+--- root-6.06.02.orig/tutorials/graphs/gerrors2.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphs/gerrors2.C	2016-03-07 19:06:10.030340540 +0100
+@@ -1,6 +1,5 @@
+ void gerrors2() {
+    //Draw two graphs with error bars
+-   // To see the output of this macro, click begin_html <a href="gif/gerrors2.gif">here</a>. end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","gerrors2",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphs/gerrors.C root-6.06.02/tutorials/graphs/gerrors.C
+--- root-6.06.02.orig/tutorials/graphs/gerrors.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphs/gerrors.C	2016-03-07 19:06:10.031340552 +0100
+@@ -1,6 +1,5 @@
+ void gerrors() {
+    //Draw a graph with error bars
+-   // To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","A Simple Graph with error bars",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphs/graph.C root-6.06.02/tutorials/graphs/graph.C
+--- root-6.06.02.orig/tutorials/graphs/graph.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphs/graph.C	2016-03-07 19:06:10.031340552 +0100
+@@ -1,6 +1,5 @@
+ void graph() {
+    //Draw a simple graph
+-   // To see the output of this macro, click begin_html <a href="gif/graph.gif">here</a>. end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
+diff -ur root-6.06.02.orig/tutorials/graphs/surfaces.C root-6.06.02/tutorials/graphs/surfaces.C
+--- root-6.06.02.orig/tutorials/graphs/surfaces.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphs/surfaces.C	2016-03-07 19:06:10.031340552 +0100
+@@ -1,6 +1,5 @@
+ void surfaces() {
+    //Draw 2-Dim functions
+-   // To see the output of this macro, click begin_html <a href="gif/surfaces.gif">here</a> end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","Surfaces Drawing Options",200,10,700,900);
+diff -ur root-6.06.02.orig/tutorials/hist/fillrandom.C root-6.06.02/tutorials/hist/fillrandom.C
+--- root-6.06.02.orig/tutorials/hist/fillrandom.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/hist/fillrandom.C	2016-03-07 19:06:10.037340623 +0100
+@@ -1,6 +1,5 @@
+ void fillrandom() {
+    //Fill a 1-D histogram from a parametric function
+-   // To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","The FillRandom example",200,10,700,900);
+diff -ur root-6.06.02.orig/tutorials/hist/hsum.C root-6.06.02/tutorials/hist/hsum.C
+--- root-6.06.02.orig/tutorials/hist/hsum.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/hist/hsum.C	2016-03-07 19:06:10.038340635 +0100
+@@ -1,7 +1,6 @@
+ // histograms filled and drawn in a loop
+ void hsum() {
+ //
+-// To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html
+ //    Simple example illustrating how to use the C++ interpreter
+ //    to fill histograms in a loop and show the graphics results
+ //Author: Rene Brun
+diff -ur root-6.06.02.orig/tutorials/hist/twoscales.C root-6.06.02/tutorials/hist/twoscales.C
+--- root-6.06.02.orig/tutorials/hist/twoscales.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/hist/twoscales.C	2016-03-07 19:06:10.037340623 +0100
+@@ -9,7 +9,6 @@
+ {
+    //example of macro illustrating how to superimpose two histograms
+    //with different scales in the "same" pad.
+-   // To see the output of this macro, click begin_html <a href="gif/twoscales.gif" >here</a> end_html
+    //Author: Rene Brun
+ 
+    TCanvas *c1 = new TCanvas("c1","hists with different scales",600,400);
+diff -ur root-6.06.02.orig/tutorials/pyroot/fillrandom.py root-6.06.02/tutorials/pyroot/fillrandom.py
+--- root-6.06.02.orig/tutorials/pyroot/fillrandom.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/fillrandom.py	2016-03-07 19:06:10.035340599 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
+ #
+ 
+ from ROOT import TCanvas, TPad, TFormula, TF1, TPaveLabel, TH1F, TFile
+diff -ur root-6.06.02.orig/tutorials/pyroot/fit1.py root-6.06.02/tutorials/pyroot/fit1.py
+--- root-6.06.02.orig/tutorials/pyroot/fit1.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/fit1.py	2016-03-07 19:06:10.032340564 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
+ #
+ from os import path
+ from ROOT import TCanvas, TFile, TPaveText
+diff -ur root-6.06.02.orig/tutorials/pyroot/gerrors.py root-6.06.02/tutorials/pyroot/gerrors.py
+--- root-6.06.02.orig/tutorials/pyroot/gerrors.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/gerrors.py	2016-03-07 19:06:10.034340587 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
+ #
+ 
+ from ROOT import TCanvas, TGraphErrors
+diff -ur root-6.06.02.orig/tutorials/pyroot/graph.py root-6.06.02/tutorials/pyroot/graph.py
+--- root-6.06.02.orig/tutorials/pyroot/graph.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/graph.py	2016-03-07 19:06:10.034340587 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/graph.gif">here</a>. end_html
+ #
+ 
+ from ROOT import TCanvas, TGraph
+diff -ur root-6.06.02.orig/tutorials/pyroot/h1draw.py root-6.06.02/tutorials/pyroot/h1draw.py
+--- root-6.06.02.orig/tutorials/pyroot/h1draw.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/h1draw.py	2016-03-07 19:06:10.032340564 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/h1draw.gif">here</a> end_html
+ #
+ 
+ from ROOT import TCanvas, TPad, TFile, TPaveLabel, TPaveText
+diff -ur root-6.06.02.orig/tutorials/pyroot/hsum.py root-6.06.02/tutorials/pyroot/hsum.py
+--- root-6.06.02.orig/tutorials/pyroot/hsum.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/hsum.py	2016-03-07 19:06:10.034340587 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html
+ #    Simple example illustrating how to use the C++ interpreter	
+ #    to fill histograms in a loop and show the graphics results
+ #
+diff -ur root-6.06.02.orig/tutorials/pyroot/multifit.py root-6.06.02/tutorials/pyroot/multifit.py
+--- root-6.06.02.orig/tutorials/pyroot/multifit.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/multifit.py	2016-03-07 19:06:10.035340599 +0100
+@@ -1,4 +1,3 @@
+-# To see the output of this macro, click begin_html <a href="gif/multifit.gif" >here</a> end_html
+ #      Example showing how to fit in a sub-range of an histogram
+ #  An histogram is created and filled with the bin contents and errors
+ #  defined in the table below.
+diff -ur root-6.06.02.orig/tutorials/pyroot/shapes.py root-6.06.02/tutorials/pyroot/shapes.py
+--- root-6.06.02.orig/tutorials/pyroot/shapes.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/shapes.py	2016-03-07 19:06:10.036340611 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
+ #
+ 
+ import ROOT
+diff -ur root-6.06.02.orig/tutorials/pyroot/surfaces.py root-6.06.02/tutorials/pyroot/surfaces.py
+--- root-6.06.02.orig/tutorials/pyroot/surfaces.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/surfaces.py	2016-03-07 19:06:10.033340576 +0100
+@@ -1,5 +1,4 @@
+ #
+-# To see the output of this macro, click begin_html <a href="gif/surfaces.gif">here</a> end_html
+ #
+ 
+ from ROOT import TCanvas, TPaveText, TPad, TF2
+diff -ur root-6.06.02.orig/tutorials/pyroot/tornado.py root-6.06.02/tutorials/pyroot/tornado.py
+--- root-6.06.02.orig/tutorials/pyroot/tornado.py	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/pyroot/tornado.py	2016-03-07 19:06:10.033340576 +0100
+@@ -1,4 +1,3 @@
+-# To see the output of this macro, click begin_html <a href="gif/tornado.gif" >here</a> end_html
+ 
+ from ROOT import TCanvas, TView, TPolyMarker3D, TPaveText
+ from ROOT import gROOT, gBenchmark
+diff -ur root-6.06.02.orig/tutorials/ruby/hsum.rb root-6.06.02/tutorials/ruby/hsum.rb
+--- root-6.06.02.orig/tutorials/ruby/hsum.rb	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/ruby/hsum.rb	2016-03-07 19:06:10.036340611 +0100
+@@ -4,7 +4,6 @@
+ # (20/01/2004)  --elathan  <elathan@phys.uoa.gr>
+ #
+ # original header:
+-# To see the output of this macro, click begin_html <a href="gif/hsum.gif" >here</a> end_html
+ # Simple example illustrating how to use the C++ interpreter	
+ # to fill histograms in a loop and show the graphics results
+ 

@@ -1,0 +1,305 @@
+diff -Nur root-6.06.02.orig/cmake/modules/FindUnuran.cmake root-6.06.02/cmake/modules/FindUnuran.cmake
+--- root-6.06.02.orig/cmake/modules/FindUnuran.cmake	1970-01-01 01:00:00.000000000 +0100
++++ root-6.06.02/cmake/modules/FindUnuran.cmake	2016-03-20 17:53:02.393804958 +0100
+@@ -0,0 +1,21 @@
++# - Locate Unuran library
++# Defines:
++#
++#  UNURAN_FOUND
++#  UNURAN_INCLUDE_DIR
++#  UNURAN_INCLUDE_DIRS (not cached)
++#  UNURAN_LIBRARIES
++
++find_path(UNURAN_INCLUDE_DIR NAMES unuran.h HINTS ${UNURAN_DIR}/include $ENV{UNURAN_DIR}/include /usr/include)
++find_library(UNURAN_LIBRARY NAMES unuran HINTS ${UNURAN_DIR}/lib $ENV{UNURAN_DIR}/lib)
++
++set(UNURAN_INCLUDE_DIRS ${UNURAN_INCLUDE_DIR})
++set(UNURAN_LIBRARIES ${UNURAN_LIBRARY})
++
++
++# handle the QUIETLY and REQUIRED arguments and set UNURAN_FOUND to TRUE if
++# all listed variables are TRUE
++INCLUDE(FindPackageHandleStandardArgs)
++FIND_PACKAGE_HANDLE_STANDARD_ARGS(UNURAN DEFAULT_MSG UNURAN_LIBRARY UNURAN_INCLUDE_DIR)
++
++mark_as_advanced(UNURAN_FOUND UNURAN_INCLUDE_DIR UNURAN_LIBRARY)
+diff -Nur root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake root-6.06.02/cmake/modules/RootBuildOptions.cmake
+--- root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake	2016-03-20 14:37:23.656597032 +0100
++++ root-6.06.02/cmake/modules/RootBuildOptions.cmake	2016-03-20 17:54:50.896874682 +0100
+@@ -73,6 +73,7 @@
+ ROOT_BUILD_OPTION(builtin_glew ON "Built included libGLEW, or use system libGLEW")
+ ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
+ ROOT_BUILD_OPTION(builtin_pcre OFF "Built included libpcre, or use system libpcre")
++ROOT_BUILD_OPTION(builtin_unuran OFF "Build included libunuran, or use system libunuran")
+ ROOT_BUILD_OPTION(builtin_zlib OFF "Built included libz, or use system libz")
+ ROOT_BUILD_OPTION(builtin_lzma OFF "Built included liblzma, or use system liblzma")
+ ROOT_BUILD_OPTION(builtin_davix OFF "Built the Davix library internally (downloading tarfile from the Web)")
+diff -Nur root-6.06.02.orig/cmake/modules/RootConfiguration.cmake root-6.06.02/cmake/modules/RootConfiguration.cmake
+--- root-6.06.02.orig/cmake/modules/RootConfiguration.cmake	2016-03-20 15:54:25.926191321 +0100
++++ root-6.06.02/cmake/modules/RootConfiguration.cmake	2016-03-20 17:53:02.394804968 +0100
+@@ -142,6 +142,11 @@
+ set(zliblib ${ZLIB_LIBRARY})
+ set(zlibincdir ${ZLIB_INCLUDE_DIR})
+ 
++set(builtinunuran ${value${builtin_unuran}})
++set(unuranlibdir ${UNURAN_LIBRARY_DIR})
++set(unuranlib ${UNURAN_LIBRARY})
++set(unuranincdir ${UNURAN_INCLUDE_DIR})
++
+ set(buildgl ${value${opengl}})
+ set(opengllibdir ${OPENGL_LIBRARY_DIR})
+ set(openglulib ${OPENGL_glu_LIBRARY})
+diff -Nur root-6.06.02.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.06.02/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.06.02.orig/cmake/modules/SearchInstalledSoftware.cmake	2016-03-20 17:08:52.186461662 +0100
++++ root-6.06.02/cmake/modules/SearchInstalledSoftware.cmake	2016-03-20 17:53:02.394804968 +0100
+@@ -40,6 +40,16 @@
+   endif()
+ endif()
+ 
++#---Check for Unuran ------------------------------------------------------------------
++if(NOT builtin_unuran)
++  message(STATUS "Looking for Unuran")
++  find_Package(Unuran)
++  if(NOT UNURAN_FOUND)
++    message(STATUS "Unuran not found. Switching on builtin_unuran option")
++    set(builtin_unuran ON CACHE BOOL "" FORCE)
++  endif()
++endif()
++
+ #---Check for Freetype---------------------------------------------------------------
+ if(NOT builtin_freetype)
+   message(STATUS "Looking for Freetype")
+diff -Nur root-6.06.02.orig/config/Makefile.in root-6.06.02/config/Makefile.in
+--- root-6.06.02.orig/config/Makefile.in	2016-03-20 15:54:25.999192031 +0100
++++ root-6.06.02/config/Makefile.in	2016-03-20 17:53:02.468805698 +0100
+@@ -121,6 +121,11 @@
+ 
+ BUILTINPCRE    := @builtinpcre@
+ 
++BUILTINUNURAN  := @builtinunuran@
++UNURANLIBDIR   := @unuranlibdir@
++UNURANLIB      := @unuranlib@
++UNURANINCDIR   := $(filter-out /usr/include, @unuranincdir@)
++
+ BUILTINZLIB    := @builtinzlib@
+ ZLIBLIBDIR     := @zliblibdir@
+ ZLIBCLILIB     := @zliblib@
+diff -Nur root-6.06.02.orig/configure root-6.06.02/configure
+--- root-6.06.02.orig/configure	2016-03-20 16:48:49.767492974 +0100
++++ root-6.06.02/configure	2016-03-20 17:53:02.513806142 +0100
+@@ -55,6 +55,7 @@
+    enable_builtin_freetype   \
+    enable_builtin_glew       \
+    enable_builtin_pcre       \
++   enable_builtin_unuran     \
+    enable_builtin_zlib       \
+    enable_builtin_lzma       \
+    enable_builtin_llvm       \
+@@ -183,6 +184,7 @@
+ enable_builtin_ftgl=no
+ enable_builtin_glew=no
+ enable_builtin_pcre=no
++enable_builtin_unuran=no
+ enable_builtin_zlib=no
+ enable_builtin_lzma=no
+ enable_builtin_llvm=yes
+@@ -1704,6 +1706,7 @@
+   builtin-freetype   Build included libfreetype, or use system libfreetype
+   builtin-glew       Build included libGLEW, or use system libGLEW
+   builtin-pcre       Build included libpcre, or use system libpcre
++  builtin-unuran     Build included libunuran, or use system libunuran
+   builtin-zlib       Build included libz, or use system libz
+   builtin-lzma       Build included liblzma, or use system liblzma
+   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
+@@ -2046,6 +2049,7 @@
+    enable_builtin_ftgl="yes"
+    enable_builtin_glew="yes"
+    enable_builtin_pcre="yes"
++   enable_builtin_unuran="yes"
+    enable_builtin_zlib="yes"
+    enable_builtin_lzma="yes"
+    top_builddir=`cygpath -u $top_builddir`
+@@ -3210,6 +3214,38 @@
+ 
+ ######################################################################
+ #
++### echo %%% libunuran (builtin or system)
++#
++if test "x$enable_builtin_unuran" = "xno" ; then
++    check_header "unuran.h" "" \
++        $UNURAN ${UNURAN:+$UNURAN/include} /usr/include
++    if test "x$found_dir" = "x" ; then
++        enable_builtin_unuran=yes
++    else
++        unuraninc=$found_hdr
++        unuranincdir=$found_dir
++    fi
++
++    check_library "libunuran" "$enable_shared" "" \
++        $UNURAN ${UNURAN:+$UNURAN/lib} /usr/lib
++    if test "x$found_lib" = "x" ; then
++        unuranlib=""
++        unuranlibdir=""
++        enable_builtin_unuran="yes"
++    else
++        unuranlib="$found_lib"
++        unuranlibdir="$found_dir"
++    fi
++
++    if test "x$unuranincdir" = "x" || test "x$unuranlib" = "x"; then
++        enable_builtin_unuran="yes"
++    fi
++fi
++message "Checking whether to build included unuran"
++result "$enable_builtin_unuran"
++
++######################################################################
++#
+ ### echo %%% Use included zLib or use systems
+ #
+ if test "x$enable_builtin_zlib" = "xno" ; then
+@@ -7720,6 +7756,10 @@
+     -e "s|@top_srcdir@|$top_srcdir|"            \
+     -e "s|@ttffontdir@|$fontdir|"               \
+     -e "s|@tutdir@|$tutdir|"                    \
++    -e "s|@builtinunuran@|$enable_builtin_unuran|" \
++    -e "s|@unuranincdir@|$unuranincdir|"        \
++    -e "s|@unuranlib@|$unuranlib|"              \
++    -e "s|@unuranlibdir@|$unuranlibdir|"        \
+     -e "s|@winrtdebug@|$enable_winrtdebug|"     \
+     -e "s|@xmlincdir@|$xmlincdir|"              \
+     -e "s|@xmllib@|$xmllib|"                    \
+diff -Nur root-6.06.02.orig/math/unuran/CMakeLists.txt root-6.06.02/math/unuran/CMakeLists.txt
+--- root-6.06.02.orig/math/unuran/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/unuran/CMakeLists.txt	2016-03-20 17:53:02.552806526 +0100
+@@ -3,6 +3,9 @@
+ ############################################################################
+ 
+ #---Define package related variables-----------------------------------------------------------------
++
++if(builtin_unuran)
++
+ set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+ set(UNR_VERSION "1.8.0-root")
+ set(UNR_TARNAME "unuran-${UNR_VERSION}")
+@@ -62,8 +65,17 @@
+                ${UNR_UNTARDIR}/src/tests/*.c
+                ${UNR_UNTARDIR}/src/uniform/*.c
+                ${UNR_UNTARDIR}/src/urng/*.c )
++set(unrconfig ${UNR_UNTARDIR}/config.h)
++
++else()
++
++include_directories(${UNURAN_INCLUDE_DIRS})
++set(unrsources)
++set(unrconfig)
++
++endif()
+ 
+ ROOT_GENERATE_DICTIONARY(G__Unuran *.h MODULE Unuran LINKDEF LinkDef.h)
+ 
+-ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${UNR_UNTARDIR}/config.h  LIBRARIES Core DEPENDENCIES Hist MathCore)
++ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${unrconfig} LIBRARIES Core ${UNURAN_LIBRARIES} DEPENDENCIES Hist MathCore)
+ ROOT_INSTALL_HEADERS()
+diff -Nur root-6.06.02.orig/math/unuran/Module.mk root-6.06.02/math/unuran/Module.mk
+--- root-6.06.02.orig/math/unuran/Module.mk	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/unuran/Module.mk	2016-03-20 17:53:02.553806536 +0100
+@@ -12,6 +12,8 @@
+ UNURANDIRS   := $(UNURANDIR)/src
+ UNURANDIRI   := $(UNURANDIR)/inc
+ 
++ifeq ($(BUILTINUNURAN),yes)
++
+ UNRVERS      := unuran-1.8.0-root
+ 
+ UNRSRCS      := $(MODDIRS)/$(UNRVERS).tar.gz
+@@ -43,15 +45,18 @@
+                 $(filter $(UNRDIRS)/src/uniform/%,$(UNRTARCONTENT)) \
+                 $(filter $(UNRDIRS)/src/urng/%,$(UNRTARCONTENT)))
+ endif
+-UNRO         := $(UNRS:.c=.o)
++UNRFLAGS     := -I$(UNRDIRS)/src
+ 
+-ifeq ($(PLATFORM),win32)
+-UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.lib
+ else
+-UNRLIBS      := $(UNRDIRS)/src/.libs/libunuran.a
++
++UNURANETAG   :=
++UNRCFG       :=
++UNRS         :=
++UNRFLAGS     := $(UNURANINCDIR:%=-I%)
++
+ endif
+ 
+-UNRFLAGS     :=  -I$(UNRDIRS)/src
++UNRO         := $(UNRS:.c=.o)
+ 
+ ##### libUnuran #####
+ UNURANL      := $(MODDIRI)/LinkDef.h
+@@ -84,6 +89,8 @@
+ include/%.h: 	$(UNURANDIRI)/%.h $(UNURANETAG)
+ 		cp $< $@
+ 
++ifeq ($(BUILTINUNURAN),yes)
++
+ $(UNURANDEP):   $(UNRCFG)
+ $(UNRS):        $(UNURANETAG)
+ 
+@@ -134,12 +141,14 @@
+ 		GNUMAKE=$(MAKE) ./configure  CC="$$ACC"  \
+ 		CFLAGS="$$ACFLAGS");
+ 
++endif
++
+ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
+                 $(MAINLIBS) $(UNURANLIBDEP)
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
+ 		   "$(SOFLAGS)" libUnuran.$(SOEXT) $@     \
+ 		   "$(UNURANO) $(UNURANDO)"             \
+-		   "$(UNURANLIBEXTRA) $(UNRO)"
++		   "$(UNURANLIBEXTRA) $(UNRO) $(UNURANLIBDIR) $(UNURANLIB)"
+ 
+ $(call pcmrule,UNURAN)
+ 	$(noop)
+@@ -158,16 +167,19 @@
+ 
+ clean-$(MODNAME):
+ 		@rm -f $(UNURANO) $(UNURANDO)
++ifeq ($(BUILTINUNURAN),yes)
+ 		-@(if [ -d $(UNRDIRS) ]; then \
+ 			cd $(UNRDIRS); \
+ 			$(MAKE) clean; \
+ 		fi)
++endif
+ 
+ clean::         clean-$(MODNAME)
+ 
+ distclean-$(MODNAME): clean-$(MODNAME)
+ 		@rm -f $(UNURANO) $(UNURANDO) $(UNURANETAG) $(UNURANDEP) \
+ 		   $(UNURANDS) $(UNURANDH) $(UNURANLIB) $(UNURANMAP)
++ifeq ($(BUILTINUNURAN),yes)
+ 		@mv $(UNRSRCS) $(UNRDIR)/-$(UNRVERS).tar.gz
+ ifeq ($(UNURKEEP),yes)
+ 		@mv $(UNRDIRS) $(UNRDIRS).keep
+@@ -177,6 +189,7 @@
+ 		@mv $(UNRDIRS).keep $(UNRDIRS)
+ endif
+ 		@mv $(UNRDIR)/-$(UNRVERS).tar.gz $(UNRSRCS)
++endif
+ 
+ distclean::     distclean-$(MODNAME)
+ 
+@@ -184,6 +197,7 @@
+ 
+ $(UNURANO): CXXFLAGS += $(UNRFLAGS)
+ 
++ifeq ($(BUILTINUNURAN),yes)
+ ifeq ($(PLATFORM),win32)
+ $(UNRO): CFLAGS := $(filter-out -FIsehmap.h,$(filter-out -Iinclude,$(CFLAGS) -I$(UNRDIRS) -I$(UNRDIRS)/src/ -I$(UNRDIRS)/src/utils -DHAVE_CONFIG_H))
+ else
+@@ -194,3 +208,4 @@
+ ifeq ($(CC),icc)
+ $(UNRO): CFLAGS += -mp
+ endif
++endif

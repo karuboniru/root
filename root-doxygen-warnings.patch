@@ -1,0 +1,723 @@
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/impl_tuple_apply.h root-6.06.02/core/base/v7/inc/ROOT/impl_tuple_apply.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/impl_tuple_apply.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/impl_tuple_apply.h	2016-04-06 15:27:12.238754375 +0200
+@@ -1,4 +1,4 @@
+-/// \file impl_tuple_apply.h
++/// \file ROOT/impl_tuple_apply.h
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-09
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/RArrayView.h root-6.06.02/core/base/v7/inc/ROOT/RArrayView.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/RArrayView.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/RArrayView.h	2016-04-06 15:26:02.228280069 +0200
+@@ -1,4 +1,4 @@
+-/// \file RArrayView.h
++/// \file ROOT/RArrayView.h
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/rhysd_array_view.h root-6.06.02/core/base/v7/inc/ROOT/rhysd_array_view.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/rhysd_array_view.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/rhysd_array_view.h	2016-04-06 15:27:03.919698016 +0200
+@@ -1,4 +1,4 @@
+-/// \file rhysd_array_view.h
++/// \file ROOT/rhysd_array_view.h
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/RTupleApply.h root-6.06.02/core/base/v7/inc/ROOT/RTupleApply.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/RTupleApply.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/RTupleApply.h	2016-04-06 15:26:30.392470876 +0200
+@@ -1,4 +1,4 @@
+-/// \file RArrayView.h
++/// \file ROOT/RTupleApply.h
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/TCoopPtr.h root-6.06.02/core/base/v7/inc/ROOT/TCoopPtr.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/TCoopPtr.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/TCoopPtr.h	2016-04-06 15:22:08.629702559 +0200
+@@ -1,4 +1,4 @@
+-/// \file TCoopPtr
++/// \file ROOT/TCoopPtr.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/TDirectory.h root-6.06.02/core/base/v7/inc/ROOT/TDirectory.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/TDirectory.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/TDirectory.h	2016-04-06 15:22:35.960886031 +0200
+@@ -1,4 +1,4 @@
+-/// \file TDirectory.h
++/// \file ROOT/TDirectory.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/TDrawable.h root-6.06.02/core/base/v7/inc/ROOT/TDrawable.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/TDrawable.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/TDrawable.h	2016-04-06 15:23:28.468238508 +0200
+@@ -1,4 +1,4 @@
+-/// \file TDirectory.h
++/// \file ROOT/TDrawable.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-08-07
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/TKey.h root-6.06.02/core/base/v7/inc/ROOT/TKey.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/TKey.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/TKey.h	2016-04-06 15:23:57.359434110 +0200
+@@ -1,4 +1,4 @@
+-/// \file TKey.h
++/// \file ROOT/TKey.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff -ur root-6.06.02.orig/core/base/v7/inc/ROOT/TLogger.h root-6.06.02/core/base/v7/inc/ROOT/TLogger.h
+--- root-6.06.02.orig/core/base/v7/inc/ROOT/TLogger.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/base/v7/inc/ROOT/TLogger.h	2016-04-06 15:24:38.710714256 +0200
+@@ -1,4 +1,4 @@
+-/// \file TDirectory.h
++/// \file ROOT/TLogger.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-03-29
+diff -ur root-6.06.02.orig/core/cont/inc/TCollectionProxyInfo.h root-6.06.02/core/cont/inc/TCollectionProxyInfo.h
+--- root-6.06.02.orig/core/cont/inc/TCollectionProxyInfo.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/core/cont/inc/TCollectionProxyInfo.h	2016-04-07 06:52:03.825926112 +0200
+@@ -57,7 +57,7 @@
+       // Same value as TVirtualCollectionProxy.
+       static const UInt_t fgIteratorArenaSize = 16; // greater than sizeof(void*) + sizeof(UInt_t)
+ 
+-   /** @class template TCollectionProxyInfo::IteratorValue
++   /** @class ROOT::Detail::TCollectionProxyInfo::IteratorValue
+     *
+     * Small helper to encapsulate whether to return the value
+     * pointed to by the iterator or its address.
+@@ -76,7 +76,7 @@
+          }
+       };
+ 
+-   /** @class template TCollectionProxyInfo::Iterators
++   /** @class ROOT::Detail::TCollectionProxyInfo::Iterators
+     *
+     * Small helper to implement the function to create,access and destroy
+     * iterators.
+@@ -204,7 +204,7 @@
+          }
+       };
+ 
+-  /** @class TCollectionProxyInfo::Environ TCollectionProxyInfo.h TCollectionProxyInfo.h
++  /** @class ROOT::Detail::TCollectionProxyInfo::Environ
+     *
+     * Small helper to save proxy environment in the event of
+     * recursive calls.
+@@ -276,7 +276,7 @@
+       static size_t GetContainerSize(const std::forward_list<T,ALLOCATOR>& c) {return std::distance(c.begin(),c.end());}
+    };
+ 
+-   /** @class TCollectionProxyInfo::Type TCollectionProxyInfo.h TCollectionProxyInfo.h
++   /** @class ROOT::Detail::TCollectionProxyInfo::Type
+     *
+     * Small helper to encapsulate basic data accesses for
+     * all STL continers.
+@@ -356,7 +356,7 @@
+ 
+    };
+ 
+-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
++   /** @class ROOT::Detail::TCollectionProxyInfo::Pushback
+     *
+     * Small helper to encapsulate all necessary data accesses for
+     * containers like vector, list, deque
+@@ -389,7 +389,7 @@
+       }
+    };
+ 
+-   /** @class TCollectionProxyInfo::Pushfront TCollectionProxyInfo.h TCollectionProxyInfo.h
++   /** @class ROOT::Detail::TCollectionProxyInfo::Pushfront
+     *
+     * Small helper to encapsulate all necessary data accesses for
+     * containers like forward_list
+@@ -425,7 +425,7 @@
+       }
+    };
+ 
+-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
++   /** @class ROOT::Detail::TCollectionProxyInfo::Insert
+     *
+     * Small helper to encapsulate all necessary data accesses for
+     * containers like set, multiset etc.
+@@ -457,7 +457,7 @@
+       }
+    };
+ 
+-   /** @class TCollectionProxyInfo::Map TCollectionProxyInfo.h TCollectionProxyInfo.h
++   /** @class ROOT::Detail::TCollectionProxyInfo::MapInsert
+     *
+     * Small helper to encapsulate all necessary data accesses for
+     * containers like set, multiset etc.
+diff -ur root-6.06.02.orig/graf2d/gpad/v7/inc/ROOT/TCanvas.h root-6.06.02/graf2d/gpad/v7/inc/ROOT/TCanvas.h
+--- root-6.06.02.orig/graf2d/gpad/v7/inc/ROOT/TCanvas.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf2d/gpad/v7/inc/ROOT/TCanvas.h	2016-04-06 15:29:40.178756637 +0200
+@@ -1,4 +1,4 @@
+-/// \file TCanvas.h
++/// \file ROOT/TCanvas.h
+ /// \ingroup Gpad ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-08
+diff -ur root-6.06.02.orig/graf3d/gl/src/TGLPolyMarker.cxx root-6.06.02/graf3d/gl/src/TGLPolyMarker.cxx
+--- root-6.06.02.orig/graf3d/gl/src/TGLPolyMarker.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf3d/gl/src/TGLPolyMarker.cxx	2016-04-06 13:52:29.064736441 +0200
+@@ -26,7 +26,7 @@
+ #include "TClass.h"
+ #include "TError.h"
+ 
+-/** \class
++/** \class TGLPolyMarker
+ \ingroup opengl
+ To draw a 3D polymarker in a GL window.
+ */
+diff -ur root-6.06.02.orig/graf3d/gl/src/TGLSelectRecord.cxx root-6.06.02/graf3d/gl/src/TGLSelectRecord.cxx
+--- root-6.06.02.orig/graf3d/gl/src/TGLSelectRecord.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf3d/gl/src/TGLSelectRecord.cxx	2016-04-06 13:53:23.837160381 +0200
+@@ -14,7 +14,7 @@
+ 
+ #include <string.h>
+ 
+-/** \class
++/** \class TGLSelectRecordBase
+ \ingroup opengl TGLSelectRecordBase
+ Base class for select records.
+ Supports initialization from a raw GL record (UInt_t*) and
+diff -ur root-6.06.02.orig/graf3d/gl/src/TGLVoxelPainter.cxx root-6.06.02/graf3d/gl/src/TGLVoxelPainter.cxx
+--- root-6.06.02.orig/graf3d/gl/src/TGLVoxelPainter.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/graf3d/gl/src/TGLVoxelPainter.cxx	2016-04-06 13:54:42.651770407 +0200
+@@ -15,7 +15,7 @@
+ #include "TGLPlotCamera.h"
+ #include "TGLIncludes.h"
+ 
+-/** \class
++/** \class TGLVoxelPainter
+ \ingroup opengl
+ Paint TH3 histograms as "voxels" - colored boxes, transparent if transfer function was specified.
+ */
+diff -ur root-6.06.02.orig/hist/hist/src/TH1.cxx root-6.06.02/hist/hist/src/TH1.cxx
+--- root-6.06.02.orig/hist/hist/src/TH1.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TH1.cxx	2016-04-07 06:55:45.067740071 +0200
+@@ -49,11 +49,16 @@
+ 
+ /** \addtogroup Hist
+ @{
+-\class TH1C \brief tomato 1-D histogram with a bype per channel (see TH1 documentation)
+-\class TH1S \brief tomato 1-D histogram with a short per channel (see TH1 documentation)
+-\class TH1I \brief tomato 1-D histogram with a int per channel (see TH1 documentation)}
+-\class TH1F \brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
+-\class TH1D \brief tomato 1-D histogram with a double per channel (see TH1 documentation)}
++\class TH1C
++\brief 1-D histogram with a byte per channel (see TH1 documentation)
++\class TH1S
++\brief 1-D histogram with a short per channel (see TH1 documentation)
++\class TH1I
++\brief 1-D histogram with an int per channel (see TH1 documentation)}
++\class TH1F
++\brief 1-D histogram with a float per channel (see TH1 documentation)}
++\class TH1D
++\brief 1-D histogram with a double per channel (see TH1 documentation)}
+ @}
+ */
+ 
+diff -ur root-6.06.02.orig/hist/hist/src/TH2.cxx root-6.06.02/hist/hist/src/TH2.cxx
+--- root-6.06.02.orig/hist/hist/src/TH2.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TH2.cxx	2016-04-07 09:26:40.573880803 +0200
+@@ -30,11 +30,16 @@
+ 
+ /** \addtogroup Hist
+ @{
+-\class TH2C \brief tomato 2-D histogram with a bype per channel (see TH1 documentation)
+-\class TH2S \brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+-\class TH2I \brief tomato 2-D histogram with a int per channel (see TH1 documentation)}
+-\class TH2F \brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+-\class TH2D \brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
++\class TH2C
++\brief 2-D histogram with a byte per channel (see TH1 documentation)
++\class TH2S
++\brief 2-D histogram with a short per channel (see TH1 documentation)
++\class TH2I
++\brief 2-D histogram with an int per channel (see TH1 documentation)}
++\class TH2F
++\brief 2-D histogram with a float per channel (see TH1 documentation)}
++\class TH2D
++\brief 2-D histogram with a double per channel (see TH1 documentation)}
+ @}
+ */ 
+ 
+diff -ur root-6.06.02.orig/hist/hist/src/TH3.cxx root-6.06.02/hist/hist/src/TH3.cxx
+--- root-6.06.02.orig/hist/hist/src/TH3.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TH3.cxx	2016-04-07 09:27:06.173017889 +0200
+@@ -28,11 +28,16 @@
+ 
+ /** \addtogroup Hist
+ @{
+-\class TH3C \brief tomato 3-D histogram with a bype per channel (see TH1 documentation)
+-\class TH3S \brief tomato 3-D histogram with a short per channel (see TH1 documentation)
+-\class TH3I \brief tomato 3-D histogram with a int per channel (see TH1 documentation)}
+-\class TH3F \brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
+-\class TH3D \brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
++\class TH3C
++\brief 3-D histogram with a byte per channel (see TH1 documentation)
++\class TH3S
++\brief 3-D histogram with a short per channel (see TH1 documentation)
++\class TH3I
++\brief 3-D histogram with an int per channel (see TH1 documentation)}
++\class TH3F
++\brief 3-D histogram with a float per channel (see TH1 documentation)}
++\class TH3D
++\brief 3-D histogram with a double per channel (see TH1 documentation)}
+ @} 
+ */
+ 
+diff -ur root-6.06.02.orig/hist/hist/v7/src/THistDrawable.cxx root-6.06.02/hist/hist/v7/src/THistDrawable.cxx
+--- root-6.06.02.orig/hist/hist/v7/src/THistDrawable.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/v7/src/THistDrawable.cxx	2016-04-06 15:34:29.885719340 +0200
+@@ -1,4 +1,4 @@
+-/// \file ROOT/THistDrawable.cxx
++/// \file THistDrawable.cxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-11
+diff -ur root-6.06.02.orig/hist/histpainter/v7/src/THistPainter.cxx root-6.06.02/hist/histpainter/v7/src/THistPainter.cxx
+--- root-6.06.02.orig/hist/histpainter/v7/src/THistPainter.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/histpainter/v7/src/THistPainter.cxx	2016-04-06 15:36:05.225365245 +0200
+@@ -1,4 +1,4 @@
+-/// \file ROOT/THistPainter.cxx
++/// \file THistPainter.cxx
+ /// \ingroup HistPainter ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-09
+diff -ur root-6.06.02.orig/html/src/TDocOutput.cxx root-6.06.02/html/src/TDocOutput.cxx
+--- root-6.06.02.orig/html/src/TDocOutput.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/html/src/TDocOutput.cxx	2016-04-06 17:05:08.613380373 +0200
+@@ -2463,7 +2463,7 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Write the first part of the links shown ontop of each doc page;
+-/// one <div> has to be closed by caller so additional items can still
++/// one \<div\> has to be closed by caller so additional items can still
+ /// be added.
+ 
+ void TDocOutput::WriteTopLinks(std::ostream& out, TModuleDocInfo* module, const char* classname,
+diff -ur root-6.06.02.orig/io/dcache/inc/TDCacheFile.h root-6.06.02/io/dcache/inc/TDCacheFile.h
+--- root-6.06.02.orig/io/dcache/inc/TDCacheFile.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/dcache/inc/TDCacheFile.h	2016-04-06 17:05:58.695761365 +0200
+@@ -63,7 +63,7 @@
+                        const char *location = 0);
+    static Bool_t CheckFile(const char *path, const char *location = 0);
+ 
+-   /// Note: This must be kept in sync with values #defined in dcap.h
++   /// Note: This must be kept in sync with values \#defined in dcap.h
+    enum EOnErrorAction {
+       kOnErrorRetry   =  1,
+       kOnErrorFail    =  0,
+diff -ur root-6.06.02.orig/io/io/inc/TCollectionProxyFactory.h root-6.06.02/io/io/inc/TCollectionProxyFactory.h
+--- root-6.06.02.orig/io/io/inc/TCollectionProxyFactory.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/io/inc/TCollectionProxyFactory.h	2016-04-06 15:50:50.695248333 +0200
+@@ -160,7 +160,7 @@
+ };
+ 
+ /**
+- \class TCollectionClassStreamer TCollectionProxy.h
++ \class TCollectionClassStreamer TCollectionProxyFactory.h
+  \ingroup IO
+ 
+  Class streamer object to implement TClassStreamer functionality
+diff -ur root-6.06.02.orig/io/io/src/TMakeProject.cxx root-6.06.02/io/io/src/TMakeProject.cxx
+--- root-6.06.02.orig/io/io/src/TMakeProject.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/io/src/TMakeProject.cxx	2016-04-06 17:07:01.370235962 +0200
+@@ -434,7 +434,7 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Add to the header file, the #include needed for the argument of
++/// Add to the header file, the \#include needed for the argument of
+ /// this template.
+ 
+ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, char *inclist, Bool_t forward, const TList *extrainfos)
+@@ -587,7 +587,7 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Add to the header file anything that need to appear after the class
+-/// declaration (this includes some #pragma link).
++/// declaration (this includes some \#pragma link).
+ 
+ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist)
+ {
+diff -ur root-6.06.02.orig/io/io/src/TStreamerInfo.cxx root-6.06.02/io/io/src/TStreamerInfo.cxx
+--- root-6.06.02.orig/io/io/src/TStreamerInfo.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/io/src/TStreamerInfo.cxx	2016-04-06 17:07:43.579564101 +0200
+@@ -3645,7 +3645,7 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Add to the header file, the #include need for this class.
++/// Add to the header file, the \#include need for this class.
+ 
+ UInt_t TStreamerInfo::GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos)
+ {
+diff -ur root-6.06.02.orig/io/io/v7/inc/ROOT/TFile.h root-6.06.02/io/io/v7/inc/ROOT/TFile.h
+--- root-6.06.02.orig/io/io/v7/inc/ROOT/TFile.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/io/io/v7/inc/ROOT/TFile.h	2016-04-06 15:37:54.096102821 +0200
+@@ -1,4 +1,4 @@
+-/// \file TFile.h
++/// \file ROOT/TFile.h
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff -ur root-6.06.02.orig/math/doc/Math.md root-6.06.02/math/doc/Math.md
+--- root-6.06.02.orig/math/doc/Math.md	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/doc/Math.md	2016-04-07 10:27:29.799138394 +0200
+@@ -4,7 +4,7 @@
+ 
+ \brief The %ROOT Mathematical Libraries.
+ 
+-See the \subpage MathPage "Mathematical Libraries" description page.
++See the \ref MathPage "Mathematical Libraries" description page.
+ 
+ 
+ \page MathPage The ROOT Mathematical Libraries 
+@@ -39,7 +39,7 @@
+ - **Physics Vectors**: Classes for describing vectors in 2, 3 and 4 dimensions (relativistic vectors) and their rotation and transformation algorithms. Two package exist in %ROOT:
+ 
+    - Physics: library with the TVector3 and TLorentzVector classes.
+-   - GenVector: new library providing generic class templates for modeling the vectors. See the \subpage "GenVector" page. 
++   - GenVector: new library providing generic class templates for modeling the vectors. See the \ref Vector "GenVector" page.
+ 
+ - \ref Unuran "UNURAN": Package with universal algorithms for generating non-uniform pseudo-random numbers, from a large classes of continuous or discrete distributions in one or multi-dimensions. 
+ 
+diff -ur root-6.06.02.orig/math/mathcore/inc/Math/Random.h root-6.06.02/math/mathcore/inc/Math/Random.h
+--- root-6.06.02.orig/math/mathcore/inc/Math/Random.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/inc/Math/Random.h	2016-04-07 05:35:46.482275553 +0200
+@@ -18,9 +18,7 @@
+ #define ROOT_Math_Random
+ 
+ /**
+-@defgroup Random 
+-
+- Interface class for Random number generation
++@defgroup Random Interface class for Random number generation
+ */
+ 
+ #include "Math/RandomFunctions.h"
+diff -ur root-6.06.02.orig/math/mathcore/inc/Math/SpecFuncMathCore.h root-6.06.02/math/mathcore/inc/Math/SpecFuncMathCore.h
+--- root-6.06.02.orig/math/mathcore/inc/Math/SpecFuncMathCore.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/inc/Math/SpecFuncMathCore.h	2016-04-06 17:10:52.593135769 +0200
+@@ -209,7 +209,7 @@
+ 
+   /**
+ 
+-  Calculates the real part of the cosine integral \Re(Ci).
++  Calculates the real part of the cosine integral Re(Ci).
+ 
+   For x<0, the imaginary part is \pi i and has to be added by the user,
+   for x>0 the imaginary part of Ci(x) is 0.
+diff -ur root-6.06.02.orig/math/mathcore/src/TKDTree.cxx root-6.06.02/math/mathcore/src/TKDTree.cxx
+--- root-6.06.02.orig/math/mathcore/src/TKDTree.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/src/TKDTree.cxx	2016-04-06 15:52:05.037737876 +0200
+@@ -21,7 +21,8 @@
+ 
+ /**
+ 
+-\class TKDTree class implementing a kd-tree
++\class TKDTree
++\brief Class implementing a kd-tree
+ 
+ 
+ 
+diff -ur root-6.06.02.orig/math/mathcore/v7/inc/ROOT/TFit.h root-6.06.02/math/mathcore/v7/inc/ROOT/TFit.h
+--- root-6.06.02.orig/math/mathcore/v7/inc/ROOT/TFit.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathcore/v7/inc/ROOT/TFit.h	2016-04-06 17:54:03.364574676 +0200
+@@ -1,4 +1,4 @@
+-/// \file TFit.h
++/// \file ROOT/TFit.h
+ /// \ingroup MathCore ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff -ur root-6.06.02.orig/math/mathmore/inc/Math/GSLMCIntegrator.h root-6.06.02/math/mathmore/inc/Math/GSLMCIntegrator.h
+--- root-6.06.02.orig/math/mathmore/inc/Math/GSLMCIntegrator.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathmore/inc/Math/GSLMCIntegrator.h	2016-04-06 15:19:36.635682240 +0200
+@@ -83,9 +83,6 @@
+ 
+     It implements also the interface ROOT::Math::VirtualIntegratorMultiDim so it can be
+     instantiate using the plugin manager (plugin name is "GSLMCIntegrator")
+-
+-    @ingroup MCIntegration
+-
+    */
+ 
+ 
+diff -ur root-6.06.02.orig/math/mathmore/inc/Math/VavilovAccuratePdf.h root-6.06.02/math/mathmore/inc/Math/VavilovAccuratePdf.h
+--- root-6.06.02.orig/math/mathmore/inc/Math/VavilovAccuratePdf.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathmore/inc/Math/VavilovAccuratePdf.h	2016-04-06 15:05:19.713897159 +0200
+@@ -51,7 +51,7 @@
+    and \f[\psi(s) = s \ln \kappa + (s+\beta^2 \kappa)
+                \cdot \left ( \int \limits_{0}^{1}
+                \frac{1 - e^{\frac{-st}{\kappa}}}{t} \, dt- \gamma \right )
+-               - \kappa \, e^{\frac{-s}{\kappa}}\f$.
++               - \kappa \, e^{\frac{-s}{\kappa}}\f].
+    \f$ \gamma = 0.5772156649\dots\f$ is Euler's constant.
+ 
+    The parameters are:
+diff -ur root-6.06.02.orig/math/mathmore/src/SpecFuncMathMore.cxx root-6.06.02/math/mathmore/src/SpecFuncMathMore.cxx
+--- root-6.06.02.orig/math/mathmore/src/SpecFuncMathMore.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/mathmore/src/SpecFuncMathMore.cxx	2016-04-07 09:55:57.093992371 +0200
+@@ -84,16 +84,17 @@
+ // [5.2.1.6] (complete) elliptic integral of the third kind
+ // (26.x.17.2)
+ /**
++Complete elliptic integral of the third kind.
+ 
+ There are two different definitions used for the elliptic
+ integral of the third kind:
+-
+-P(\phi,k,n) = \int_0^\phi dt 1/((1 + nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+-
++\f[
++P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 + n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
++\f]
+ and
+-
+-P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+-
++\f[
++P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 - n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
++\f]
+ the former is adopted by
+ 
+ - GSL
+@@ -220,16 +221,17 @@
+ // phi in radians
+ // (26.x.17.1)
+ /**
++Incomplete elliptic integral of the third kind.
+ 
+ There are two different definitions used for the elliptic
+ integral of the third kind:
+-
+-P(\phi,k,n) = \int_0^\phi dt 1/((1 + nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+-
++\f[
++P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 + n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
++\f]
+ and
+-
+-P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+-
++\f[
++P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 - n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
++\f]
+ the former is adopted by
+ 
+ - GSL
+diff -ur root-6.06.02.orig/math/unuran/doc/Unuran.md root-6.06.02/math/unuran/doc/Unuran.md
+--- root-6.06.02.orig/math/unuran/doc/Unuran.md	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/unuran/doc/Unuran.md	2016-04-06 17:30:53.517632259 +0200
+@@ -38,7 +38,7 @@
+     - The user can optionally provide the
+ 	  - cdf (cumulative distribution function) via the **TUnuranContDist::SetCdf** function,
+ 	  - the mode via **TUnuranContDist::SetMode**,
+-      - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
++	  - the domain via **TUnuranContDist::SetDomain** for generating numbers in a restricted region,
+ 	  - the area below the pdf via **TUnuranContDist::SetPdfArea**.
+ 
+ Some of this information is required depending on the chosen UNURAN generation method.
+diff -ur root-6.06.02.orig/net/glite/inc/TGLiteResult.h root-6.06.02/net/glite/inc/TGLiteResult.h
+--- root-6.06.02.orig/net/glite/inc/TGLiteResult.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/net/glite/inc/TGLiteResult.h	2016-04-06 15:41:31.962569095 +0200
+@@ -10,7 +10,7 @@
+  *************************************************************************/
+ 
+ /************************************************************************/
+-/*! \file TGLiteresult.h
++/*! \file TGLiteResult.h
+ *//*
+ 
+          version number:    $LastChangedRevision: 1678 $
+diff -ur root-6.06.02.orig/net/glite/src/TGLiteResult.cxx root-6.06.02/net/glite/src/TGLiteResult.cxx
+--- root-6.06.02.orig/net/glite/src/TGLiteResult.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/net/glite/src/TGLiteResult.cxx	2016-04-06 15:41:59.755752113 +0200
+@@ -10,7 +10,7 @@
+  *************************************************************************/
+ 
+ /************************************************************************/
+-/*! \file TGLiteresult.cxx
++/*! \file TGLiteResult.cxx
+  */ /*
+ 
+          version number:    $LastChangedRevision: 1678 $
+diff -ur root-6.06.02.orig/net/http/src/THttpCallArg.cxx root-6.06.02/net/http/src/THttpCallArg.cxx
+--- root-6.06.02.orig/net/http/src/THttpCallArg.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/net/http/src/THttpCallArg.cxx	2016-04-07 09:18:31.987498647 +0200
+@@ -60,8 +60,8 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// method used to get or set http header in the string buffer
+ /// Header has following format:
+-///   field1 : value1\r\n
+-///   field2 : value2\r\n
++///   field1 : value1\\r\\n
++///   field2 : value2\\r\\n
+ /// Such format corresponds to header format in HTTP requests
+ 
+ TString THttpCallArg::AccessHeader(TString& buf, const char* name, const char* value, Bool_t doing_set)
+diff -ur root-6.06.02.orig/net/net/src/TWebFile.cxx root-6.06.02/net/net/src/TWebFile.cxx
+--- root-6.06.02.orig/net/net/src/TWebFile.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/net/net/src/TWebFile.cxx	2016-04-06 17:18:57.433964872 +0200
+@@ -1195,7 +1195,7 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Determine whether [START, PEEKED + PEEKLEN) contains an HTTP new
+-/// line [\r]\n. If so, return the pointer to the position after the line,
++/// line [\\r]\\n. If so, return the pointer to the position after the line,
+ /// otherwise return 0. This is used as callback to GetHunk(). The data
+ /// between START and PEEKED has been read and cannot be "unread"; the
+ /// data after PEEKED has only been peeked.
+diff -ur root-6.06.02.orig/roofit/roofitcore/src/BidirMMapPipe.h root-6.06.02/roofit/roofitcore/src/BidirMMapPipe.h
+--- root-6.06.02.orig/roofit/roofitcore/src/BidirMMapPipe.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roofitcore/src/BidirMMapPipe.h	2016-04-06 17:34:02.717120497 +0200
+@@ -813,7 +813,7 @@
+ 
+ 	/** @brief I/O manipulator support
+ 	 *
+-	 * @param f manipulator
++	 * @param manip manipulator
+ 	 * @returns pipe with manipulator applied
+ 	 *
+ 	 * example:
+@@ -826,7 +826,7 @@
+ 
+ 	/** @brief I/O manipulator support
+ 	 *
+-	 * @param f manipulator
++	 * @param manip manipulator
+ 	 * @returns pipe with manipulator applied
+ 	 *
+ 	 * example:
+diff -ur root-6.06.02.orig/roofit/roofitcore/src/RooAbsCollection.cxx root-6.06.02/roofit/roofitcore/src/RooAbsCollection.cxx
+--- root-6.06.02.orig/roofit/roofitcore/src/RooAbsCollection.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roofitcore/src/RooAbsCollection.cxx	2016-04-06 17:35:25.398770868 +0200
+@@ -1002,7 +1002,7 @@
+ ///   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
+ ///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
+ ///                                + n specified additional digits (1 is sensible default)
+-///   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
++///   VerbatimName(Bool_t flag) -- Put variable name in a \\verb+   + clause.
+ ///
+ /// Example use: list.printLatex(Columns(2), Format("NEU",AutoPrecision(1),VerbatimName()) ) ;
+ 
+diff -ur root-6.06.02.orig/roofit/roofitcore/src/RooAbsData.cxx root-6.06.02/roofit/roofitcore/src/RooAbsData.cxx
+--- root-6.06.02.orig/roofit/roofitcore/src/RooAbsData.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roofitcore/src/RooAbsData.cxx	2016-04-06 17:36:08.129106984 +0200
+@@ -1264,7 +1264,7 @@
+ ///   FixedPrecision(int n)     -- Controls precision, set fixed number of digits
+ ///   AutoPrecision(int n)      -- Controls precision. Number of shown digits is calculated from error 
+ ///                                + n specified additional digits (1 is sensible default)
+-///   VerbatimName(Bool_t flag) -- Put variable name in a \verb+   + clause.
++///   VerbatimName(Bool_t flag) -- Put variable name in a \\verb+   + clause.
+ ///
+ 
+ RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2, 
+diff -ur root-6.06.02.orig/roofit/roofitcore/src/RooAbsReal.cxx root-6.06.02/roofit/roofitcore/src/RooAbsReal.cxx
+--- root-6.06.02.orig/roofit/roofitcore/src/RooAbsReal.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roofitcore/src/RooAbsReal.cxx	2016-04-06 17:37:51.058916416 +0200
+@@ -21,7 +21,7 @@
+    RooAbsReal is the common abstract base class for objects that represent a
+    real value and implements functionality common to all real-valued objects
+    such as the ability to plot them, to construct integrals of them, the
+-   ability to advertise (partial) analytical integrals etc..
++   ability to advertise (partial) analytical integrals etc.
+    
+    Implementation of RooAbsReal may be derived, thus no interface
+    is provided to modify the contents.
+diff -ur root-6.06.02.orig/roofit/roofitcore/src/RooRealVar.cxx root-6.06.02/roofit/roofitcore/src/RooRealVar.cxx
+--- root-6.06.02.orig/roofit/roofitcore/src/RooRealVar.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roofitcore/src/RooRealVar.cxx	2016-04-06 15:08:46.129315457 +0200
+@@ -838,7 +838,7 @@
+ /// L = TLatex mode
+ /// X = Latex mode
+ /// Y = Latex table mode ( '=' replaced by '&' )
+-/// V = Make name \verbatim in Latex mode
++/// V = Make name \\verbatim in Latex mode
+ /// P = use error to control shown precision
+ /// F = force fixed precision
+ ///
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/MCMCInterval.h root-6.06.02/roofit/roostats/inc/RooStats/MCMCInterval.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/MCMCInterval.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/MCMCInterval.h	2016-04-06 15:09:46.205718743 +0200
+@@ -55,7 +55,7 @@
+    confidence level is reached within an acceptable neighborhood as defined by
+    SetEpsilon(). More specifically: we calculate the following for different
+    cutoff values C until we reach the target confidence level: \f$\int_{ F >= C } F
+-   d{normset} \$.
++   d{normset} \f$.
+    Important note: this is not the default method because of a bug in constructing
+    the RooNDKeysPdf from a weighted data set.  Configure to use this method by
+    calling SetUseKeys(true), and the data set will be interpreted without weights.
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/PdfProposal.h root-6.06.02/roofit/roostats/inc/RooStats/PdfProposal.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/PdfProposal.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/PdfProposal.h	2016-04-07 06:17:01.453676714 +0200
+@@ -53,7 +53,7 @@
+ To make Propose(xPrime, x) dependent on x, configure with
+ PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
+ 
+-````{.cpp}
++~~~{.cpp}
+ // our parameter
+ RooRealVar p("p", "p", 5, 0, 10);
+ 
+@@ -74,7 +74,7 @@
+ // number of proposals. If you don't call this function, the default cache size
+ // is 1, which can be slow.
+ pdfProposal.SetCacheSize(desiredCacheSize);
+-````
++~~~
+ 
+ PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
+ for future versions.
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/RatioOfProfiledLikelihoodsTestStat.h root-6.06.02/roofit/roostats/inc/RooStats/RatioOfProfiledLikelihoodsTestStat.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/RatioOfProfiledLikelihoodsTestStat.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/RatioOfProfiledLikelihoodsTestStat.h	2016-04-07 07:05:58.067764467 +0200
+@@ -40,8 +40,8 @@
+ By default the calculation is:
+ 
+ \f[
+-	\log{    \frac{  \lambda( \mu_{alt} , {conditional \: MLE \: for \: alt \: nuisance}) }
+-   	              { \lambda(\mu_{null} , {conditional \: MLE \: for \:  null \: nuisance}) } }
++        \log{    \frac{ \lambda(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
++                      { \lambda(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
+ \f]
+ 
+ where \f$ \lambda \f$ is the profile likeihood ratio, so the 
+@@ -50,11 +50,11 @@
+ If ``SetSubtractMLE(false)`` then it calculates:
+ 
+ \f[
++        \log{    \frac{ L(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
++                      { L(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
++\f]
+ 
+-	\log{    \frac{ L( \mu_alt , {conditional \: MLE \: for \: alt \: nuisance} ) }         
+-                      { L(\mu_null , {conditional \: MLE \: for \:  null \: nuisance}) } }
+-
+-where \f$ L\$ is the Likelihood function. 
++where \f$ L \f$ is the Likelihood function.
+ 
+ The values of the parameters of interest for the alternative 
+ hypothesis are taken at the time of the construction.
+diff -ur root-6.06.02.orig/tree/treeplayer/src/TBranchProxy.cxx root-6.06.02/tree/treeplayer/src/TBranchProxy.cxx
+--- root-6.06.02.orig/tree/treeplayer/src/TBranchProxy.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tree/treeplayer/src/TBranchProxy.cxx	2016-04-06 16:16:28.650063487 +0200
+@@ -9,7 +9,7 @@
+  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+  *************************************************************************/
+ 
+-/** \class Detail::TBranchProxy
++/** \class ROOT::Detail::TBranchProxy
+ Base class for all the proxy object. It includes the imeplemtation
+ of the autoloading of branches as well as all the generic setup routine.
+ */

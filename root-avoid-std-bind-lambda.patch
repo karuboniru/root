@@ -1,0 +1,42 @@
+diff -ur root-6.06.02.orig/tutorials/multicore/mp101_fillNtuples.C root-6.06.02/tutorials/multicore/mp101_fillNtuples.C
+--- root-6.06.02.orig/tutorials/multicore/mp101_fillNtuples.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/multicore/mp101_fillNtuples.C	2016-03-21 19:56:55.414726427 +0100
+@@ -33,6 +33,9 @@
+    // Total amount of numbers
+    const UInt_t nNumbers = 20000000U;
+ 
++   // We split the work in equal parts
++   const auto workSize = nNumbers / nWorkers;
++
+    // A simple function to fill ntuples randomly
+ 
+    auto fillRandom = [](TNtuple & ntuple, TRandom3 & rndm, UInt_t n) {
+@@ -57,7 +60,7 @@
+    // We now go MP! ------------------------------------------------------------
+ 
+    // We define our work item
+-   auto workItem = [&fillRandom](UInt_t workerID, UInt_t workSize) {
++   auto workItem = [&fillRandom, &workSize](UInt_t workerID) {
+       // One generator, file and ntuple per worker
+       TRandom3 workerRndm(workerID); // Change the seed
+       TFile ofile(Form("mp101_multiCore_%u.root", workerID), "RECREATE");
+@@ -74,18 +77,10 @@
+    {
+       TimerRAII t("Parallel execution");
+ 
+-      // We split the work in equal parts
+-      const auto workSize = nNumbers / nWorkers;
+-
+-      // The work item requires two arguments, the map infrastructure offer
+-      // an interface to use only one. A standard solution is to use std::bind
+-      using namespace std::placeholders;
+-      auto workItemOneArg = std::bind(workItem, _1, workSize);
+-
+       // Fill the pool with work
+       std::forward_list<UInt_t> workerIDs(nWorkers);
+       std::iota(std::begin(workerIDs), std::end(workerIDs), 0);
+-      workers.Map(workItemOneArg, workerIDs);
++      workers.Map(workItem, workerIDs);
+    }
+ 
+    return 0;

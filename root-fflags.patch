@@ -1,0 +1,78 @@
+diff -ur root-6.06.02.orig/cmake/modules/SetUpLinux.cmake root-6.06.02/cmake/modules/SetUpLinux.cmake
+--- root-6.06.02.orig/cmake/modules/SetUpLinux.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/SetUpLinux.cmake	2016-03-15 18:28:14.350609028 +0100
+@@ -70,7 +70,7 @@
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
+ 
+-  set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
++  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
+ 
+   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+   set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+@@ -107,7 +107,7 @@
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -Woverloaded-virtual -fsigned-char -fPIC")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe ${BIT_ENVIRONMENT} -Wall -W -fPIC")
+ 
+-  set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
++  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${BIT_ENVIRONMENT} -std=legacy")
+ 
+   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+   set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+@@ -144,7 +144,7 @@
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -wd1476")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -restrict")
+ 
+-  set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -fPIC")
++  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fPIC")
+ 
+   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+   set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+diff -ur root-6.06.02.orig/cmake/modules/SetUpMacOS.cmake root-6.06.02/cmake/modules/SetUpMacOS.cmake
+--- root-6.06.02.orig/cmake/modules/SetUpMacOS.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/SetUpMacOS.cmake	2016-03-15 18:28:14.348609011 +0100
+@@ -37,12 +37,12 @@
+        SET(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -m64")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64")
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
+-       SET(CMAKE_FORTRAN_FLAGS "${CMAKE_FORTRAN_FLAGS} -m64")
++       SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -m64")
+     else(${SYSCTL_OUTPUT} MATCHES 64)
+        MESSAGE(STATUS "Found a 32bit system")
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m32")
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
+-       SET(CMAKE_FORTRAN_FLAGS "${CMAKE_FORTRAN_FLAGS} -m32")
++       SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -m32")
+     endif(${SYSCTL_OUTPUT} MATCHES 64)
+   endif()
+ 
+@@ -65,7 +65,7 @@
+ 
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common")
+-     SET(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -std=legacy")
++     SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
+      SET(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+      SET(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+ 
+@@ -101,7 +101,7 @@
+ 
+      SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe -W -Wall -Woverloaded-virtual -fsigned-char -fno-common -Qunused-arguments")
+      SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -W -Wall -fsigned-char -fno-common -Qunused-arguments")
+-     SET(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -std=legacy")
++     SET(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
+      SET(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+      SET(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL -DG__STD_EXCEPTION")
+ 
+diff -ur root-6.06.02.orig/cmake/modules/SetUpWindows.cmake root-6.06.02/cmake/modules/SetUpWindows.cmake
+--- root-6.06.02.orig/cmake/modules/SetUpWindows.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/SetUpWindows.cmake	2016-03-15 18:28:14.347609002 +0100
+@@ -13,7 +13,7 @@
+ 
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pipe  -Wall -W -Woverloaded-virtual -fPIC")
+   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pipe -Wall -W -fPIC")
+-  set(CMAKE_Fortran_FLAGS "${CMAKE_FORTRAN_FLAGS} -std=legacy")
++  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -std=legacy")
+ 
+   set(CINT_CXX_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")
+   set(CINT_C_DEFINITIONS "-DG__REGEXP -DG__UNIX -DG__SHAREDLIB -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__STD_EXCEPTION ${SPECIAL_CINT_FLAGS}")

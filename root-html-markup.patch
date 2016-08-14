@@ -1,0 +1,1031 @@
+diff -ur root-6.06.02.orig/gui/gui/src/TGTextEntry.cxx root-6.06.02/gui/gui/src/TGTextEntry.cxx
+--- root-6.06.02.orig/gui/gui/src/TGTextEntry.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/gui/gui/src/TGTextEntry.cxx	2016-03-10 07:19:40.000000000 +0100
+@@ -42,7 +42,6 @@
+ //
+ // This enum type describes the ways in which TGTextEntry can display
+ // its contents. The currently defined values are:
+-//Begin_Html
+ /*
+ <ul>
+ <li>  kNormal - display characters as they are entered. This is the default.
+@@ -50,14 +49,12 @@
+ <li>  kPassword - display asterisks instead of the characters actually entered.
+ </ul>
+ */
+-//End_Html
+ // See also SetEchoMode(), GetEchoMode().
+ //
+ // enum TGTextEntry::EInsertMode
+ //
+ // This enum type describes the way how typed characters are
+ // inserted in the text entry. This mode is switched by "Insert" key.
+-//Begin_Html
+ /*
+ <ul>
+ <li>  kInsert - typed character are inserted (cursor has shape of short line).
+@@ -65,13 +62,11 @@
+                  (cursor has the shape of filled rectangle).
+ </ul>
+ */
+-//End_Html
+ //
+ // enum TGWidget::ETextJustification
+ //
+ // This enum type (defined in TGWidget.h) describes the text alignment modes.
+ // These modes are valid untill text fits the frame width
+-//Begin_Html
+ /*
+ <ul>
+ <li>  kTextLeft    - left-side text alignment
+@@ -79,12 +74,10 @@
+ <li>  kTextCenterX - center text alignment
+ </ul>
+ */
+-//End_Html
+ //
+ //
+ // The key press event handler converts a key press to some line editor action.
+ // Here are the default key bindings:
+-//Begin_Html
+ /*
+ <ul>
+ <li><i> Left Arrow </i>
+@@ -153,7 +146,6 @@
+ </ul>
+ All other keys with valid ASCII codes insert themselves into the line.
+ */
+-//End_Html
+ //
+ ////////////////////////////////////////////////////////////////////////////////
+ 
+@@ -658,13 +650,11 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// The echo modes available are:
+-///Begin_Html
+ /// <ul>
+ /// <li> kNormal   - display characters as they are entered.  This is the default.
+ /// <li> kNoEcho   - do not display anything.
+ /// <li> kPassword - display asterisks instead of the characters actually entered.
+ /// </ul>
+-///End_Html
+ /// It is always possible to cut and paste any marked text;  only the widget's own
+ /// display is affected.
+ /// See also GetEchoMode(), GetDisplayText().
+@@ -1154,7 +1144,6 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// The key press event handler converts a key press to some line editor
+ /// action. Here are the default key bindings:
+-///Begin_Html
+ ///  <ul>
+ ///  <li><i> Left Arrow </i>
+ ///          Move the cursor one character leftwards.
+@@ -1220,7 +1209,6 @@
+ ///  <li><i> Control-Y </i>
+ ///          Paste the clipboard text into line edit.
+ ///  </ul>
+-///End_Html
+ ///  All other keys with valid ASCII codes insert themselves into the line.
+ 
+ Bool_t TGTextEntry::HandleKey(Event_t* event)
+diff -ur root-6.06.02.orig/hist/hist/src/TH2.cxx root-6.06.02/hist/hist/src/TH2.cxx
+--- root-6.06.02.orig/hist/hist/src/TH2.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TH2.cxx	2016-03-10 08:51:26.491321275 +0100
+@@ -938,17 +938,10 @@
+ ///  NOTE: To access the generated histograms in the current directory, do eg:
+ ///     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+ ///
+-/// A complete example of this function is given in begin_html <a href="examples/fitslicesy.C.html">tutorial:fitslicesy.C</a> end_html
+-/// with the following output:
+-///Begin_Html
++/// A complete example of this function is given in tutorial fitslicesy.C.
+ 
+ void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option, TObjArray* arr)
+ {
+-   /*
+-   <img src="gif/fitslicesy.gif">
+-   */
+-   //End_Html
+-
+    DoFitSlices(false, f1, firstxbin, lastxbin, cut, option, arr);
+ 
+ }
+diff -ur root-6.06.02.orig/hist/hist/src/TMultiDimFit.cxx root-6.06.02/hist/hist/src/TMultiDimFit.cxx
+--- root-6.06.02.orig/hist/hist/src/TMultiDimFit.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/hist/src/TMultiDimFit.cxx	2016-03-09 00:26:13.030291477 +0100
+@@ -603,7 +603,7 @@
+ /// Please note, that if no error is given Poisson statistics is
+ /// assumed and the square error is set to the value of dependent
+ /// quantity.  See also the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::AddRow(const Double_t *x, Double_t D, Double_t E)
+ {
+@@ -682,7 +682,7 @@
+ /// Please note, that if no error is given Poisson statistics is
+ /// assumed and the square error is set to the value of dependent
+ /// quantity.  See also the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::AddTestRow(const Double_t *x, Double_t D, Double_t E)
+ {
+@@ -986,7 +986,7 @@
+ ///     None so far
+ ///
+ /// For detailed description of what this entails, please refer to the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::FindParameterization(Option_t *)
+ {
+@@ -1005,7 +1005,7 @@
+ ///     M     use Minuit to improve coefficients
+ ///
+ /// Also, refer to
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::Fit(Option_t *option)
+ {
+@@ -1097,7 +1097,7 @@
+ /// PRIVATE METHOD:
+ /// Create list of candidate functions for the parameterisation. See
+ /// also
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::MakeCandidates()
+ {
+@@ -1354,7 +1354,7 @@
+ /// PRIVATE METHOD:
+ /// Invert the model matrix B, and compute final coefficients. For a
+ /// more thorough discussion of what this means, please refer to the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ ///
+ /// First we invert the lower triangle matrix fOrthCurvatureMatrix
+ /// and store the inverted matrix in the upper triangle.
+@@ -1496,7 +1496,7 @@
+ /// Make Gram-Schmidt orthogonalisation. The class description gives
+ /// a thorough account of this algorithm, as well as
+ /// references. Please refer to the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ Double_t TMultiDimFit::MakeGramSchmidt(Int_t function)
+ {
+@@ -1589,7 +1589,7 @@
+ ///     R4        Residuals computed on test sample
+ ///
+ /// For a description of these quantities, refer to
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::MakeHistograms(Option_t *option)
+ {
+@@ -1800,7 +1800,7 @@
+ /// PRIVATE METHOD:
+ /// Find the parameterization over the training sample. A full account
+ /// of the algorithm is given in the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::MakeParameterization()
+ {
+@@ -2365,7 +2365,7 @@
+ /// be fitted, and the new candidate function to be included in the
+ /// fit.  By default it is 0, which automatically chooses another
+ /// selection criteria. See also
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetMaxAngle(Double_t ang)
+ {
+@@ -2381,7 +2381,7 @@
+ /// Set the min angle (in degrees) between a new candidate function
+ /// and the subspace spanned by the previously accepted
+ /// functions. See also
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetMinAngle(Double_t ang)
+ {
+@@ -2401,7 +2401,7 @@
+ /// Where N is the dimension of the data sample, L is the number of
+ /// terms (given in terms) and the first number, labels the term, the
+ /// second the variable.  More information is given in the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetPowers(const Int_t* powers, Int_t terms)
+ {
+@@ -2421,7 +2421,7 @@
+ /// Set the user parameter for the function selection. The bigger the
+ /// limit, the more functions are used. The meaning of this variable
+ /// is defined in the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetPowerLimit(Double_t limit)
+ {
+@@ -2431,7 +2431,7 @@
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Set the maximum power to be considered in the fit for each
+ /// variable. See also
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetMaxPowers(const Int_t* powers)
+ {
+@@ -2446,7 +2446,7 @@
+ /// Set the acceptable relative error for when sum of square
+ /// residuals is considered minimized. For a full account, refer to
+ /// the
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ void TMultiDimFit::SetMinRelativeError(Double_t error)
+ {
+@@ -2458,7 +2458,7 @@
+ /// PRIVATE METHOD:
+ /// Test whether the currently considered function contributes to the
+ /// fit. See also
+-/// Begin_Html<a href="#TMultiDimFit:description">class description</a>End_Html
++/// <a href="#TMultiDimFit:description">class description</a>
+ 
+ Bool_t TMultiDimFit::TestFunction(Double_t squareResidual,
+                                   Double_t dResidur)
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrum2.cxx root-6.06.02/hist/spectrum/src/TSpectrum2.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrum2.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrum2.cxx	2016-03-10 18:41:15.609812954 +0100
+@@ -71,8 +71,6 @@
+ //
+ //</div>
+ //
+-//<!-- */
+-// --> End_Html
+ 
+ //______________________________________________________________________________
+ /** \class TSpectrum2
+@@ -372,7 +370,6 @@
+ ///                                                                         //
+ //////////////////////////////////////////////////////////////////////////////
+ ///
+-///Begin_Html <!--
+ 
+ const char *TSpectrum2::Background(Double_t **spectrum,
+                        Int_t ssizex, Int_t ssizey,
+@@ -381,7 +378,7 @@
+                        Int_t direction,
+                        Int_t filterType)
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Background
+@@ -523,10 +520,8 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
+-//Begin_Html <!--
+-/* -->
++ */
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><i><span style='font-size:18.0pt'>Example 1– script Back_gamma64.c
+@@ -835,8 +830,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, x, y, sampling, r1, r2;
+    Double_t a, b, p1, p2, p3, p4, s1, s2, s3, s4;
+@@ -1022,11 +1016,10 @@
+ ///   averWindow-width of averaging smoothing window
+ ///
+ //////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssizey, Int_t averWindow)
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Smoothing</span></b></p>
+@@ -1134,10 +1127,8 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
+-//Begin_Html <!--
+-/* -->
++ */
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 4 – script Smooth.c
+@@ -1239,8 +1230,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    Int_t xmin, xmax, ymin, ymax, i, j, l;
+    Double_t a, b, maxch;
+    Double_t nom, nip, nim, sp, sm, spx, spy, smx, smy, plocha = 0;
+@@ -1439,7 +1429,6 @@
+ ///   boost, boosting factor, for details we refer to manual
+ ///
+ //////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
+                                        Int_t ssizex, Int_t ssizey,
+@@ -1447,7 +1436,7 @@
+                                        Int_t numberRepetitions,
+                                        Double_t boost)
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal style='text-align:justify'><b><span style='font-size:20.0pt'>Deconvolution</span></b></p>
+@@ -1602,10 +1591,8 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
+-//Begin_Html <!--
+-/* -->
++ */
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><i><span style='font-size:16.0pt'>Example 5 – script Decon.c
+@@ -1982,8 +1969,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    Int_t i, j, lhx, lhy, i1, i2, j1, j2, k1, k2, lindex, i1min, i1max,
+        i2min, i2max, j1min, j1max, j2min, j2max, positx = 0, posity = 0, repet;
+    Double_t lda, ldb, ldc, area, maximum = 0;
+@@ -2177,8 +2163,7 @@
+ //                  we refer to manual (applies only for Markov method)    //
+ //                                                                         //
+ /////////////////////////////////////////////////////////////////////////////
+-//Begin_Html <!--
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><b><span style='font-size:20.0pt'>Peaks searching</span></b></p>
+@@ -2311,10 +2296,8 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
+-//Begin_Html <!--
+-/* -->
++ */
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><b><span style='font-size:18.0pt'>Examples of peak searching
+@@ -2856,8 +2839,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    Int_t number_of_iterations = (Int_t)(4 * sigma + 0.5);
+    Int_t k, lindex, priz;
+    Double_t lda, ldb, ldc, area, maximum;
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrum2Fit.cxx root-6.06.02/hist/spectrum/src/TSpectrum2Fit.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrum2Fit.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrum2Fit.cxx	2016-03-10 18:30:15.018839468 +0100
+@@ -162,11 +162,10 @@
+ ///numberPeaks: number of fitted peaks (must be greater than zero)
+ ///the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
+ ///variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
+-///Begin_Html <!--
+ 
+ TSpectrum2Fit::TSpectrum2Fit(Int_t numberPeaks) :TNamed("Spectrum2Fit", "Miroslav Morhac peak fitter")
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal style='text-align:justify'>Shape function of the fitted
+@@ -178,8 +177,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    if (numberPeaks <= 0){
+       Error ("TSpectrum2Fit","Invalid number of peaks, must be > than 0");
+       return;
+@@ -1793,11 +1791,10 @@
+ ///
+ //////////////////////////////////////////////////////////////////////////////
+ ///
+-///Begin_Html <!--
+ 
+ void TSpectrum2Fit::FitAwmi(Double_t **source)
+ {
+-/* -->
++/* 
+ <div class=Section2>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Fitting</span></b></p>
+@@ -2686,8 +2683,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, i1, i2, j, k, shift =
+        7 * fNPeaks + 14, peak_vel, size, iter, pw,
+@@ -4697,8 +4693,7 @@
+ //
+ /////////////////////////////////////////////////////////////////////////////
+ //
+-//Begin_Html <!--
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Stiefel fitting algorithm</span></b></p>
+@@ -4928,8 +4923,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, i1, i2, j, k, shift =
+        7 * fNPeaks + 14, peak_vel, size, iter, regul_cycle,
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrum2Transform.cxx root-6.06.02/hist/spectrum/src/TSpectrum2Transform.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrum2Transform.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrum2Transform.cxx	2016-03-10 18:30:29.040934692 +0100
+@@ -1748,8 +1748,7 @@
+ /* fSizex,fSizey-basic dimensions of source and dest spectra                       */
+ /*                         */
+ //////////////////////////////////////////////////////////////////////////////////////////
+-//Begin_Html <!--
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Transform methods</span></b></p>
+@@ -2018,8 +2017,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    Int_t i, j;
+    Int_t size;
+    Double_t *working_vector = 0, **working_matrix = 0;
+@@ -2324,8 +2322,7 @@
+ /*           fSizeX*fSizeY                                                              */
+ /*                         */
+ //////////////////////////////////////////////////////////////////////////////////////////
+-//Begin_Html <!--
+-/* -->
++/* 
+ <div class=Section2>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Example of zonal filtering</span></b></p>
+@@ -2481,8 +2478,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, j;
+    Double_t a, old_area = 0, new_area = 0;
+@@ -2768,8 +2764,7 @@
+ /*           fSizeX*fSizeY                                                              */
+ /*                         */
+ //////////////////////////////////////////////////////////////////////////////////////////
+-//Begin_Html <!--
+-/* -->
++/* 
+ <div class=Section3>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Example of enhancement</span></b></p>
+@@ -2908,8 +2903,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, j;
+    Double_t a, old_area = 0, new_area = 0;
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrum3.cxx root-6.06.02/hist/spectrum/src/TSpectrum3.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrum3.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrum3.cxx	2016-03-10 18:31:47.355466523 +0100
+@@ -273,7 +273,6 @@
+ ///                                                                           //
+ ///                                                                           //
+ ////////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ const char *TSpectrum3::Background(Double_t***spectrum,
+                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
+@@ -283,7 +282,7 @@
+                        Int_t direction,
+                        Int_t filterType)
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal style='text-align:justify'><b><span style='font-size:14.0pt'>Background
+@@ -674,8 +673,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    Int_t i, j, x, y, z, sampling, q1, q2, q3;
+    Double_t a, b, c, d, p1, p2, p3, p4, p5, p6, p7, p8, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, r1, r2, r3, r4, r5, r6;
+    if (ssizex <= 0 || ssizey <= 0 || ssizez <= 0)
+@@ -1069,11 +1067,10 @@
+ /// averWindow-width of averaging smoothing window                          //
+ ///                                                                         //
+ //////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ const char* TSpectrum3::SmoothMarkov(Double_t***source, Int_t ssizex, Int_t ssizey, Int_t ssizez, Int_t averWindow)
+ {
+-/* -->
++/* 
+ 
+ <div class=Section2>
+ 
+@@ -1302,8 +1299,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t xmin,xmax,ymin,ymax,zmin,zmax,i,j,k,l;
+    Double_t a,b,maxch;
+@@ -1868,7 +1864,6 @@
+ /// boost, boosting factor, for details we refer to manual                  //
+ ///                                                                         //
+ //////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ const char *TSpectrum3::Deconvolution(Double_t***source, const Double_t***resp,
+                                        Int_t ssizex, Int_t ssizey, Int_t ssizez,
+@@ -1876,7 +1871,7 @@
+                                        Int_t numberRepetitions,
+                                        Double_t boost)
+ {
+-/* -->
++/* 
+ 
+ <div class=Section3>
+ 
+@@ -2357,8 +2352,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t i, j, k, lhx, lhy, lhz, i1, i2, i3, j1, j2, j3, k1, k2, k3, lindex, i1min, i1max, i2min, i2max, i3min, i3max, j1min, j1max, j2min, j2max, j3min, j3max, positx = 0, posity = 0, positz = 0, repet;
+    Double_t lda, ldb, ldc, area, maximum = 0;
+@@ -2590,8 +2584,7 @@
+ //                  we refer to manual (applies only for Markov method)    //
+ //                                                                         //
+ /////////////////////////////////////////////////////////////////////////////
+-//Begin_Html <!--
+-/* -->
++/* 
+ 
+ <div class=Section4>
+ 
+@@ -2901,8 +2894,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+ 
+    Int_t number_of_iterations = (Int_t)(4 * sigma + 0.5);
+    Int_t k,lindex;
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrumFit.cxx root-6.06.02/hist/spectrum/src/TSpectrumFit.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrumFit.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrumFit.cxx	2016-03-09 01:58:25.390463585 +0100
+@@ -113,7 +113,6 @@
+ ///numberPeaks: number of fitted peaks (must be greater than zero)
+ ///the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
+ ///variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
+-///Begin_Html <!--
+ 
+ TSpectrumFit::TSpectrumFit(Int_t numberPeaks) :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
+ {
+@@ -162,7 +161,6 @@
+ </div>
+ 
+ <!-- */
+-// --> End_Html
+ 
+    if (numberPeaks <= 0){
+       Error ("TSpectrumFit","Invalid number of peaks, must be > than 0");
+@@ -847,7 +845,6 @@
+ ///
+ //////////////////////////////////////////////////////////////////////////////
+ ///
+-///Begin_Html <!--
+ 
+ void TSpectrumFit::FitAwmi(Double_t *source)
+ {
+@@ -1343,7 +1340,6 @@
+ </div>
+ 
+ <!-- */
+-// --> End_Html
+ 
+    Int_t i, j, k, shift =
+        2 * fNPeaks + 7, peak_vel, rozmer, iter, pw, regul_cycle,
+@@ -2312,7 +2308,6 @@
+ ///        source-pointer to the vector of source spectrum
+ ///
+ //////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ void TSpectrumFit::FitStiefel(Double_t *source)
+ {
+@@ -2546,7 +2541,6 @@
+ </div>
+ 
+ <!-- */
+-// --> End_Html
+ 
+    Int_t i, j, k, shift =
+        2 * fNPeaks + 7, peak_vel, rozmer, iter, regul_cycle,
+diff -ur root-6.06.02.orig/hist/spectrum/src/TSpectrumTransform.cxx root-6.06.02/hist/spectrum/src/TSpectrumTransform.cxx
+--- root-6.06.02.orig/hist/spectrum/src/TSpectrumTransform.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrum/src/TSpectrumTransform.cxx	2016-03-10 18:39:27.847980211 +0100
+@@ -739,11 +739,10 @@
+ ///             need 2*size length to store real and imaginary coefficients
+ ///
+ ////////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ void TSpectrumTransform::Transform(const Double_t *source, Double_t *destVector)
+ {
+-/* -->
++/* 
+ <div class=Section1>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Transform methods</span></b></p>
+@@ -989,8 +988,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    int i, j=0, k = 1, m, l;
+    Double_t val;
+    Double_t a, b, pi = 3.14159265358979323846;
+@@ -1482,11 +1480,10 @@
+ ///
+ /////////////////////////////////////////////////////////////////////////////////
+ ///
+-///Begin_Html <!--
+ 
+ void TSpectrumTransform::FilterZonal(const Double_t *source, Double_t *destVector)
+ {
+-/* -->
++/* 
+ <div class=Section2>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Example of zonal filtering</span></b></p>
+@@ -1618,8 +1615,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    int i, j=0, k = 1, m, l;
+    Double_t val;
+    Double_t *working_space = 0;
+@@ -2091,11 +2087,10 @@
+ ///           need 2*size length to store real and imaginary coefficients
+ ///
+ /////////////////////////////////////////////////////////////////////////////////
+-///Begin_Html <!--
+ 
+ void TSpectrumTransform::Enhance(const Double_t *source, Double_t *destVector)
+ {
+-/* -->
++/* 
+ <div class=Section3>
+ 
+ <p class=MsoNormal><b><span style='font-size:14.0pt'>Example of enhancement</span></b></p>
+@@ -2226,8 +2221,7 @@
+ 
+ </div>
+ 
+-<!-- */
+-// --> End_Html
++ */
+    int i, j=0, k = 1, m, l;
+    Double_t val;
+    Double_t *working_space = 0;
+diff -ur root-6.06.02.orig/hist/spectrumpainter/src/TSpectrum2Painter.cxx root-6.06.02/hist/spectrumpainter/src/TSpectrum2Painter.cxx
+--- root-6.06.02.orig/hist/spectrumpainter/src/TSpectrum2Painter.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/hist/spectrumpainter/src/TSpectrum2Painter.cxx	2016-03-09 01:56:01.961261823 +0100
+@@ -1162,7 +1162,6 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Paints histogram according to preset parameters.
+-///Begin_Html <!--
+ 
+ void TSpectrum2Painter::Paint(Option_t * /*option*/)
+ {
+@@ -1524,7 +1523,6 @@
+ }
+ </pre>
+ <!-- */
+-// --> End_Html
+ 
+    Int_t turni,turnj,w1,w2,x,y;
+    Int_t q1=0,q2=0,qv=0,smer=0,flag=0,i=0,j=0,x1=0,y1=0,x2=0,y2=0,x3=0,y3=0,x4=0,y4=0,uhl=0,xp1=0,yp1=0,xp2=0,yp2=0;
+@@ -7654,14 +7652,12 @@
+ ///                               * * *
+ ///
+ /// See example in $ROOTSYS/tutorials/spectrum/spectrumpainter.C
+-///Begin_Html
+ 
+ void TSpectrum2Painter::PaintSpectrum(TH2* h2, Option_t *option, Int_t bs)
+ {
+    /*
+    <img src="gif/spectrumpainter.gif">
+    */
+-   //End_Html
+ 
+    TString opt = option;
+ 
+diff -ur root-6.06.02.orig/math/foam/src/TFoam.cxx root-6.06.02/math/foam/src/TFoam.cxx
+--- root-6.06.02.orig/math/foam/src/TFoam.cxx	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/math/foam/src/TFoam.cxx	2016-03-09 20:34:37.000000000 +0100
+@@ -25,20 +25,15 @@
+ // Monte Carlo event generator (integrator) FOAM.
+ // It creates hyper-rectangular "foam of cells", which is more dense around its peaks.
+ // See the following 2-dim. example of the map of 1000 cells for doubly peaked distribution:
+-//BEGIN_HTML <!--
+-/* -->
+-<img src="gif/foam_MapCamel1000.gif">
+-<!--*/
+-// -->END_HTML
++//
++// <img src="gif/foam_MapCamel1000.gif">
++//
+ // FOAM is now fully integrated with the ROOT package.
+ // The important bonus of the ROOT use is persistency of the FOAM objects!
+ //
+ // For more sophisticated problems full version of FOAM may be more appropriate:
+-//BEGIN_HTML <!--
+-/* -->
+-  See <A HREF="http://jadach.home.cern.ch/jadach/Foam/Index.html"> full version of FOAM</A>
+-<!--*/
+-// -->END_HTML
++// See [full version of FOAM](http://jadach.home.cern.ch/jadach/Foam/Index.html)
++//
+ // Simple example of the use of FOAM:
+ // ==================================
+ // Int_t kanwa(){
+@@ -81,11 +76,9 @@
+ //   return 0.5*Dist;
+ // }// Camel2
+ // Two-dim. histogram of the MC points generated with the above program looks as follows:
+-//BEGIN_HTML <!--
+-/* -->
+-<img src="gif/foam_cKanwa.gif">
+-<!--*/
+-// -->END_HTML
++//
++// <img src="gif/foam_cKanwa.gif">
++//
+ // Canonical nine steering parameters of FOAM
+ // ===========================================
+ //------------------------------------------------------------------------------
+@@ -266,10 +259,10 @@
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Default destructor
+-///  std::cout<<" DESTRUCTOR entered "<<std::endl;
+ 
+ TFoam::~TFoam()
+ {
++   //std::cout<<" DESTRUCTOR entered "<<std::endl;
+    Int_t i;
+ 
+    if(fCells!= 0) {
+@@ -321,42 +314,35 @@
+ /// This is done BEFORE generating first MC event and AFTER allocating FOAM object
+ /// and reseting (optionally) its internal parameters/switches.
+ /// The overall operational scheme of the FOAM is the following:
+-///BEGIN_HTML <!--
++///
++//  <img src="gif/foam_schema2.gif">
++///
++/// This method invokes several other methods:
++/// ==========================================
++/// InitCells initializes memory storage for cells and begins exploration process
++/// from the root cell. The empty cells are allocated/filled using  CellFill.
++/// The procedure Grow which loops over cells, picks up the cell with the biggest
++/// ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
++/// with the help of PeekMax procedure. The chosen cell is split using Divide.
++/// Subsequently, the procedure Explore called by the Divide
++/// (and by InitCells for the root cell) does the most important
++/// job in the FOAM object build-up: it performs a small MC run for each
++/// newly allocated daughter cell.
++/// Explore calculates how profitable the future split of the cell will be
++/// and defines the optimal cell division geometry with the help of Carver or Varedu
++/// procedures, for maximum weight or variance optimization respectively.
++/// All essential results of the exploration are written into
++/// the explored cell object. At the very end of the foam build-up,
++/// Finally, MakeActiveList is invoked to create a list of pointers to
++/// all active cells, for the purpose of the quick access during the MC generation.
++/// The procedure Explore employs MakeAlpha to generate random coordinates
++/// inside a given cell with the uniform distribution.
++/// The above sequence of the procedure calls is depicted in the following figure:
++///
++//  <img src="gif/foam_Initialize_schema.gif">
+ 
+ void TFoam::Initialize(TRandom *PseRan, TFoamIntegrand *fun )
+ {
+-/* -->
+-<img src="gif/foam_schema2.gif">
+-<!--*/
+-// -->END_HTML
+-//
+-// This method invokes several other methods:
+-// ==========================================
+-// InitCells initializes memory storage for cells and begins exploration process
+-// from the root cell. The empty cells are allocated/filled using  CellFill.
+-// The procedure Grow which loops over cells, picks up the cell with the biggest
+-// ``driver integral'', see Comp. Phys. Commun. 152 152 (2003) 55 for explanations,
+-// with the help of PeekMax procedure. The chosen cell is split using Divide.
+-// Subsequently, the procedure Explore called by the Divide
+-// (and by InitCells for the root cell) does the most important
+-// job in the FOAM object build-up: it performs a small MC run for each
+-// newly allocated daughter cell.
+-// Explore calculates how profitable the future split of the cell will be
+-// and defines the optimal cell division geometry with the help of Carver or Varedu
+-// procedures, for maximum weight or variance optimization respectively.
+-// All essential results of the exploration are written into
+-// the explored cell object. At the very end of the foam build-up,
+-// Finally, MakeActiveList is invoked to create a list of pointers to
+-// all active cells, for the purpose of the quick access during the MC generation.
+-// The procedure Explore employs MakeAlpha to generate random coordinates
+-// inside a given cell with the uniform distribution.
+-// The above sequence of the procedure calls is depicted in the following figure:
+-//BEGIN_HTML <!--
+-/* -->
+-<img src="gif/foam_Initialize_schema.gif">
+-<!--*/
+-// -->END_HTML
+-
+    SetPseRan(PseRan);
+    SetRho(fun);
+    Initialize();
+@@ -1363,15 +1349,11 @@
+ /// It defines which variables are excluded in the process of the cell division.
+ /// For example 'FoamX->SetInhiDiv(1, 1);' inhibits division of y-variable.
+ /// The resulting map of cells in 2-dim. case will look as follows:
+-///BEGIN_HTML <!--
++///
++//  <img src="gif/foam_Map2.gif">
+ 
+ void  TFoam::SetInhiDiv(Int_t iDim, Int_t InhiDiv)
+ {
+-/* -->
+-<img src="gif/foam_Map2.gif">
+-<!--*/
+-// -->END_HTML
+-
+    if(fDim==0) Error("TFoam","SetInhiDiv: fDim=0 \n");
+    if(fInhiDiv == 0) {
+       fInhiDiv = new Int_t[ fDim ];
+@@ -1391,15 +1373,11 @@
+ ///     xDiv[0]=0.30; xDiv[1]=0.40; xDiv[2]=0.65;
+ ///     FoamX->SetXdivPRD(0,3,xDiv);
+ /// results in the following 2-dim. pattern of the cells:
+-///BEGIN_HTML <!--
++///
++//  <img src="gif/foam_Map3.gif">
+ 
+ void  TFoam::SetXdivPRD(Int_t iDim, Int_t len, Double_t xDiv[])
+ {
+-/* -->
+-<img src="gif/foam_Map3.gif">
+-<!--*/
+-// -->END_HTML
+-
+    Int_t i;
+ 
+    if(fDim<=0)  Error("SetXdivPRD", "fDim=0 \n");
+diff -ur root-6.06.02.orig/montecarlo/eg/src/TDatabasePDG.cxx root-6.06.02/montecarlo/eg/src/TDatabasePDG.cxx
+--- root-6.06.02.orig/montecarlo/eg/src/TDatabasePDG.cxx	2016-03-09 23:01:55.705319822 +0100
++++ root-6.06.02/montecarlo/eg/src/TDatabasePDG.cxx	2016-03-08 23:40:27.936824677 +0100
+@@ -238,19 +238,14 @@
+ /// PDG convention already)
+ /// Source: BaBar User Guide, Neil I. Geddes,
+ ///
+-///Begin_Html
++/// See <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html">Conversion table</A>
++/// with some fixes by PB, marked with (PB) below. Checked against
++/// PDG listings from 2000.
++///
++/// Paul Balm, Nov 19, 2001
+ 
+ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) const
+ {
+-  /*
+-   see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
+-  */
+-  //End_Html
+-  // with some fixes by PB, marked with (PB) below. Checked against
+-  // PDG listings from 2000.
+-  //
+-  // Paul Balm, Nov 19, 2001
+-
+    switch(Geant3number) {
+ 
+       case 1   : return 22;       // photon
+diff -ur root-6.06.02.orig/roofit/roostats/inc/RooStats/IntervalCalculator.h root-6.06.02/roofit/roostats/inc/RooStats/IntervalCalculator.h
+--- root-6.06.02.orig/roofit/roostats/inc/RooStats/IntervalCalculator.h	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/roofit/roostats/inc/RooStats/IntervalCalculator.h	2016-03-07 19:15:34.728025914 +0100
+@@ -50,7 +50,7 @@
+ 
+ The concrete implementations of this interface should deal with the details of how the nuisance parameters are dealt with (eg. integration vs. profiling) and which test-statistic is used (perhaps this should be added to the interface).
+ 
+-The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.END_HTML
++The motivation for this interface is that we hope to be able to specify the problem in a common way for several concrete calculators.
+ 
+ */
+ 
+diff -ur root-6.06.02.orig/tutorials/graphs/timeonaxis.C root-6.06.02/tutorials/graphs/timeonaxis.C
+--- root-6.06.02.orig/tutorials/graphs/timeonaxis.C	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/tutorials/graphs/timeonaxis.C	2016-03-08 23:47:58.944143869 +0100
+@@ -3,13 +3,11 @@
+ TCanvas *timeonaxis()
+ {
+ // This macro illustrates the use of the time mode on the axis
+-// with different time intervals and time formats. It's result can
+-// be seen begin_html <a href="gif/timeonaxis.gif">here</a> end_html
++// with different time intervals and time formats.
+ // Through all this script, the time is expressed in UTC. some
+ // information about this format (and others like GPS) may be found at
+-// begin_html <a href="http://tycho.usno.navy.mil/systime.html">http://tycho.usno.navy.mil/systime.html</a> end_html
+-//  or
+-// begin_html <a href="http://www.topology.org/sci/time.html">http://www.topology.org/sci/time.html</a> end_html
++// http://tycho.usno.navy.mil/systime.html or
++// http://www.topology.org/sci/time.html
+ //
+ // The start time is : almost NOW (the time at which the script is executed)
+ // actualy, the nearest preceding hour beginning.

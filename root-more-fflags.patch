@@ -1,0 +1,33 @@
+diff --git a/cmake/modules/RootConfiguration.cmake b/cmake/modules/RootConfiguration.cmake
+index f51bcbe..1ee0602 100644
+--- a/cmake/modules/RootConfiguration.cmake
++++ b/cmake/modules/RootConfiguration.cmake
+@@ -569,7 +569,7 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
+ #---Compiler flags (because user apps are a bit dependent on them...)----------------------------------------
+ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
+ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
+-string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_fortran_FLAGS}")
++string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
+ string(REGEX MATCHALL "-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
+ set(ROOT_COMPILER_FLAG_HINTS "#
+ set(ROOT_DEFINITIONS \"${__defs}\")
+diff --git a/cmake/scripts/RootUseFile.cmake.in b/cmake/scripts/RootUseFile.cmake.in
+index 045926d..a419744 100644
+--- a/cmake/scripts/RootUseFile.cmake.in
++++ b/cmake/scripts/RootUseFile.cmake.in
+@@ -9,4 +9,4 @@ link_directories(${ROOT_LIBRARY_DIR})
+ add_definitions(${ROOT_DEFINITIONS})
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_C_FLAGS}")
+-set(CMAKE_fortran_FLAGS "${CMAKE_fortran_FLAGS} ${ROOT_fortran_FLAGS}")
++set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ROOT_fortran_FLAGS}")
+diff --git a/etc/cmake/RootUseFile.cmake b/etc/cmake/RootUseFile.cmake
+index b9a8e34..f931ad3 100644
+--- a/etc/cmake/RootUseFile.cmake
++++ b/etc/cmake/RootUseFile.cmake
+@@ -6,4 +6,4 @@ link_directories(${ROOT_LIBRARY_DIR})
+ add_definitions(${ROOT_DEFINITIONS})
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_C_FLAGS}")
+-set(CMAKE_fortran_FLAGS "${CMAKE_fortran_FLAGS} ${ROOT_fortran_FLAGS}")
++set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} ${ROOT_fortran_FLAGS}")

@@ -1,0 +1,11 @@
+--- root-6.06.02.orig/cmake/modules/RootNewMacros.cmake	2016-03-03 10:36:03.000000000 +0100
++++ root-6.06.02/cmake/modules/RootNewMacros.cmake	2016-03-15 18:37:23.252408979 +0100
+@@ -39,7 +39,7 @@
+ if(soversion)
+   set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
+       VERSION ${ROOT_VERSION}
+-      SOVERSION ${ROOT_MAJOR_VERSION}
++      SOVERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
+       SUFFIX ${libsuffix}
+       PREFIX ${libprefix} )
+ else()
