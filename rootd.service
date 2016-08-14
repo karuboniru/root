@@ -1,0 +1,12 @@
+[Unit]
+Description=ROOT file server daemon
+Documentation=man:rootd(8)
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/sysconfig/rootd
+ExecStart=/usr/bin/rootd $ROOTDOPTS
+
+[Install]
+WantedBy=multi-user.target

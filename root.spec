@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -41,6 +41,9 @@ Source0:	%{name}-%{version}.tar.xz
 Source1:	%{name}-testfiles.tar.xz
 #		Script to generate above source
 Source2:	%{name}-testfiles.sh
+#		systemd unit files
+Source3:	rootd.service
+Source4:	proofd.service
 #		Adapt to gcc's ABI tags
 #		https://github.com/root-mirror/root/pull/124
 Patch0:		%{name}-abitags.patch
@@ -237,6 +240,7 @@ BuildRequires:	dos2unix
 BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	perl-generators
+BuildRequires:	systemd-units
 #		Some of the tests call lsb_release
 BuildRequires:	redhat-lsb-core
 BuildRequires:	font(freesans)
@@ -397,10 +401,9 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
 #		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
-Requires(post):		chkconfig
-Requires(postun):	initscripts
+Requires(preun):	systemd-units
+Requires(post):		systemd-units
+Requires(postun):	systemd-units
 
 %description proofd
 This package contains the PROOF server. Proofd is the core daemon of
@@ -414,10 +417,9 @@ transparent interface.
 Summary:	ROOT remote file server
 #		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
-Requires(preun):	chkconfig
-Requires(preun):	initscripts
-Requires(post):		chkconfig
-Requires(postun):	initscripts
+Requires(preun):	systemd-units
+Requires(post):		systemd-units
+Requires(postun):	systemd-units
 
 %description rootd
 This package contains the ROOT file server. Rootd is a server for ROOT
@@ -1857,15 +1859,10 @@ install -p -m 644 build/package/debian/root-system-bin.sharedmimeinfo \
 install -p -m 644 build/package/debian/application-x-root.png \
     %{buildroot}%{_datadir}/icons/hicolor/48x48/mimetypes
 
-# Init scripts for services
-mkdir -p %{buildroot}%{_initrddir}
-mv %{buildroot}%{_datadir}/%{name}/daemons/proofd.rc.d \
-   %{buildroot}%{_initrddir}/proofd
-mv %{buildroot}%{_datadir}/%{name}/daemons/rootd.rc.d \
-   %{buildroot}%{_initrddir}/rootd
-
-# Turn off services by default
-sed 's/\(chkconfig: \)[0-9]*/\1-/' -i %{buildroot}%{_initrddir}/*
+# systemd unit files for services
+mkdir -p %{buildroot}%{_unitdir}
+install -p -m 644 %SOURCE3 %{buildroot}%{_unitdir}
+install -p -m 644 %SOURCE4 %{buildroot}%{_unitdir}
 
 # The Python interface library is handled by alternatives
 mkdir -p %{buildroot}%{python_sitearch}
@@ -1905,6 +1902,7 @@ sed 's!/usr/bin/env python!/usr/bin/python!' \
 
 # Remove some junk
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
+rm %{buildroot}%{_datadir}/%{name}/daemons/*.rc.d
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.xinetd
 rm %{buildroot}%{_datadir}/%{name}/daemons/README
 rm %{buildroot}%{_datadir}/%{name}/hostcert.conf
@@ -2071,33 +2069,31 @@ update-mime-database %{_datadir}/mime >/dev/null 2>&1 || :
 %posttrans
 gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 
+%pre rootd
+# Remove old init config when systemd is used
+/sbin/chkconfig --del rootd >/dev/null 2>&1 || :
+
 %post rootd
-/sbin/chkconfig --add rootd
+%systemd_post rootd.service
 
 %preun rootd
-if [ $1 = 0 ] ; then
-    /sbin/service rootd stop >/dev/null 2>&1
-    /sbin/chkconfig --del rootd
-fi
+%systemd_preun rootd.service
 
 %postun rootd
-if [ "$1" -ge "1" ] ; then
-    /sbin/service rootd condrestart >/dev/null 2>&1 || :
-fi
+%systemd_postun_with_restart rootd.service
+
+%pre proofd
+# Remove old init config when systemd is used
+/sbin/chkconfig --del proofd >/dev/null 2>&1 || :
 
 %post proofd
-/sbin/chkconfig --add proofd
+%systemd_post proofd.service
 
 %preun proofd
-if [ $1 = 0 ] ; then
-    /sbin/service proofd stop >/dev/null 2>&1
-    /sbin/chkconfig --del proofd
-fi
+%systemd_preun proofd.service
 
 %postun proofd
-if [ "$1" -ge "1" ] ; then
-    /sbin/service proofd condrestart >/dev/null 2>&1 || :
-fi
+%systemd_postun_with_restart proofd.service
 
 %post python
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
@@ -2405,6 +2401,7 @@ fi
 %{_includedir}/%{name}/RGitCommit.h
 %{_includedir}/%{name}/compiledata.h
 %dir %{_includedir}/%{name}/Math
+%dir %{_includedir}/%{name}/ROOT
 %{_datadir}/aclocal/root.m4
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
 %dir %{_pkgdocdir}
@@ -2449,12 +2446,12 @@ fi
 %{_mandir}/man1/proofd.1*
 %{_mandir}/man1/proofserv.1*
 %{_mandir}/man1/xpdtest.1*
-%{_initrddir}/proofd
+%{_unitdir}/proofd.service
 
 %files rootd
 %{_bindir}/rootd
 %{_mandir}/man1/rootd.1*
-%{_initrddir}/rootd
+%{_unitdir}/rootd.service
 
 %files python -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
@@ -2647,6 +2644,7 @@ fi
 %files hist -f includelist-hist-hist
 %{_libdir}/%{name}/libHist.*
 %{_libdir}/%{name}/libHist_rdict.pcm
+%dir %{_includedir}/%{name}/v5
 
 %files hist-painter -f includelist-hist-histpainter
 %{_libdir}/%{name}/libHistPainter.*
@@ -3039,6 +3037,9 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Sun Aug 14 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.06-4
+- Convert init scripts to systemd unit files
+
 * Tue Jul 19 2016 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 6.06.06-3
 - https://fedoraproject.org/wiki/Changes/Automatic_Provides_for_Python_RPM_Packages
 
