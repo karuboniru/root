@@ -24,9 +24,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.06.06
+Version:	6.06.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -342,6 +342,23 @@ Requires:	%{name}-icons = %{version}-%{release}
 #		Dynamic dependencies
 Requires:	%{name}-cling%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-asimage%{?_isa} = %{version}-%{release}
+#		Packages providing the libraries listed by "root-config --libs"
+#		(Only root-physics and root-multiproc are not dragged in by
+#		recursively resolving the dependency on root-graf-asimage
+#		above, so it is not that much of a bloat...)
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
+Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Fonts
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(freesans)
 Requires:	font(freeserif)
@@ -2147,6 +2164,8 @@ fi
 
 %post core -p /sbin/ldconfig
 %postun core -p /sbin/ldconfig
+%post multiproc -p /sbin/ldconfig
+%postun multiproc -p /sbin/ldconfig
 %post cling -p /sbin/ldconfig
 %postun cling -p /sbin/ldconfig
 %if %{ruby}
@@ -3037,6 +3056,12 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Thu Sep 08 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.08-1
+- Update to 6.06.08
+- Add the packages providing the libraries listed by "root-config --libs"
+  as dependencies to root-core
+- Add missing scriptlets to root-multiproc
+
 * Sun Aug 14 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.06-4
 - Convert init scripts to systemd unit files
 
