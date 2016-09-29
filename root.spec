@@ -26,7 +26,7 @@
 Name:		root
 Version:	6.06.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -154,6 +154,9 @@ ExcludeArch:	s390
 #		https://sft.its.cern.ch/jira/browse/ROOT-6434
 #		https://sft.its.cern.ch/jira/browse/ROOT-7314
 ExcludeArch:	ppc %{power64}
+#		aarch64 does not yet work
+#		https://sft.its.cern.ch/jira/browse/ROOT-7291
+ExcludeArch:	aarch64
 
 BuildRequires:	cmake
 BuildRequires:	libX11-devel
@@ -1833,12 +1836,9 @@ popd
 
 # Move python modules to the sitelib
 mkdir -p %{buildroot}%{python_sitelib}
-mkdir -p %{buildroot}%{python_sitearch}
-
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* %{buildroot}%{python_sitelib}
-mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
-
 rm %{buildroot}%{_libdir}/%{name}/ROOTaaS/README.md
+rm %{buildroot}%{_libdir}/%{name}/ROOTaaS/.gitignore
 mv %{buildroot}%{_libdir}/%{name}/ROOTaaS %{buildroot}%{python_sitelib}
 
 # Do emacs byte compilation
@@ -1885,10 +1885,15 @@ install -p -m 644 %SOURCE4 %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{python_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python_sitearch}/libPyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
 
 mkdir -p %{buildroot}%{python3_sitearch}
-install builddir/python/libPyROOT.so.%{version} \
+tmpdir=`mktemp -d`
+DESTDIR=$tmpdir cmake -DCMAKE_INSTALL_COMPONENT=libraries \
+   -P builddir/bindings/python/cmake_install.cmake
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
+rm -rf $tmpdir
 install -m 644 bindings/python/*.py %{buildroot}%{python3_sitearch}
 
 %if %{ruby}
@@ -1915,7 +1920,10 @@ sed 's!/usr/bin/env python!/usr/bin/python!' \
        %{buildroot}%{_bindir}/rootprint \
        %{buildroot}%{_bindir}/rootrm \
        %{buildroot}%{python_sitelib}/cmdLineUtils.py \
-       %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py
+       %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/pyroot/parse_CSV_file_with_TTree_ReadStream.py
 
 # Remove some junk
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
@@ -3056,6 +3064,9 @@ fi
 %{python_sitelib}/ROOTaaS
 
 %changelog
+* Wed Sep 28 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.08-2
+- Rebuild for gcc 6.2
+
 * Thu Sep 08 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.08-1
 - Update to 6.06.08
 - Add the packages providing the libraries listed by "root-config --libs"
