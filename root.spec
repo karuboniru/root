@@ -7,13 +7,10 @@
 %global pythia8 1
 %global xrootd 1
 
-%if %{?fedora}%{!?fedora:0} >= 20
-# libhdfs is currently only available on intel architectures in Fedora
-%ifarch %{ix86} x86_64
+%if %{?fedora}%{!?fedora:0} >= 24
+# libhdfs is available for all architectures for Fedora 24 and later.
+# For Fedora 20-23 it was only available on Intel (ix86 and x86_64).
 %global hadoop 1
-%else
-%global hadoop 0
-%endif
 %else
 %global hadoop 0
 %endif
@@ -24,9 +21,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.06.08
+Version:	6.08.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -35,7 +32,7 @@ URL:		https://root.cern.ch/
 #		wget -N https://root.cern.ch/download/root_v%{version}.source.tar.gz
 #		tar -z -x -f root_v%{version}.source.tar.gz
 #		find root-%{version}/fonts -type f -a '!' '(' -name 'STIX*' -o -name DroidSansFallback.ttf ')' -exec rm {} ';'
-#		tar -J -c -f root-%{version}.tar.xz root-%{version}
+#		tar -J -c --group root --owner root -f root-%{version}.tar.xz root-%{version}
 Source0:	%{name}-%{version}.tar.xz
 #		Input data for the tests
 Source1:	%{name}-testfiles.tar.xz
@@ -44,108 +41,54 @@ Source2:	%{name}-testfiles.sh
 #		systemd unit files
 Source3:	rootd.service
 Source4:	proofd.service
-#		Adapt to gcc's ABI tags
-#		https://github.com/root-mirror/root/pull/124
-Patch0:		%{name}-abitags.patch
 #		Allow running tests
 #		https://github.com/root-mirror/root/pull/130
-Patch1:		%{name}-test-install.patch
+Patch0:		%{name}-test-install.patch
 #		Use system fonts
-Patch2:		%{name}-fontconfig.patch
-#		Fix segfault when embedding Type 1 fonts
-#		https://github.com/root-mirror/root/pull/90
-Patch3:		%{name}-type1-embed.patch
+Patch1:		%{name}-fontconfig.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
-Patch4:		%{name}-dont-link-jvm.patch
-#		Remove gcc ABI check
-#		with the abitags patch above it is not needed
-Patch5:		%{name}-no-abi-check.patch
-#		Public header #includes private header
-#		https://github.com/root-mirror/root/pull/88
-Patch6:		%{name}-private-public.patch
-#		Fix problems with the cmake configuration
-Patch7:		%{name}-broken-cmake-config.patch
-#		Missing stuff in the cmake configuration
-Patch8:		%{name}-missing-cmake-config.patch
-#		Fix broken deprecation check (configure)
-Patch9:		%{name}-deprecated-options.patch
-#		Only link to libgfortranbegin.a if it exists (configure)
-Patch10:	%{name}-libgfortranbegin.patch
-#		Make sure the removal of -Werror doesn't do more than intended
-Patch11:	%{name}-werror.patch
-#		Properly remove -Wall (must also remove Werror=*)
-Patch12:	%{name}-compiledata.patch
-#		Don't overwrite FFLAGS
-Patch13:	%{name}-fflags.patch
-#		Use system unuran
-Patch14:	%{name}-unuran.patch
-#		Use systme gl2ps
-Patch15:	%{name}-gl2ps.patch
-#		More CMAKE_Fortran_FLAGS case issues
-Patch16:	%{name}-more-fflags.patch
-#		Use the same soname for cmake and configure
-Patch17:	%{name}-soname.patch
-#		Save memory during build
-Patch18:	%{name}-save-memory.patch
-#		Fix build configuration for ppc64/ppc64le
-Patch19:	%{name}-ppc64.patch
-#		Fix build configuration for ARM
-Patch20:	%{name}-arm.patch
-#		Fix build configuration for s390/s390x
-Patch21:	%{name}-s390x.patch
-#		Always build the bundled llvm as static libraries
-Patch22:	%{name}-llvm-static.patch
-
-#		Documentation fixes
-
-#		Fixes for doxygen parsing issues:
-#		- warning: Found ';' while parsing initializer list
-#		- warning: Illegal member name found
-#		- warning: no matching file member found for ClassImp()
-#		- warning: documented symbol 'X' was not declared or defined
-Patch23:	%{name}-doxyfile.patch
-#		Improvements to the doxygen filter
-Patch24:	%{name}-dox-filter.patch
-#		Align macros so the doxygen filter works
-Patch25:	%{name}-macro-align.patch
-#		Fix broken ~~~ for doxygen
-#		https://github.com/root-mirror/root/pull/127
-Patch26:	%{name}-tildes.patch
-#		Convert old latex markup to doxygen
-Patch27:	%{name}-latex-markup.patch
-#		Remove some old html markup
-Patch28:	%{name}-html-markup.patch
-#		Fix broken links (cernlib, clhep, geant)
-Patch29:	%{name}-links.patch
-#		Remove duplicated comment
-Patch30:	%{name}-tvector2-comment.patch
-#		Remove links to tutorial macro results
-Patch31:	%{name}-see-macro-output.patch
-#		Fix TMath doxygen
-Patch32:	%{name}-tmath-doc.patch
-#		Fix cernlib doxygen
-Patch33:	%{name}-cernlib-doc.patch
-#		Backported doxygen updates for TPrincipal class
-Patch34:	%{name}-tprincipal-doc.patch
+Patch2:		%{name}-dont-link-jvm.patch
+#		Don't create documentation notebooks
+Patch3:		%{name}-doc-no-notebooks.patch
 #		Don't run gui macros
-Patch35:	%{name}-avoid-gui-crash.patch
-#		Doxygen warnings
-Patch36:	%{name}-doxygen-warnings.patch
+Patch4:		%{name}-avoid-gui-crash.patch
 
 #		Test fixes
+#		https://github.com/root-mirror/root/pull/155
 
-#		User files in source tree during tests
-Patch37:	%{name}-template-files.patch
+#		Use files in source tree during tests
+Patch5:		%{name}-template-files.patch
 #		Use cache read option
-Patch38:	%{name}-cache-test.patch
+Patch6:		%{name}-cache-test.patch
 #		Fixes for tests on ix86
-Patch39:	%{name}-32bit.patch
-#		Fixes for stressGraphics.ref
-Patch40:	%{name}-stressgraphics.patch
+Patch7:		%{name}-32bit.patch
+#		Clean up TFormulaParsingTests
+Patch8:		%{name}-tformulaparsingtests.patch
+#		Typo in TFormulaTests
+Patch9:		%{name}-tformulatests-typo.patch
 #		Don't download testdata
-Patch41:	%{name}-no-testdata.patch
-#		Avoid using std::bind with lambdas (fixed upstream)
-Patch42:	%{name}-avoid-std-bind-lambda.patch
+Patch10:	%{name}-no-testdata.patch
+
+#		Miscellaneous
+
+#		Missing includes
+#		https://github.com/root-mirror/root/pull/269
+Patch11:	%{name}-missing-includes.patch
+#		Old FSF address
+#		https://github.com/root-mirror/root/pull/270
+Patch12:	%{name}-fsf-addr.patch
+#		Name clash HZ
+#		https://github.com/root-mirror/root/pull/309
+Patch13:	%{name}-hz.patch
+#		Fix errors when building documentation
+#		https://github.com/root-mirror/root/pull/310
+Patch14:	%{name}-global-name-not-defined.patch
+#		Fix paths in image tutorial
+#		https://github.com/root-mirror/root/pull/311
+Patch15:	%{name}-rose-image.patch
+#		Fix stressGraphics.ref
+#		https://github.com/root-mirror/root/pull/312
+Patch16:	%{name}-stressgraphics.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -154,11 +97,12 @@ ExcludeArch:	s390
 #		https://sft.its.cern.ch/jira/browse/ROOT-6434
 #		https://sft.its.cern.ch/jira/browse/ROOT-7314
 ExcludeArch:	ppc %{power64}
-#		aarch64 does not yet work
-#		https://sft.its.cern.ch/jira/browse/ROOT-7291
-ExcludeArch:	aarch64
 
-BuildRequires:	cmake
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
+BuildRequires:	cmake >= 3.4.3
+%else
+BuildRequires:	cmake3 >= 3.4.3
+%endif
 BuildRequires:	libX11-devel
 BuildRequires:	libXpm-devel
 BuildRequires:	libXft-devel
@@ -228,7 +172,9 @@ BuildRequires:	OCE-devel
 BuildRequires:	R-Rcpp-devel
 BuildRequires:	R-RInside-devel
 BuildRequires:	readline-devel
-BuildRequires:	tbb-devel
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
+BuildRequires:	tbb-devel >= 4.3
+%endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
 BuildRequires:	gcc-c++
@@ -239,13 +185,13 @@ BuildRequires:	expat-devel
 BuildRequires:	pythia8-devel >= 8.1.80
 %endif
 BuildRequires:	numpy
-BuildRequires:	dos2unix
 BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	perl-generators
 BuildRequires:	systemd-units
 #		Some of the tests call lsb_release
 BuildRequires:	redhat-lsb-core
+#		Fonts
 BuildRequires:	font(freesans)
 BuildRequires:	font(freeserif)
 BuildRequires:	font(freemono)
@@ -255,6 +201,8 @@ BuildRequires:	urw-fonts
 %if %{?fedora}%{!?fedora:0} >= 11
 BuildRequires:	font(droidsansfallback)
 %endif
+#		With gdb installed test failures will show backtraces
+BuildRequires:	gdb
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	hicolor-icon-theme
@@ -378,6 +326,7 @@ Obsoletes:	%{name}-ruby < 6.00.00
 %if %{hadoop} == 0
 Obsoletes:	%{name}-io-hdfs < 6.06.04-2
 %endif
+Obsoletes:	%{name}-rootaas < 6.08.00
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -447,25 +396,61 @@ files, serving files over the Internet. Using this daemon, you can
 access files on the machine from anywhere on the Internet, using a
 transparent interface.
 
-%package python
+%package -n python2-%{name}
 Summary:	Python extension for ROOT
+Provides:	root-python = %{version}-%{release}
+Obsoletes:	root-python < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
-%description python
+%description -n python2-%{name}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
-%package %{python3pkg}
+%package -n %{python3pkg}-%{name}
 Summary:	Python extension for ROOT
+Provides:	root-%{python3pkg} = %{version}-%{release}
+Obsoletes:	root-%{python3pkg} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
-%description %{python3pkg}
+%description -n %{python3pkg}-%{name}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
+
+%package -n python2-jupyroot
+Summary:	ROOT Jupyter kernel
+Requires:	python2-%{name} = %{version}-%{release}
+
+%description -n python2-jupyroot
+The Jupyter kernel for the ROOT notebook.
+
+%package -n %{python3pkg}-jupyroot
+Summary:	ROOT Jupyter kernel
+Requires:	%{python3pkg}-%{name} = %{version}-%{release}
+
+%description -n %{python3pkg}-jupyroot
+The Jupyter kernel for the ROOT notebook.
+
+%package -n python2-jsmva
+Summary:	TMVA interface used by JupyROOT
+BuildArch:	noarch
+Requires:	%{name}-tmva = %{version}-%{release}
+Requires:	python2-jupyroot = %{version}-%{release}
+
+%description -n python2-jsmva
+TMVA interface used by JupyROOT.
+
+%package -n %{python3pkg}-jsmva
+Summary:	TMVA interface used by JupyROOT
+BuildArch:	noarch
+Requires:	%{name}-tmva = %{version}-%{release}
+Requires:	%{python3pkg}-jupyroot = %{version}-%{release}
+
+%description -n %{python3pkg}-jsmva
+TMVA interface used by JupyROOT.
 
 %if %{ruby}
 %package ruby
@@ -1535,38 +1520,29 @@ This package contains a plugin for browsing a ROOT tree in ROOT.
 %package cli
 Summary:	ROOT command line utilities
 BuildArch:	noarch
-Requires:	%{name}-python = %{version}-%{release}
+Requires:	python2-%{name} = %{version}-%{release}
 
 %description cli
 The ROOT command line utilities is a set of scripts for common tasks
 written in python.
 
 %package notebook
-Summary:	ROOT as an IPython Notebook
+Summary:	ROOT as a Jupyter Notebook
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-rootaas = %{version}-%{release}
-Requires:	/usr/bin/ipython
+%if %{?fedora}%{!?fedora:0} >= 23
+#		Jupyter is not available in RHEL/EPEL
+Requires:	/usr/bin/jupyter
+#		Fedora's /usr/bin/jupyter uses Python 3
+#		Therefore depend on the Python 3 JupyROOT kernel
+Requires:	%{python3pkg}-jupyroot = %{version}-%{release}
+Requires:	%{python3pkg}-jsmva = %{version}-%{release}
+%endif
 
 %description notebook
-ROOT as an IPython Notebook.
-
-%package rootaas
-Summary:	ROOT as a Service
-BuildArch:	noarch
-Requires:	%{name}-python = %{version}-%{release}
-Requires:	python-ipython-console
-
-%description rootaas
-ROOT as a Service - the IPython kernel for the ROOT notebook.
+ROOT as a Jupyter Notebook.
 
 %prep
 %setup -q -a 1
-
-# Convert from mac line terminators (and remove trailing spaces)
-mac2unix math/smatrix/doc/SMatrixClass.html
-sed 's! *$!!' -i math/smatrix/doc/SMatrixClass.html
-mac2unix math/smatrix/doc/SVector.html
-sed 's! *$!!' -i math/smatrix/doc/SVector.html
 
 %patch0 -p1
 %patch1 -p1
@@ -1585,32 +1561,6 @@ sed 's! *$!!' -i math/smatrix/doc/SVector.html
 %patch14 -p1
 %patch15 -p1
 %patch16 -p1
-%patch17 -p1
-%patch18 -p1
-%patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch25 -p1
-%patch26 -p1
-%patch27 -p1
-%patch28 -p1
-%patch29 -p1
-%patch30 -p1
-%patch31 -p1
-%patch32 -p1
-%patch33 -p1
-%patch34 -p1
-%patch35 -p1
-%patch36 -p1
-%patch37 -p1
-%patch38 -p1
-%patch39 -p1
-%patch40 -p1
-%patch41 -p1
-%patch42 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1628,7 +1578,7 @@ rm -rf core/zip/src/[a-z]* core/zip/inc/[a-z]*
 #  * lzma
 rm -rf core/lzma/src/*.tar.gz
 #  * gl2ps
-rm graf3d/gl/src/gl2ps.cxx graf3d/gl/inc/gl2ps.h
+rm graf3d/gl/src/gl2ps.cxx graf3d/gl/src/gl2ps/gl2ps.h
 #  * unuran
 rm -rf math/unuran/src/*.tar.gz
 #  * xrootd-private-devel headers
@@ -1673,16 +1623,12 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 %global optflags %(sed 's/-march=z9\\S* /-march=z10 /g' <<< '%{optflags}')
 %endif
 
-%ifarch ppc %{power64} s390 s390x
-# On some architectures JIT compilation fails if the stack protector is used
-# https://llvm.org/bugs/show_bug.cgi?id=22248
-# https://llvm.org/bugs/show_bug.cgi?id=26226
-# IncrementalExecutor::executeFunction:
-#   symbol '__stack_chk_guard' unresolved while linking
-%global optflags %(sed 's/-fstack-protector\\S* //g' <<< '%{optflags}')
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
+%cmake \
+%else
+%cmake3 \
 %endif
-
-%cmake -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
+       -DCMAKE_INSTALL_PREFIX:PATH=%{_prefix} \
        -DCMAKE_INSTALL_LIBDIR:PATH=%{_libdir}/%{name} \
        -DCMAKE_INSTALL_SYSCONFDIR:PATH=%{_datadir}/%{name} \
        -DCMAKE_INSTALL_DOCDIR:PATH=%{_pkgdocdir} \
@@ -1703,6 +1649,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_pcre:BOOL=OFF \
        -Dbuiltin_tbb:BOOL=OFF \
        -Dbuiltin_unuran:BOOL=OFF \
+       -Dbuiltin_vc:BOOL=OFF \
        -Dbuiltin_xrootd:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
        -Dafdsmgrd:BOOL=OFF \
@@ -1718,9 +1665,13 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dcocoa:BOOL=OFF \
 %if %{?fedora}%{!?fedora:0} >= 24
        -Dcxx14:BOOL=ON \
+       -Droot7:BOOL=ON \
 %else
        -Dcxx14:BOOL=OFF \
+       -Droot7:BOOL=OFF \
 %endif
+       -Dcxxmodules:BOOL=OFF \
+       -Dcuda:BOOL=OFF \
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
        -Dexceptions:BOOL=ON \
@@ -1746,6 +1697,11 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dhdfs:BOOL=OFF \
 %endif
        -Dhttp:BOOL=ON \
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
+       -Dimt:BOOL=ON \
+%else
+       -Dimt:BOOL=OFF \
+%endif
        -Djemalloc:BOOL=OFF \
        -Dkrb5:BOOL=ON \
        -Dldap:BOOL=ON \
@@ -1754,7 +1710,6 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dmemstat:BOOL=ON \
        -Dminuit2:BOOL=ON \
        -Dmonalisa:BOOL=OFF \
-       -Dmt:BOOL=ON \
        -Dmysql:BOOL=ON \
        -Dodbc:BOOL=ON \
        -Dopengl:BOOL=ON \
@@ -1768,12 +1723,12 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dpythia8:BOOL=OFF \
 %endif
        -Dpython:BOOL=ON \
+       -Dpython3:BOOL=OFF \
        -Dqt:BOOL=ON \
        -Dqtgsi:BOOL=ON \
        -Dr:BOOL=ON \
        -Drfio:BOOL=ON \
        -Droofit:BOOL=ON \
-       -Droot7:BOOL=OFF \
        -Drpath:BOOL=OFF \
 %if %{ruby}
        -Druby:BOOL=ON \
@@ -1788,13 +1743,13 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dsrp:BOOL=OFF \
        -Dssl:BOOL=ON \
        -Dtable:BOOL=ON \
-       -Dtbb:BOOL=ON \
        -Dtcmalloc:BOOL=OFF \
        -Dthread:BOOL=ON \
        -Dtmva:BOOL=ON \
        -Dunuran:BOOL=ON \
        -Dvc:BOOL=OFF \
        -Dvdt:BOOL=ON \
+       -Dvecgeom:BOOL=OFF \
        -Dx11:BOOL=ON \
        -Dxft:BOOL=ON \
        -Dxml:BOOL=ON \
@@ -1822,9 +1777,11 @@ py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
 py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
 py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,lib${py2l},lib${py3l},g" -e 's,lib/libPyROOT,python/libPyROOT,g' \
+    -e "s,lib${py2l},lib${py3l},g" -e 's, python , python3 ,g' \
+    -e 's,lib/libPyROOT,python/libPyROOT,g' \
+    -e 's,lib/libJupyROOT,python/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python!g' -i `find bindings/python -type f`
-make %{?_smp_mflags} -f bindings/python/Makefile PyROOT
+make %{?_smp_mflags} -f bindings/python/Makefile PyROOT JupyROOT
 mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
 
 popd
@@ -1833,13 +1790,6 @@ popd
 pushd builddir
 make %{?_smp_mflags} install DESTDIR=%{buildroot}
 popd
-
-# Move python modules to the sitelib
-mkdir -p %{buildroot}%{python_sitelib}
-mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* %{buildroot}%{python_sitelib}
-rm %{buildroot}%{_libdir}/%{name}/ROOTaaS/README.md
-rm %{buildroot}%{_libdir}/%{name}/ROOTaaS/.gitignore
-mv %{buildroot}%{_libdir}/%{name}/ROOTaaS %{buildroot}%{python_sitelib}
 
 # Do emacs byte compilation
 emacs -batch -no-site-file -f batch-byte-compile \
@@ -1881,20 +1831,50 @@ mkdir -p %{buildroot}%{_unitdir}
 install -p -m 644 %SOURCE3 %{buildroot}%{_unitdir}
 install -p -m 644 %SOURCE4 %{buildroot}%{_unitdir}
 
-# The Python interface library is handled by alternatives
+# Move python cli helper to its own directory
+mkdir -p %{buildroot}%{_datadir}/%{name}/cli
+mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
+   %{buildroot}%{_datadir}/%{name}/cli
+
+# Move the python modules to sitearch/sitelib
 mkdir -p %{buildroot}%{python_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python_sitearch}/libPyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
+   %{buildroot}%{python_sitearch}/libJupyROOT.so
 mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
+rm %{buildroot}%{_libdir}/%{name}/JupyROOT/README.md
+mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python_sitearch}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
+
+mkdir -p %{buildroot}%{python_sitelib}
+mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python_sitelib}
+
+tmpdir=`mktemp -d`
+
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
+DESTDIR=$tmpdir cmake -P builddir/bindings/python/cmake_install.cmake
+%else
+DESTDIR=$tmpdir cmake3 -P builddir/bindings/python/cmake_install.cmake
+%endif
 
 mkdir -p %{buildroot}%{python3_sitearch}
-tmpdir=`mktemp -d`
-DESTDIR=$tmpdir cmake -DCMAKE_INSTALL_COMPONENT=libraries \
-   -P builddir/bindings/python/cmake_install.cmake
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
+mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libJupyROOT%{py3soabi}.so
+mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
+mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
+rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
+mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_sitearch}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
+
+mkdir -p %{buildroot}%{python3_sitelib}
+mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
+
 rm -rf $tmpdir
-install -m 644 bindings/python/*.py %{buildroot}%{python3_sitearch}
 
 %if %{ruby}
 # The Ruby interface library must be in two places
@@ -1908,9 +1888,12 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_vendorarchdir}`/libRuby.so \
 # These should be in PATH
 mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
-# Avoid /usr/bin/env shebangs
+# Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
-sed 's!/usr/bin/env python!/usr/bin/python!' \
+sed -e 's!/usr/bin/env python!/usr/bin/python!' \
+    -e '/import sys/d' \
+    -e '/import cmdLineUtils/iimport sys' \
+    -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
     -i %{buildroot}%{_bindir}/rootbrowse \
        %{buildroot}%{_bindir}/rootcp \
        %{buildroot}%{_bindir}/rooteventselector \
@@ -1918,8 +1901,10 @@ sed 's!/usr/bin/env python!/usr/bin/python!' \
        %{buildroot}%{_bindir}/rootmkdir \
        %{buildroot}%{_bindir}/rootmv \
        %{buildroot}%{_bindir}/rootprint \
-       %{buildroot}%{_bindir}/rootrm \
-       %{buildroot}%{python_sitelib}/cmdLineUtils.py \
+       %{buildroot}%{_bindir}/rootrm
+sed '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
+sed 's!/usr/bin/env python!/usr/bin/python!' \
+    -i %{buildroot}%{_bindir}/rootdrawtree \
        %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
@@ -1935,7 +1920,6 @@ rm %{buildroot}%{_datadir}/%{name}/proof/*.sample
 rm -rf %{buildroot}%{_datadir}/%{name}/proof/utils
 rm %{buildroot}%{_datadir}/%{name}/root.desktop
 rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
-rm %{buildroot}%{_datadir}/%{name}/gitinfo.txt
 rm %{buildroot}%{_libdir}/%{name}/libmathtext.a
 rm %{buildroot}%{_libdir}/%{name}/libminicern.a
 rm %{buildroot}%{_bindir}/setenvwrap.csh
@@ -1953,8 +1937,6 @@ rm %{buildroot}%{_includedir}/%{name}/*.cw
 rm %{buildroot}%{_includedir}/%{name}/*.pri
 rm %{buildroot}%{_includedir}/%{name}/proofdp.h
 rm %{buildroot}%{_includedir}/%{name}/rootdp.h
-rm %{buildroot}%{_pkgdocdir}/BUILDSYSTEM
-rm %{buildroot}%{_pkgdocdir}/ChangeLog-2-24
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
@@ -1993,6 +1975,7 @@ rm TSystem/P030_TAlienSystem.C
 rm TSystem/P060_THDFSSystem.C
 %endif
 rm TViewerX3D/P020_TQtViewerX3D.C
+rm TVirtualGeoConverter/P010_TGeoVGConverter.C
 rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
@@ -2009,6 +1992,7 @@ rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
 rmdir TImagePlugin
+rmdir TVirtualGeoConverter
 popd
 
 # Create ldconfig configuration
@@ -2024,10 +2008,16 @@ cp -p interpreter/llvm/src/README.txt interpreter/llvm/src/llvm-README.txt
 # Generate documentation
 pushd documentation/doxygen
 ln -s ../../files files
-sed -e 's!\(GENERATE_LATEX\s*=\).*!\1 NO!' \
-    -e 's!\(GENERATE_MAN\s*=\).*!\1 NO!' -i Doxyfile
+# Create the py-hsimple.root file in advance (needed as input)
 ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
+    LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
+    PYTHONPATH=${PWD}/../../builddir/lib \
+    python ../../tutorials/pyroot/hsimple.py
+ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
+    ROOTSYS=${PWD}/../../builddir \
+    LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
+    PYTHONPATH=${PWD}/../../builddir/lib \
     make DOXYGEN_OUTPUT_DIRECTORY=${PWD}/doc
 mv doc/html %{buildroot}%{_pkgdocdir}/html
 popd
@@ -2037,7 +2027,11 @@ for f in `find builddir -name cmake_install.cmake -a '!' -path '*/llvm/*'` ; do
     l=`sed 's!builddir/\(.*\)/cmake_install.cmake!includelist-\1!' <<< $f`
     l=`tr / - <<< $l`
     tmpdir=`mktemp -d`
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
     DESTDIR=$tmpdir cmake -DCMAKE_INSTALL_COMPONENT=headers -P $f > /dev/null
+%else
+    DESTDIR=$tmpdir cmake3 -DCMAKE_INSTALL_COMPONENT=headers -P $f > /dev/null
+%endif
     ( cd $tmpdir ; find . -type f -a '!' -name '*.cw' -a '!' -name '*.pri') | \
 	sort | sed 's!^\.!!' > $l
     rm -rf $tmpdir
@@ -2063,17 +2057,26 @@ pushd runtutorials
 ln -s ../../files files
 popd
 # Exclude some tests that can not be run
+#
 # - test-stressIOPlugins-*
 #   requires network access (by design since they test the remote file IO)
+#
 # - tutorial-tree-run_h1analysis
+# - tutorial-multicore-imt001_parBranchProcessing
+# - tutorial-multicore-mp103_processSelector
 #   requires network access: http://root.cern.ch/files/h1/
+#
+# - tutorial-multicore-imt101_parTreeProcessing
+#   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
+#
+# - test-stressiterators-interpreted
+# - tutorial-hist-sparsehist
 # - tutorial-r-*
-#   occasionally causes random crashes
-# - tutorial-multicore-mp*
-#   currently fails on ix86 and arm
-excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-r-.*"
-%ifarch %{ix86} %{arm}
-excluded="${excluded}|tutorial-multicore-mp.*"
+#   currently fails on 32 bit arm - reported upstream:
+#   https://sft.its.cern.ch/jira/browse/ROOT-8500
+excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing"
+%ifarch %{arm}
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
 %endif
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
@@ -2120,7 +2123,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 %postun proofd
 %systemd_postun_with_restart proofd.service
 
-%post python
+%post -n python2-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
 	/var/lib/alternatives/libPyROOT.so || \
@@ -2137,15 +2140,23 @@ fi
     libPyROOT.so %{python_sitearch}/libPyROOT.so 20
 /sbin/ldconfig
 
-%preun python
+%preun -n python2-%{name}
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
 	libPyROOT.so %{python_sitearch}/libPyROOT.so
 fi
 
-%postun python -p /sbin/ldconfig
+%postun -n python2-%{name} -p /sbin/ldconfig
 
-%post %{python3pkg}
+%triggerpostun -n python2-%{name} -- %{name}-python
+# Uninstalling the old %{name}-python will remove the alternatives
+# for python2-%{name} - put them back in this triggerpostun script
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{version} \
+    libPyROOT.so %{python_sitearch}/libPyROOT.so 20
+/sbin/ldconfig
+
+%post -n %{python3pkg}-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
 	/var/lib/alternatives/libPyROOT.so || \
@@ -2162,13 +2173,21 @@ fi
     libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
 /sbin/ldconfig
 
-%preun %{python3pkg}
+%preun -n %{python3pkg}-%{name}
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
 	libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so
 fi
 
-%postun %{python3pkg} -p /sbin/ldconfig
+%postun -n %{python3pkg}-%{name} -p /sbin/ldconfig
+
+%triggerpostun -n %{python3pkg}-%{name} -- %{name}-%{python3pkg}
+# Uninstalling the old %{name}-%{python3pkg} will remove the alternatives
+# for %{python3pkg}-%{name} - put them back in this triggerpostun script
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{version} \
+    libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
+/sbin/ldconfig
 
 %post core -p /sbin/ldconfig
 %postun core -p /sbin/ldconfig
@@ -2405,6 +2424,7 @@ fi
 %{_datadir}/%{name}/allDict.cxx.pch
 %{_datadir}/%{name}/class.rules
 %{_datadir}/%{name}/gdb-backtrace.sh
+%{_datadir}/%{name}/gitinfo.txt
 %{_datadir}/%{name}/helgrind-root.supp
 %{_datadir}/%{name}/Makefile.arch
 %{_datadir}/%{name}/root.mimes
@@ -2480,7 +2500,7 @@ fi
 %{_mandir}/man1/rootd.1*
 %{_unitdir}/rootd.service
 
-%files python -f includelist-bindings-pyroot
+%files -n python2-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
@@ -2491,7 +2511,7 @@ fi
 %{python_sitearch}/cppyy.py*
 %{python_sitearch}/_pythonization.py*
 
-%files %{python3pkg} -f includelist-bindings-pyroot
+%files -n %{python3pkg}-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
@@ -2502,6 +2522,22 @@ fi
 %{python3_sitearch}/cppyy.py
 %{python3_sitearch}/_pythonization.py
 %{python3_sitearch}/__pycache__
+
+%files -n python2-jupyroot
+%{python_sitearch}/JupyROOT
+%{python_sitearch}/libJupyROOT.so
+%doc bindings/pyroot/JupyROOT/README.md
+
+%files -n %{python3pkg}-jupyroot
+%{python3_sitearch}/JupyROOT
+%{python3_sitearch}/libJupyROOT%{py3soabi}.so
+%doc bindings/pyroot/JupyROOT/README.md
+
+%files -n python2-jsmva
+%{python_sitelib}/JsMVA
+
+%files -n %{python3pkg}-jsmva
+%{python3_sitelib}/JsMVA
 
 %if %{ruby}
 %files ruby -f includelist-bindings-ruby
@@ -3048,22 +3084,32 @@ fi
 %files cli
 %{_bindir}/rootbrowse
 %{_bindir}/rootcp
+%{_bindir}/rootdrawtree
 %{_bindir}/rooteventselector
 %{_bindir}/rootls
 %{_bindir}/rootmkdir
 %{_bindir}/rootmv
 %{_bindir}/rootprint
 %{_bindir}/rootrm
-%{python_sitelib}/cmdLineUtils.py*
+%{_datadir}/%{name}/cli
 
 %files notebook
 %{_bindir}/rootnb.exe
 %{_datadir}/%{name}/notebook
 
-%files rootaas
-%{python_sitelib}/ROOTaaS
-
 %changelog
+* Tue Dec 06 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.02-1
+- Update to 6.08.02
+- Drop patches accepted upstream
+- Drop previously backported patches
+- Drop obsolete patches
+- Enable hadoop/hdfs support for all architectures
+  * libhdfs is now available for more architectures than ix86 and x86_64
+- Enable building on aarch64
+- Rename the python packages to python2-root and python3-root
+- New sub-packages: python{2,3}-jupyroot, python{2,3}-jsmva
+- Dropped sub-package: root-rootaas (replaced by python{2,3}-jupyroot)
+
 * Wed Sep 28 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.06.08-2
 - Rebuild for gcc 6.2
 

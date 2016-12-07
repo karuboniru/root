@@ -1,8 +1,9 @@
-diff -ur root-6.06.02.orig/tutorials/mlp/mlpHiggs.C root-6.06.02/tutorials/mlp/mlpHiggs.C
---- root-6.06.02.orig/tutorials/mlp/mlpHiggs.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/mlp/mlpHiggs.C	2016-03-23 21:58:56.072799219 +0100
-@@ -15,8 +15,8 @@
-    // equal to 1 for the signal and 0 for the background is added.
+diff --git a/tutorials/mlp/mlpHiggs.C b/tutorials/mlp/mlpHiggs.C
+index 8c5743f..d2a2769 100644
+--- a/tutorials/mlp/mlpHiggs.C
++++ b/tutorials/mlp/mlpHiggs.C
+@@ -16,8 +16,8 @@
+ void mlpHiggs(Int_t ntrain=100) {
     const char *fname = "mlpHiggs.root";
     TFile *input = 0;
 -   if (!gSystem->AccessPathName(fname)) {
@@ -12,17 +13,27 @@ diff -ur root-6.06.02.orig/tutorials/mlp/mlpHiggs.C root-6.06.02/tutorials/mlp/m
     } else {
        printf("accessing %s file from http://root.cern.ch/files\n",fname);
        input = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
-diff -ur root-6.06.02.orig/tutorials/quadp/portfolio.C root-6.06.02/tutorials/quadp/portfolio.C
---- root-6.06.02.orig/tutorials/quadp/portfolio.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/quadp/portfolio.C	2016-03-23 22:19:31.309867477 +0100
-@@ -273,8 +273,8 @@
+diff --git a/tutorials/quadp/portfolio.C b/tutorials/quadp/portfolio.C
+index 9f8bb8a..ca96365 100644
+--- a/tutorials/quadp/portfolio.C
++++ b/tutorials/quadp/portfolio.C
+@@ -289,8 +289,8 @@ void portfolio()
  
-   const char *fname = "stock.root";
-   TFile *f = 0;
--  if (!gSystem->AccessPathName(fname)) {
--     f = TFile::Open(fname);
-+  if (!gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(__FILE__), fname))) {
-+     f = TFile::Open(Form("%s/%s", gSystem->DirName(__FILE__), fname));
-   } else {
-      printf("accessing %s file from http://root.cern.ch/files\n",fname);
-      f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+    const char *fname = "stock.root";
+    TFile *f = 0;
+-   if (!gSystem->AccessPathName(fname)) {
+-      f = TFile::Open(fname);
++   if (!gSystem->AccessPathName(Form("%s/%s", gSystem->DirName(__FILE__), fname))) {
++      f = TFile::Open(Form("%s/%s", gSystem->DirName(__FILE__), fname));
+    } else {
+       printf("accessing %s file from http://root.cern.ch/files\n",fname);
+       f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+@@ -314,7 +314,7 @@ void portfolio()
+       for (Int_t j = 0; j <= i; j++) {
+          Double_t sum = 0.;
+          for (Int_t k = 0; k < nrData; k++)
+-         sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
++            sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
+          Covar(i,j) = Covar(j,i) = sum/nrData;
+       }
+    }

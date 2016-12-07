@@ -1,38 +1,47 @@
-diff -Nur root-6.06.02.orig/bindings/pyroot/CMakeLists.txt root-6.06.02/bindings/pyroot/CMakeLists.txt
---- root-6.06.02.orig/bindings/pyroot/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/bindings/pyroot/CMakeLists.txt	2016-03-20 14:37:23.588596390 +0100
-@@ -37,12 +37,12 @@
+diff -Nur root-6.08.02.orig/bindings/pyroot/CMakeLists.txt root-6.08.02/bindings/pyroot/CMakeLists.txt
+--- root-6.08.02.orig/bindings/pyroot/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/bindings/pyroot/CMakeLists.txt	2016-12-06 12:46:10.280969916 +0100
+@@ -36,18 +36,18 @@
+ file(GLOB pyfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
+ foreach(pyfile ${pyfiles})
    install(FILES ${pyfile} DESTINATION ${runtimedir})
-   install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
-   install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
+-  install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
+-  install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
 -  file(COPY ${pyfile} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
++  install(CODE "execute_process(COMMAND python -m py_compile \$ENV{DESTDIR}${runtimedir}/${pyfile})")
++  install(CODE "execute_process(COMMAND python -O -m py_compile \$ENV{DESTDIR}${runtimedir}/${pyfile})")
 +  file(COPY ${pyfile} DESTINATION ${localruntimedir})
  endforeach()
  
--set( ROOTaaSDirName "ROOTaaS")
-+set(ROOTaaSDirName "ROOTaaS")
- install (DIRECTORY ${ROOTaaSDirName} DESTINATION ${runtimedir})
--file(COPY ${ROOTaaSDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
-+file(COPY ${ROOTaaSDirName} DESTINATION ${localruntimedir})
+-set( JupyROOTDirName "JupyROOT")
++set(JupyROOTDirName "JupyROOT")
+ install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
+-file(COPY ${JupyROOTDirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
++file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
+ 
+ set( JsMVADirName "JsMVA")
+ install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
+-file(COPY ${JsMVADirName} DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
++file(COPY ${JsMVADirName} DESTINATION ${localruntimedir})
  
  #---Install headers----------------------------------------------------------
  ROOT_INSTALL_HEADERS()
-diff -Nur root-6.06.02.orig/bindings/pyroot/ROOT.py root-6.06.02/bindings/pyroot/ROOT.py
---- root-6.06.02.orig/bindings/pyroot/ROOT.py	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/bindings/pyroot/ROOT.py	2016-03-20 14:37:23.646596937 +0100
-@@ -508,7 +508,7 @@
+diff -Nur root-6.08.02.orig/bindings/pyroot/ROOT.py root-6.08.02/bindings/pyroot/ROOT.py
+--- root-6.08.02.orig/bindings/pyroot/ROOT.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/bindings/pyroot/ROOT.py	2016-12-06 12:46:10.281969905 +0100
+@@ -516,7 +516,7 @@
  
            # system logon, user logon, and local logon (skip Rint.Logon)
              name = '.rootlogon.C'
 -            logons = [ os.path.join( str(self.gRootDir), 'etc', 'system' + name ),
-+            logons = [ os.path.join( self.TROOT.GetEtcDir().Data(), 'system' + name ),
++            logons = [ os.path.join( str(self.TROOT.GetEtcDir()), 'system' + name ),
                         os.path.expanduser( os.path.join( '~', name ) ) ]
              if logons[-1] != os.path.join( os.getcwd(), name ):
                 logons.append( name )
-diff -Nur root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake root-6.06.02/cmake/modules/RootBuildOptions.cmake
---- root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/cmake/modules/RootBuildOptions.cmake	2016-03-20 14:37:23.656597032 +0100
-@@ -222,7 +222,7 @@
+diff -Nur root-6.08.02.orig/cmake/modules/RootBuildOptions.cmake root-6.08.02/cmake/modules/RootBuildOptions.cmake
+--- root-6.08.02.orig/cmake/modules/RootBuildOptions.cmake	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/cmake/modules/RootBuildOptions.cmake	2016-12-06 12:46:10.281969905 +0100
+@@ -234,7 +234,7 @@
  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE) # point to directories outside the build tree to the install RPATH
  
  # Check whether to add RPATH to the installation (the build tree always has the RPATH enabled)
@@ -41,9 +50,9 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootBuildOptions.cmake root-6.06.02/cm
    set(CMAKE_INSTALL_RPATH ${CMAKE_INSTALL_FULL_LIBDIR}) # install LIBDIR
    set(CMAKE_SKIP_INSTALL_RPATH FALSE)          # don't skip the full RPATH for the install tree
  elseif(APPLE)
-diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake/modules/RootNewMacros.cmake
---- root-6.06.02.orig/cmake/modules/RootNewMacros.cmake	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/cmake/modules/RootNewMacros.cmake	2016-03-20 14:37:23.671597173 +0100
+diff -Nur root-6.08.02.orig/cmake/modules/RootNewMacros.cmake root-6.08.02/cmake/modules/RootNewMacros.cmake
+--- root-6.08.02.orig/cmake/modules/RootNewMacros.cmake	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/cmake/modules/RootNewMacros.cmake	2016-12-06 12:46:10.281969905 +0100
 @@ -19,6 +19,7 @@
    set(libprefix lib)
    set(ld_library_path PATH)
@@ -68,7 +77,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
    set(runtimedir ${CMAKE_INSTALL_LIBDIR})
  endif()
  
-@@ -322,7 +325,15 @@
+@@ -325,7 +328,15 @@
      set(pcm_name)
    else()
      if(CMAKE_PROJECT_NAME STREQUAL ROOT)
@@ -85,7 +94,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
        set(ROOTCINTDEP rootcling)
      else()
        set(command rootcling)
-@@ -431,9 +442,6 @@
+@@ -441,9 +452,6 @@
    if(TARGET G__${library})
      add_dependencies(${library} G__${library})
    endif()
@@ -95,7 +104,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
    set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
    set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
    set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
-@@ -468,9 +476,6 @@
+@@ -484,9 +492,6 @@
    if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
       add_dependencies(${library} ${CMAKE_MATCH_2})
    endif()
@@ -105,7 +114,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
  
    #--- Only for building shared libraries
    set_property(TARGET ${library} PROPERTY POSITION_INDEPENDENT_CODE 1)
-@@ -511,9 +516,6 @@
+@@ -532,9 +537,6 @@
    ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
    include_directories(${CMAKE_BINARY_DIR}/include)
    add_library( ${library} SHARED ${lib_srcs})
@@ -113,9 +122,9 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
 -    add_dependencies(${library} move_headers)
 -  endif()
    set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
-   target_link_libraries(${library} ${ARG_LIBRARIES})
-   #----Installation details-------------------------------------------------------
-@@ -590,6 +592,10 @@
+   # Do not add -Dname_EXPORTS to the command-line when building files in this
+   # target. Doing so is actively harmful for the modules build because it
+@@ -617,6 +619,10 @@
                             PATTERN ".svn" EXCLUDE
                             REGEX "LinkDef" EXCLUDE
                             ${ARG_OPTIONS})
@@ -126,7 +135,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
      set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
    endforeach()
  endfunction()
-@@ -629,9 +635,6 @@
+@@ -656,9 +662,6 @@
    if (ARG_ADDITIONAL_COMPILE_FLAGS)
      set_target_properties(${executable} PROPERTIES COMPILE_FLAGS ${ARG_ADDITIONAL_COMPILE_FLAGS})
    endif()
@@ -136,7 +145,7 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
  
    #----Installation details------------------------------------------------------
    if(NOT ARG_NOINSTALL AND CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-@@ -849,6 +852,9 @@
+@@ -878,6 +881,9 @@
      set_property(TEST ${test} PROPERTY ENVIRONMENT ROOT_DIR=${CMAKE_BINARY_DIR})
    else()
      add_test(NAME ${test} COMMAND ${_command})
@@ -146,9 +155,9 @@ diff -Nur root-6.06.02.orig/cmake/modules/RootNewMacros.cmake root-6.06.02/cmake
    endif()
  
    #- Handle TIMOUT and DEPENDS arguments
-diff -Nur root-6.06.02.orig/cmake/scripts/local_install.cmake root-6.06.02/cmake/scripts/local_install.cmake
---- root-6.06.02.orig/cmake/scripts/local_install.cmake	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/cmake/scripts/local_install.cmake	1970-01-01 01:00:00.000000000 +0100
+diff -Nur root-6.08.02.orig/cmake/scripts/local_install.cmake root-6.08.02/cmake/scripts/local_install.cmake
+--- root-6.08.02.orig/cmake/scripts/local_install.cmake	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/cmake/scripts/local_install.cmake	1970-01-01 01:00:00.000000000 +0100
 @@ -1,20 +0,0 @@
 -# Arguments:
 -#  PREFIX    - Installation prefix
@@ -170,10 +179,10 @@ diff -Nur root-6.06.02.orig/cmake/scripts/local_install.cmake root-6.06.02/cmake
 -    message(FATAL_ERROR "${msg}")
 -  endif()
 -endforeach()
-diff -Nur root-6.06.02.orig/CMakeLists.txt root-6.06.02/CMakeLists.txt
---- root-6.06.02.orig/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/CMakeLists.txt	2016-03-20 14:37:23.686597315 +0100
-@@ -135,7 +135,7 @@
+diff -Nur root-6.08.02.orig/CMakeLists.txt root-6.08.02/CMakeLists.txt
+--- root-6.08.02.orig/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/CMakeLists.txt	2016-12-06 12:46:10.290969803 +0100
+@@ -91,7 +91,7 @@
    endif()
  endforeach()
  
@@ -182,20 +191,20 @@ diff -Nur root-6.06.02.orig/CMakeLists.txt root-6.06.02/CMakeLists.txt
  set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
  add_custom_command(OUTPUT ${stamp_file}
                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-@@ -147,11 +147,7 @@
-                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
-                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
-                    COMMENT "Moving directories such as etc, icons, fonts, etc. to build area")
--add_custom_target(move_headers DEPENDS ${stamp_file}
+@@ -119,11 +119,7 @@
+   endif()
+ endforeach()
+ 
+-add_custom_target(move_headers DEPENDS ${stamp_file} ${tutorial_files_builddir}
 -                               COMMAND ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
 -                                                        -DCOMPONENTS="headers"
 -                                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake)
 -include_directories(${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_INCLUDEDIR})
-+add_custom_target(move_artifacts DEPENDS ${stamp_file})
++add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
  
  
  #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
-@@ -199,13 +195,23 @@
+@@ -179,13 +175,23 @@
                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                     DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
  
@@ -226,43 +235,51 @@ diff -Nur root-6.06.02.orig/CMakeLists.txt root-6.06.02/CMakeLists.txt
  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
  add_dependencies(onepcm ${__allTargets})
-@@ -213,22 +219,20 @@
- install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+@@ -198,26 +204,27 @@
+                     DEPENDS build/unix/module.modulemap
+                     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
+                     )
+-  add_dependencies(copymodulemap move_headers)
+ endif(cxxmodules)
  
  #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 -if(NOT gnuinstall)   # TODO hsimple.root for gnuinstall
 -  add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 -  add_dependencies(hsimple onepcm)
--  ROOT_EXECUTABLE(hsimple.exe test/hsimple.cxx NOINSTALL LIBRARIES RIO Tree Hist)
 -  if(WIN32)
 -    add_custom_command(OUTPUT tutorials/hsimple.root
--                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && $<TARGET_FILE:hsimple.exe>
--                       WORKING_DIRECTORY tutorials DEPENDS Cling)
+-                       COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && 
+-                               $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+-                       WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter)
 -  else()
 -    add_custom_command(OUTPUT tutorials/hsimple.root
--                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
--                               $<TARGET_FILE:hsimple.exe>
--                       WORKING_DIRECTORY tutorials DEPENDS Cling)
+-                       COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}} 
+-                               $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
+-                       WORKING_DIRECTORY tutorials DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter)
 -  endif()
 -  install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 +add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 +add_dependencies(hsimple onepcm)
 +if(WIN32)
 +  add_custom_command(OUTPUT tutorials/hsimple.root
-+                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} && set ROOTIGNOREPREFIX=1 && $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
++                     COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} &&
++                             set ROOTIGNOREPREFIX=1 &&
++                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
 +                     WORKING_DIRECTORY tutorials
-+                     DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
++                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 +else()
 +  add_custom_command(OUTPUT tutorials/hsimple.root
-+                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}} ROOTIGNOREPREFIX=1 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
++                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
++                             ROOTIGNOREPREFIX=1
++                             $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
 +                     WORKING_DIRECTORY tutorials
-+                     DEPENDS root.exe Cling Hist Tree Gpad Graf HistPainter move_artifacts)
++                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
  endif()
 +install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
  
  #---version--------------------------------------------------------------------------------------
  add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
-@@ -266,9 +270,6 @@
+@@ -262,9 +269,6 @@
  #---Configure Testing using CTest----------------------------------------------------------------
  configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
  if(testing)
@@ -272,9 +289,9 @@ diff -Nur root-6.06.02.orig/CMakeLists.txt root-6.06.02/CMakeLists.txt
    include(RootCTest)
    if(roottest)
      find_package(Git REQUIRED)
-diff -Nur root-6.06.02.orig/config/RConfigure.in root-6.06.02/config/RConfigure.in
---- root-6.06.02.orig/config/RConfigure.in	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/config/RConfigure.in	2016-03-20 14:37:23.686597315 +0100
+diff -Nur root-6.08.02.orig/config/RConfigure.in root-6.08.02/config/RConfigure.in
+--- root-6.08.02.orig/config/RConfigure.in	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/config/RConfigure.in	2016-12-06 12:46:10.290969803 +0100
 @@ -14,10 +14,11 @@
  #define ROOTTUTDIR    "@tutdir@"
  #define ROOTSRCDIR    "@srcdir@"
@@ -288,9 +305,9 @@ diff -Nur root-6.06.02.orig/config/RConfigure.in root-6.06.02/config/RConfigure.
  #@setresuid@ R__HAS_SETRESUID   /**/
  #@hasmathmore@ R__HAS_MATHMORE   /**/
  #@haspthread@ R__HAS_PTHREAD    /**/
-diff -Nur root-6.06.02.orig/config/rootrc.in root-6.06.02/config/rootrc.in
---- root-6.06.02.orig/config/rootrc.in	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/config/rootrc.in	2016-03-20 14:37:23.706597503 +0100
+diff -Nur root-6.08.02.orig/config/rootrc.in root-6.08.02/config/rootrc.in
+--- root-6.08.02.orig/config/rootrc.in	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/config/rootrc.in	2016-12-06 12:46:10.291969792 +0100
 @@ -9,24 +9,24 @@
  # and to PATH on Windows.
  # Paths are different for Unix and Windows. The example shows the defaults
@@ -333,10 +350,10 @@ diff -Nur root-6.06.02.orig/config/rootrc.in root-6.06.02/config/rootrc.in
  Gui.MimeTypeFile:            $(HOME)/.root.mimes
  # If above does not exists defaults to this:
  #Gui.MimeTypeFile:            @etcdir@/root.mimes
-diff -Nur root-6.06.02.orig/configure root-6.06.02/configure
---- root-6.06.02.orig/configure	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/configure	2016-03-20 14:37:23.733597759 +0100
-@@ -8018,6 +8018,7 @@
+diff -Nur root-6.08.02.orig/configure root-6.08.02/configure
+--- root-6.08.02.orig/configure	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/configure	2016-12-06 12:46:10.307969611 +0100
+@@ -8229,6 +8229,7 @@
      -e "s|@bindir@|$bindir|"               \
      -e "s|@etcdir@|$etcdir|"               \
      -e "s|@ttffontdir@|$fontdir|"          \
@@ -344,14 +361,13 @@ diff -Nur root-6.06.02.orig/configure root-6.06.02/configure
      -e "s|@iconpath@|$iconpath|"           \
      -e "s|@hasxrd@|$hasxrd|"               \
      -e "s|@hasnotxrd@|$hasnotxrd|"         \
-diff -Nur root-6.06.02.orig/core/base/inc/TROOT.h root-6.06.02/core/base/inc/TROOT.h
---- root-6.06.02.orig/core/base/inc/TROOT.h	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/inc/TROOT.h	2016-03-20 14:37:23.733597759 +0100
-@@ -325,7 +325,19 @@
+diff -Nur root-6.08.02.orig/core/base/inc/TROOT.h root-6.08.02/core/base/inc/TROOT.h
+--- root-6.08.02.orig/core/base/inc/TROOT.h	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/inc/TROOT.h	2016-12-06 12:46:10.307969611 +0100
+@@ -349,6 +349,21 @@
     static Int_t       ConvertVersionInt2Code(Int_t v);
     static Int_t       RootVersionCode();
     static const char**&GetExtraInterpreterArgs();
--   static const char *GetTutorialsDir();
 +
 +   static const TString& GetRootSys();
 +   static const TString& GetBinDir();
@@ -361,17 +377,19 @@ diff -Nur root-6.06.02.orig/core/base/inc/TROOT.h root-6.06.02/core/base/inc/TRO
 +   static const TString& GetDataDir();
 +   static const TString& GetDocDir();
 +   static const TString& GetMacroDir();
-+   static const TString& GetTutorialsDir();
++   static const TString& GetTutorialDir();
 +   static const TString& GetSourceDir();
 +   static const TString& GetIconPath();
 +   static const TString& GetTTFFontDir();
++
++   // Backward compatibility function - do not use for new code
+    static const char *GetTutorialsDir();
  
     ClassDef(TROOT,0)  //Top level (or root) structure for all classes
- };
-diff -Nur root-6.06.02.orig/core/base/src/TApplication.cxx root-6.06.02/core/base/src/TApplication.cxx
---- root-6.06.02.orig/core/base/src/TApplication.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/src/TApplication.cxx	2016-03-20 14:37:23.734597768 +0100
-@@ -268,11 +268,7 @@
+diff -Nur root-6.08.02.orig/core/base/src/TApplication.cxx root-6.08.02/core/base/src/TApplication.cxx
+--- root-6.08.02.orig/core/base/src/TApplication.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/src/TApplication.cxx	2016-12-06 12:46:10.308969599 +0100
+@@ -276,11 +276,7 @@
     // mode and Root.UseTTFonts is true and Root.TTFontPath exists. Abort silently
     // if libttf or libGX11TTF are not found in $ROOTSYS/lib or $ROOTSYS/ttf/lib.
     const char *ttpath = gEnv->GetValue("Root.TTFontPath",
@@ -384,7 +402,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TApplication.cxx root-6.06.02/core/bas
     char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
     // Check for use of DFSG - fonts
     if (!ttfont)
-@@ -880,29 +876,19 @@
+@@ -888,29 +884,19 @@
           Error("ProcessLine", "Cannot show demos in batch mode!");
           return 1;
        }
@@ -393,7 +411,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TApplication.cxx root-6.06.02/core/bas
 -#else
 -      ProcessLine(".x $(ROOTSYS)/tutorials/demos.C");
 -#endif
-+      ProcessLine(".x " + TROOT::GetTutorialsDir() + "/demos.C");
++      ProcessLine(".x " + TROOT::GetTutorialDir() + "/demos.C");
        return 0;
     }
  
@@ -420,10 +438,10 @@ diff -Nur root-6.06.02.orig/core/base/src/TApplication.cxx root-6.06.02/core/bas
     }
  
     if (!strncmp(line, ".pwd", 4)) {
-diff -Nur root-6.06.02.orig/core/base/src/TEnv.cxx root-6.06.02/core/base/src/TEnv.cxx
---- root-6.06.02.orig/core/base/src/TEnv.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/src/TEnv.cxx	2016-03-20 14:37:23.734597768 +0100
-@@ -399,21 +399,7 @@
+diff -Nur root-6.08.02.orig/core/base/src/TEnv.cxx root-6.08.02/core/base/src/TEnv.cxx
+--- root-6.08.02.orig/core/base/src/TEnv.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/src/TEnv.cxx	2016-12-06 12:46:10.308969599 +0100
+@@ -401,21 +401,7 @@
  
        TString sname = "system";
        sname += name;
@@ -446,7 +464,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TEnv.cxx root-6.06.02/core/base/src/TE
        ReadFile(s, kEnvGlobal);
        delete [] s;
        if (!gSystem->Getenv("ROOTENV_NO_HOME")) {
-@@ -683,17 +669,7 @@
+@@ -685,17 +671,7 @@
  
        TString sname = "system";
        sname += fRcName;
@@ -465,10 +483,10 @@ diff -Nur root-6.06.02.orig/core/base/src/TEnv.cxx root-6.06.02/core/base/src/TE
        rootrcdir = s;
        delete [] s;
     } else if (level == kEnvUser) {
-diff -Nur root-6.06.02.orig/core/base/src/TPluginManager.cxx root-6.06.02/core/base/src/TPluginManager.cxx
---- root-6.06.02.orig/core/base/src/TPluginManager.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/src/TPluginManager.cxx	2016-03-20 14:37:23.734597768 +0100
-@@ -468,6 +468,10 @@
+diff -Nur root-6.08.02.orig/core/base/src/TPluginManager.cxx root-6.08.02/core/base/src/TPluginManager.cxx
+--- root-6.08.02.orig/core/base/src/TPluginManager.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/src/TPluginManager.cxx	2016-12-06 12:46:10.308969599 +0100
+@@ -470,6 +470,10 @@
        TPH__IsReadingDirs() = kTRUE;
  
        TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
@@ -479,10 +497,10 @@ diff -Nur root-6.06.02.orig/core/base/src/TPluginManager.cxx root-6.06.02/core/b
  #ifdef WIN32
        dirs = plugindirs.Tokenize(";");
  #else
-diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/TROOT.cxx
---- root-6.06.02.orig/core/base/src/TROOT.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/src/TROOT.cxx	2016-03-20 14:37:23.735597777 +0100
-@@ -543,6 +543,22 @@
+diff -Nur root-6.08.02.orig/core/base/src/TROOT.cxx root-6.08.02/core/base/src/TROOT.cxx
+--- root-6.08.02.orig/core/base/src/TROOT.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/src/TROOT.cxx	2016-12-06 12:46:10.309969588 +0100
+@@ -643,6 +643,22 @@
     // Initialize Operating System interface
     InitSystem();
  
@@ -495,7 +513,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
 +   GetDataDir();
 +   GetDocDir();
 +   GetMacroDir();
-+   GetTutorialsDir();
++   GetTutorialDir();
 +   GetSourceDir();
 +   GetIconPath();
 +   GetTTFFontDir();
@@ -505,7 +523,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
     TDirectory::Build();
  
     // Initialize interface to CINT C++ interpreter
-@@ -1722,21 +1722,9 @@
+@@ -1876,21 +1892,9 @@
                 "after the call to TROOT::InitInterpreter()!");
        }
  
@@ -529,7 +547,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
  
        if (!gInterpreterLib) {
           TString err = dlerror();
-@@ -2082,22 +2070,7 @@
+@@ -2237,22 +2241,7 @@
  #endif
  
     TString gitinfo = "gitinfo.txt";
@@ -553,7 +571,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
  
     FILE *fp = fopen(filename, "r");
     if (fp) {
-@@ -2415,17 +2388,9 @@
+@@ -2570,17 +2559,9 @@
  #endif
        if (macroPath.Length() == 0)
  #if !defined(R__WIN32)
@@ -573,7 +591,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
  #endif
     }
  
-@@ -2521,14 +2486,252 @@
+@@ -2676,14 +2657,260 @@
  }
  
  ////////////////////////////////////////////////////////////////////////////////
@@ -748,7 +766,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
  
 -const char *TROOT::GetTutorialsDir()
 -{
-+const TString& TROOT::GetTutorialsDir() {
++const TString& TROOT::GetTutorialDir() {
  #ifdef ROOTTUTDIR
 -   return ROOTTUTDIR;
 -#else
@@ -767,8 +785,8 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
 +      const static TString roottutdir = ROOTTUTDIR;
 +      return roottutdir;
 +   }
-+#endif
-+}
+ #endif
+ }
 +
 +////////////////////////////////////////////////////////////////////////////////
 +/// Get the source directory in the installation. Static utility function.
@@ -830,12 +848,20 @@ diff -Nur root-6.06.02.orig/core/base/src/TROOT.cxx root-6.06.02/core/base/src/T
 +      const static TString ttffontdir = TTFFONTDIR;
 +      return ttffontdir;
 +   }
- #endif
- }
-diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src/TSystem.cxx
---- root-6.06.02.orig/core/base/src/TSystem.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/base/src/TSystem.cxx	2016-03-20 14:37:23.736597787 +0100
-@@ -1852,22 +1852,10 @@
++#endif
++}
++
++////////////////////////////////////////////////////////////////////////////////
++/// Get the tutorials directory in the installation. Static utility function.
++/// Backward compatibility function - do not use for new code
++
++const char *TROOT::GetTutorialsDir() {
++   return GetTutorialDir();
++}
+diff -Nur root-6.08.02.orig/core/base/src/TSystem.cxx root-6.08.02/core/base/src/TSystem.cxx
+--- root-6.08.02.orig/core/base/src/TSystem.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/base/src/TSystem.cxx	2016-12-06 12:46:10.310969577 +0100
+@@ -1904,22 +1904,10 @@
        if (!system) {
           // Mark the library in $ROOTSYS/lib as system.
           const char *dirname = DirName(path);
@@ -860,7 +886,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src
           }
        }
  
-@@ -2492,12 +2480,9 @@
+@@ -2571,12 +2559,9 @@
  #else
     TString touch = "echo > "; touch += "\"" + depfilename + "\"";
  #endif
@@ -876,7 +902,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src
     builddep += depfilename;
     builddep += "\" -o_" + extension + "." + gSystem->GetSoExt() + " ";
     if (build_loc.BeginsWith(gSystem->WorkingDirectory())) {
-@@ -2519,12 +2504,7 @@
+@@ -2598,12 +2583,7 @@
        builddep += "/\" ";
     }
     builddep += " -Y -- ";
@@ -890,7 +916,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src
     builddep += " \"-I"+rootsysInclude+"\" "; // cflags
     builddep += includes;
     builddep += defines;
-@@ -3345,27 +3325,17 @@
+@@ -3434,27 +3414,17 @@
        TString name = ".rootmap";
        TString sname = "system.rootmap";
        TString file;
@@ -921,7 +947,7 @@ diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src
        mapfileStream << file << std::endl;
        AssignAndDelete(file, ConcatFileName(gSystem->HomeDirectory(), name) );
        mapfileStream << file << std::endl;
-@@ -3379,23 +3349,9 @@
+@@ -3468,23 +3438,9 @@
     mapfileStream.close();
  
     // ======= Generate the rootcling command line
@@ -948,10 +974,10 @@ diff -Nur root-6.06.02.orig/core/base/src/TSystem.cxx root-6.06.02/core/base/src
     rcling += mapfile;
     rcling += "\" -f \"";
     rcling.Append(dict).Append("\" -c -p ");
-diff -Nur root-6.06.02.orig/core/CMakeLists.txt root-6.06.02/core/CMakeLists.txt
---- root-6.06.02.orig/core/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/CMakeLists.txt	2016-03-20 14:37:23.736597787 +0100
-@@ -66,14 +66,14 @@
+diff -Nur root-6.08.02.orig/core/CMakeLists.txt root-6.08.02/core/CMakeLists.txt
+--- root-6.08.02.orig/core/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/CMakeLists.txt	2016-12-06 12:46:10.310969577 +0100
+@@ -63,14 +63,14 @@
                       COMMAND ${CMAKE_SOURCE_DIR}/build/win/gitinfo.bat ${CMAKE_SOURCE_DIR}
                       COMMAND ${CMAKE_SOURCE_DIR}/build/win/githeader.bat RGitCommit.h.tmp
                       COMMENT "Recording the git revision now"
@@ -968,10 +994,10 @@ diff -Nur root-6.06.02.orig/core/CMakeLists.txt root-6.06.02/core/CMakeLists.txt
                       WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
  endif()
  add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp)
-diff -Nur root-6.06.02.orig/core/meta/src/TClass.cxx root-6.06.02/core/meta/src/TClass.cxx
---- root-6.06.02.orig/core/meta/src/TClass.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/meta/src/TClass.cxx	2016-03-20 14:37:23.737597796 +0100
-@@ -1719,17 +1719,7 @@
+diff -Nur root-6.08.02.orig/core/meta/src/TClass.cxx root-6.08.02/core/meta/src/TClass.cxx
+--- root-6.08.02.orig/core/meta/src/TClass.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/meta/src/TClass.cxx	2016-12-06 12:46:10.311969565 +0100
+@@ -1722,17 +1722,7 @@
  {
     static const char *suffix = "class.rules";
     TString sname = suffix;
@@ -990,41 +1016,43 @@ diff -Nur root-6.06.02.orig/core/meta/src/TClass.cxx root-6.06.02/core/meta/src/
  
     Int_t res = -1;
  
-diff -Nur root-6.06.02.orig/core/meta/src/TCling.cxx root-6.06.02/core/meta/src/TCling.cxx
---- root-6.06.02.orig/core/meta/src/TCling.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/meta/src/TCling.cxx	2016-03-20 14:37:23.739597815 +0100
-@@ -1049,10 +1049,10 @@
+diff -Nur root-6.08.02.orig/core/meta/src/TCling.cxx root-6.08.02/core/meta/src/TCling.cxx
+--- root-6.08.02.orig/core/meta/src/TCling.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/meta/src/TCling.cxx	2016-12-06 12:46:10.313969543 +0100
+@@ -1056,27 +1056,26 @@
+    std::vector<std::string> clingArgsStorage;
+    clingArgsStorage.push_back("cling4root");
+ 
+-   std::string interpInclude;
+    // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
     if (!fromRootCling) {
        ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
  
--      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+       // Add -I early so ASTReader can find the headers.
+-      std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
 -      clingArgsStorage.push_back(interpInclude);
-+      interpInclude = TROOT::GetEtcDir();
++      std::string interpInclude(TROOT::GetEtcDir());
 +      clingArgsStorage.push_back("-I" + interpInclude);
+ 
+       // Add include path to etc/cling. FIXME: This is a short term solution. The
+       // llvm/clang header files shouldn't be there at all. We have to get rid of
+       // that dependency and avoid copying the header files.
+-      clingArgsStorage.push_back(interpInclude + "/cling");
++      clingArgsStorage.push_back("-I" + interpInclude + "/cling");
+ 
+       // Add the root include directory and etc/ to list searched by default.
+-      clingArgsStorage.push_back(std::string("-I") + ROOT::TMetaUtils::GetROOTIncludeDir(false));
++      clingArgsStorage.push_back(std::string("-I" + TROOT::GetIncludeDir()));
+ 
+       // Add the current path to the include path
+       // TCling::AddIncludePath(".");
  
 -      std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
 +      std::string pchFilename = interpInclude + "/allDict.cxx.pch";
        if (gSystem->Getenv("ROOT_PCH")) {
           pchFilename = gSystem->Getenv("ROOT_PCH");
        }
-@@ -1063,14 +1063,8 @@
-       // clingArgsStorage.push_back("-fmodules");
- 
-       std::string include;
--#ifndef ROOTINCDIR
--      include = gSystem->Getenv("ROOTSYS");
--      include += "/include";
--#else // ROOTINCDIR
--      include = ROOTINCDIR;
--#endif // ROOTINCDIR
--      clingArgsStorage.push_back("-I");
--      clingArgsStorage.push_back(include);
-+      include = TROOT::GetIncludeDir();
-+      clingArgsStorage.push_back("-I" + include);
-       clingArgsStorage.push_back("-Wno-undefined-inline");
-       clingArgsStorage.push_back("-fsigned-char");
-    }
-@@ -1080,7 +1074,11 @@
+@@ -1095,7 +1094,11 @@
             eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
        interpArgs.push_back(iArg->c_str());
  
@@ -1037,7 +1065,7 @@ diff -Nur root-6.06.02.orig/core/meta/src/TCling.cxx root-6.06.02/core/meta/src/
     // Add statically injected extra arguments, usually coming from rootcling.
     for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
          extraArgs && *extraArgs; ++extraArgs) {
-@@ -1094,7 +1092,7 @@
+@@ -1109,7 +1112,7 @@
  
     fInterpreter = new cling::Interpreter(interpArgs.size(),
                                           &(interpArgs[0]),
@@ -1046,23 +1074,7 @@ diff -Nur root-6.06.02.orig/core/meta/src/TCling.cxx root-6.06.02/core/meta/src/
  
     if (!fromRootCling) {
        fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
-@@ -1103,13 +1101,13 @@
-       // llvm/clang header files shouldn't be there at all. We have to get rid of
-       // that dependency and avoid copying the header files.
-       // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
--      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
-+      TCling::AddIncludePath((interpInclude + "/cling").c_str());
- 
-       // Add the current path to the include path
-       // TCling::AddIncludePath(".");
- 
-       // Add the root include directory and etc/ to list searched by default.
--      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
-+      TCling::AddIncludePath(TROOT::GetIncludeDir());
-    }
- 
-    // Don't check whether modules' files exist.
-@@ -4515,21 +4513,7 @@
+@@ -4722,21 +4725,7 @@
  
     TString sname = "system";
     sname += name;
@@ -1085,10 +1097,10 @@ diff -Nur root-6.06.02.orig/core/meta/src/TCling.cxx root-6.06.02/core/meta/src/
  
     Int_t ret = ReadRootmapFile(s);
     if (ret == -3) // old format
-diff -Nur root-6.06.02.orig/core/metautils/inc/TMetaUtils.h root-6.06.02/core/metautils/inc/TMetaUtils.h
---- root-6.06.02.orig/core/metautils/inc/TMetaUtils.h	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/metautils/inc/TMetaUtils.h	2016-03-20 14:37:23.739597815 +0100
-@@ -339,10 +339,6 @@
+diff -Nur root-6.08.02.orig/core/metautils/inc/TMetaUtils.h root-6.08.02/core/metautils/inc/TMetaUtils.h
+--- root-6.08.02.orig/core/metautils/inc/TMetaUtils.h	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/metautils/inc/TMetaUtils.h	2016-12-06 12:46:10.313969543 +0100
+@@ -334,10 +334,6 @@
  //______________________________________________________________________________
  llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
  
@@ -1099,7 +1111,7 @@ diff -Nur root-6.06.02.orig/core/metautils/inc/TMetaUtils.h root-6.06.02/core/me
  enum class EIOCtorCategory : short {kAbsent, kDefault, kIOPtrType, kIORefType};
  
  //______________________________________________________________________________
-@@ -549,18 +545,6 @@
+@@ -544,18 +540,6 @@
                                   const char* headers[]);
  
  //______________________________________________________________________________
@@ -1118,10 +1130,10 @@ diff -Nur root-6.06.02.orig/core/metautils/inc/TMetaUtils.h root-6.06.02/core/me
  // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
  // that can be used in C++ as a variable name.
  void GetCppName(std::string &output, const char *input);
-diff -Nur root-6.06.02.orig/core/metautils/src/TMetaUtils.cxx root-6.06.02/core/metautils/src/TMetaUtils.cxx
---- root-6.06.02.orig/core/metautils/src/TMetaUtils.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/metautils/src/TMetaUtils.cxx	2016-03-20 14:37:23.740597824 +0100
-@@ -3407,40 +3407,6 @@
+diff -Nur root-6.08.02.orig/core/metautils/src/TMetaUtils.cxx root-6.08.02/core/metautils/src/TMetaUtils.cxx
+--- root-6.08.02.orig/core/metautils/src/TMetaUtils.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/metautils/src/TMetaUtils.cxx	2016-12-06 12:46:10.314969531 +0100
+@@ -3303,40 +3303,6 @@
  }
  
  ////////////////////////////////////////////////////////////////////////////////
@@ -1162,7 +1174,7 @@ diff -Nur root-6.06.02.orig/core/metautils/src/TMetaUtils.cxx root-6.06.02/core/
  /// Get the template specialisation decl and template decl behind the qualtype
  /// Returns true if successfully found, false otherwise
  
-@@ -3957,29 +3923,6 @@
+@@ -3967,29 +3933,6 @@
  }
  
  ////////////////////////////////////////////////////////////////////////////////
@@ -1192,10 +1204,10 @@ diff -Nur root-6.06.02.orig/core/metautils/src/TMetaUtils.cxx root-6.06.02/core/
  /// Return the dictionary file name for a module
  
  std::string ROOT::TMetaUtils::GetModuleFileName(const char* moduleName)
-diff -Nur root-6.06.02.orig/core/rint/src/TRint.cxx root-6.06.02/core/rint/src/TRint.cxx
---- root-6.06.02.orig/core/rint/src/TRint.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/rint/src/TRint.cxx	2016-03-20 14:37:23.740597824 +0100
-@@ -301,17 +301,7 @@
+diff -Nur root-6.08.02.orig/core/rint/src/TRint.cxx root-6.08.02/core/rint/src/TRint.cxx
+--- root-6.08.02.orig/core/rint/src/TRint.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/rint/src/TRint.cxx	2016-12-06 12:46:10.314969531 +0100
+@@ -305,17 +305,7 @@
     TString name = ".rootlogon.C";
     TString sname = "system";
     sname += name;
@@ -1214,10 +1226,10 @@ diff -Nur root-6.06.02.orig/core/rint/src/TRint.cxx root-6.06.02/core/rint/src/T
     if (!gSystem->AccessPathName(s, kReadPermission)) {
        ProcessFile(s);
     }
-diff -Nur root-6.06.02.orig/core/rint/src/TTabCom.cxx root-6.06.02/core/rint/src/TTabCom.cxx
---- root-6.06.02.orig/core/rint/src/TTabCom.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/rint/src/TTabCom.cxx	2016-03-20 14:37:23.741597834 +0100
-@@ -1663,8 +1663,7 @@
+diff -Nur root-6.08.02.orig/core/rint/src/TTabCom.cxx root-6.08.02/core/rint/src/TTabCom.cxx
+--- root-6.08.02.orig/core/rint/src/TTabCom.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/rint/src/TTabCom.cxx	2016-12-06 12:46:10.315969520 +0100
+@@ -1671,8 +1671,7 @@
     case kROOT_Load:
        {
           const TString fileName = s3("[^\"]*$");
@@ -1227,10 +1239,10 @@ diff -Nur root-6.06.02.orig/core/rint/src/TTabCom.cxx root-6.06.02/core/rint/src
           const TSeqCollection *pListOfFiles = GetListOfFilesInPath(dynamicPath);
  
  //             pos = Complete( "[^\"/]*$", pListOfFiles, "\");", out);
-diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix/src/TUnixSystem.cxx
---- root-6.06.02.orig/core/unix/src/TUnixSystem.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/unix/src/TUnixSystem.cxx	2016-03-20 14:37:23.742597843 +0100
-@@ -445,7 +445,9 @@
+diff -Nur root-6.08.02.orig/core/unix/src/TUnixSystem.cxx root-6.08.02/core/unix/src/TUnixSystem.cxx
+--- root-6.08.02.orig/core/unix/src/TUnixSystem.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/unix/src/TUnixSystem.cxx	2016-12-06 12:46:10.316969509 +0100
+@@ -458,7 +458,9 @@
  
  static void SetRootSys()
  {
@@ -1241,7 +1253,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
     void *addr = (void *)SetRootSys;
     Dl_info info;
     if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
-@@ -458,8 +460,8 @@
+@@ -471,8 +473,8 @@
           gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
        }
     }
@@ -1252,7 +1264,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  #endif
  }
  #endif
-@@ -487,7 +489,9 @@
+@@ -500,7 +502,9 @@
     TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
     TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
  
@@ -1263,7 +1275,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
     // first loaded is the app so set ROOTSYS to app bundle
     if (i == 1) {
-@@ -513,6 +517,8 @@
+@@ -526,6 +530,8 @@
        }
     }
  #endif
@@ -1272,7 +1284,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  #endif
  
     // when libSystem.B.dylib is loaded we have finished loading all dylibs
-@@ -600,13 +606,8 @@
+@@ -613,13 +619,8 @@
     SetRootSys();
  #endif
  
@@ -1288,7 +1300,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  
     return kFALSE;
  }
-@@ -2138,22 +2140,17 @@
+@@ -2240,22 +2241,17 @@
        if (AccessPathName(gdbscript, kReadPermission)) {
           fprintf(stderr, "Root.StacktraceScript %s does not exist\n", gdbscript.Data());
           gdbscript = "";
@@ -1314,7 +1326,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
  
     TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
     gdbmess = gdbmess.Strip();
-@@ -4471,11 +4468,7 @@
+@@ -4602,11 +4598,7 @@
        TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
        rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
        if (rdynpath.IsNull()) {
@@ -1327,7 +1339,7 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
        }
        TString ldpath;
  #if defined (R__AIX)
-@@ -4496,16 +4489,9 @@
+@@ -4627,16 +4619,9 @@
        else {
           dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
        }
@@ -1346,10 +1358,10 @@ diff -Nur root-6.06.02.orig/core/unix/src/TUnixSystem.cxx root-6.06.02/core/unix
        if (gCling) {
           dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
        } else
-diff -Nur root-6.06.02.orig/core/utils/CMakeLists.txt root-6.06.02/core/utils/CMakeLists.txt
---- root-6.06.02.orig/core/utils/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/utils/CMakeLists.txt	2016-03-20 14:37:23.742597843 +0100
-@@ -64,27 +64,27 @@
+diff -Nur root-6.08.02.orig/core/utils/CMakeLists.txt root-6.08.02/core/utils/CMakeLists.txt
+--- root-6.08.02.orig/core/utils/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/utils/CMakeLists.txt	2016-12-06 12:46:10.316969509 +0100
+@@ -66,27 +66,27 @@
                      DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
  endif()
  
@@ -1383,9 +1395,9 @@ diff -Nur root-6.06.02.orig/core/utils/CMakeLists.txt root-6.06.02/core/utils/CM
  add_dependencies(rootcling_tmp CLING LLVMRES)
  set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
  set_source_files_properties(src/TModuleGenerator.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
-diff -Nur root-6.06.02.orig/core/utils/ModuleVars.mk root-6.06.02/core/utils/ModuleVars.mk
---- root-6.06.02.orig/core/utils/ModuleVars.mk	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/utils/ModuleVars.mk	2016-03-20 14:37:23.742597843 +0100
+diff -Nur root-6.08.02.orig/core/utils/ModuleVars.mk root-6.08.02/core/utils/ModuleVars.mk
+--- root-6.08.02.orig/core/utils/ModuleVars.mk	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/utils/ModuleVars.mk	2016-12-06 12:46:10.316969509 +0100
 @@ -48,7 +48,7 @@
  ROOTCINTEXE     := bin/rootcint$(EXEEXT)
  GENREFLEXEXE    := bin/genreflex$(EXEEXT)
@@ -1395,10 +1407,10 @@ diff -Nur root-6.06.02.orig/core/utils/ModuleVars.mk root-6.06.02/core/utils/Mod
  
  ##### Dependencies for all dictionaries
  ROOTCLINGSTAGE1DEP := $(ROOTCLINGTMPEXE)
-diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils/src/rootcling.cxx
---- root-6.06.02.orig/core/utils/src/rootcling.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/utils/src/rootcling.cxx	2016-03-20 14:37:23.744597862 +0100
-@@ -295,12 +295,6 @@
+diff -Nur root-6.08.02.orig/core/utils/src/rootcling.cxx root-6.08.02/core/utils/src/rootcling.cxx
+--- root-6.08.02.orig/core/utils/src/rootcling.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/utils/src/rootcling.cxx	2016-12-06 12:46:10.317969497 +0100
+@@ -270,12 +270,6 @@
  bool buildingROOT = false;
  #endif
  
@@ -1411,7 +1423,7 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
  namespace {
     // Copy-pasted from TClass.h We cannot #include TClass.h because we are compiling in -fno-rtti mode
     template <typename T> struct IsPointerTClassCopy {
-@@ -3977,11 +3971,6 @@
+@@ -3909,11 +3903,6 @@
        clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
     }
  
@@ -1423,7 +1435,7 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
     if (ic < argc && !strcmp(argv[ic], "-c")) {
        // Simply ignore the -c options.
        ic++;
-@@ -4131,7 +4120,11 @@
+@@ -4069,7 +4058,11 @@
     }
  
     ic = nextStart;
@@ -1436,7 +1448,7 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
  
     std::vector<std::string> pcmArgs;
     for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
-@@ -4140,7 +4133,11 @@
+@@ -4093,7 +4086,11 @@
     }
  
     // cling-only arguments
@@ -1449,7 +1461,7 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
     // We do not want __ROOTCLING__ in the pch!
     if (!onepcm) {
        clingArgs.push_back("-D__ROOTCLING__");
-@@ -4162,10 +4159,14 @@
+@@ -4118,10 +4115,14 @@
     }
  
     std::string resourceDir;
@@ -1467,7 +1479,7 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
  #endif
  
  #ifndef ROOT_STAGE1_BUILD
-@@ -4184,11 +4185,6 @@
+@@ -4162,11 +4163,6 @@
  
     interp.getOptions().ErrorOut = true;
     interp.enableRawInput(true);
@@ -1479,8 +1491,8 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
     if (isGenreflex) {
        if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
           // There was an error.
-@@ -4205,17 +4201,10 @@
-                               "#include <math.h>\n"
+@@ -4182,17 +4178,10 @@
+                               "#include <stddef.h>\n"
                                "#include <string.h>\n"
                               ) != cling::Interpreter::kSuccess
 -            || (!useROOTINCDIR
@@ -1501,10 +1513,10 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootcling.cxx root-6.06.02/core/utils
           ) {
           // There was an error.
           ROOT::TMetaUtils::Error(0, "Error loading the default header files.\n");
-diff -Nur root-6.06.02.orig/core/utils/src/rootclingTCling.cxx root-6.06.02/core/utils/src/rootclingTCling.cxx
---- root-6.06.02.orig/core/utils/src/rootclingTCling.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/utils/src/rootclingTCling.cxx	2016-03-20 14:37:23.744597862 +0100
-@@ -37,6 +37,18 @@
+diff -Nur root-6.08.02.orig/core/utils/src/rootclingTCling.cxx root-6.08.02/core/utils/src/rootclingTCling.cxx
+--- root-6.08.02.orig/core/utils/src/rootclingTCling.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/utils/src/rootclingTCling.cxx	2016-12-06 12:46:10.317969497 +0100
+@@ -40,6 +40,18 @@
  }
  
  extern "C"
@@ -1522,10 +1534,10 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootclingTCling.cxx root-6.06.02/core
 +extern "C"
  cling::Interpreter *TCling__GetInterpreter()
  {
-    static bool sInitialized = false;
-diff -Nur root-6.06.02.orig/core/utils/src/rootclingTCling.h root-6.06.02/core/utils/src/rootclingTCling.h
---- root-6.06.02.orig/core/utils/src/rootclingTCling.h	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/utils/src/rootclingTCling.h	2016-03-20 14:37:23.744597862 +0100
+    static bool isInitialized = false;
+diff -Nur root-6.08.02.orig/core/utils/src/rootclingTCling.h root-6.08.02/core/utils/src/rootclingTCling.h
+--- root-6.08.02.orig/core/utils/src/rootclingTCling.h	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/utils/src/rootclingTCling.h	2016-12-06 12:46:10.318969486 +0100
 @@ -21,6 +21,8 @@
  
  extern "C" {
@@ -1535,9 +1547,9 @@ diff -Nur root-6.06.02.orig/core/utils/src/rootclingTCling.h root-6.06.02/core/u
     cling::Interpreter *TCling__GetInterpreter();
     void InitializeStreamerInfoROOTFile(const char *filename);
     void AddStreamerInfoToROOTFile(const char *normName);
-diff -Nur root-6.06.02.orig/core/winnt/src/TWinNTSystem.cxx root-6.06.02/core/winnt/src/TWinNTSystem.cxx
---- root-6.06.02.orig/core/winnt/src/TWinNTSystem.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/winnt/src/TWinNTSystem.cxx	2016-03-20 14:37:23.745597871 +0100
+diff -Nur root-6.08.02.orig/core/winnt/src/TWinNTSystem.cxx root-6.08.02/core/winnt/src/TWinNTSystem.cxx
+--- root-6.08.02.orig/core/winnt/src/TWinNTSystem.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/winnt/src/TWinNTSystem.cxx	2016-12-06 12:46:10.318969486 +0100
 @@ -362,11 +362,7 @@
           TString rdynpath = gEnv ? gEnv->GetValue("Root.DynamicPath", (char*)0) : "";
           rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
@@ -1643,10 +1655,10 @@ diff -Nur root-6.06.02.orig/core/winnt/src/TWinNTSystem.cxx root-6.06.02/core/wi
  
     // Increase the accuracy of Sleep() without needing to link to winmm.lib
     typedef UINT (WINAPI* LPTIMEBEGINPERIOD)( UINT uPeriod );
-diff -Nur root-6.06.02.orig/core/zip/CMakeLists.txt root-6.06.02/core/zip/CMakeLists.txt
---- root-6.06.02.orig/core/zip/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/core/zip/CMakeLists.txt	2016-03-20 14:37:23.745597871 +0100
-@@ -50,6 +50,7 @@
+diff -Nur root-6.08.02.orig/core/zip/CMakeLists.txt root-6.08.02/core/zip/CMakeLists.txt
+--- root-6.08.02.orig/core/zip/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/core/zip/CMakeLists.txt	2016-12-06 12:46:10.319969475 +0100
+@@ -22,6 +22,7 @@
  # Define all the header files which should be installed when
  # doing a "make install"
  install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
@@ -1654,10 +1666,22 @@ diff -Nur root-6.06.02.orig/core/zip/CMakeLists.txt root-6.06.02/core/zip/CMakeL
  set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
  
  ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})
-diff -Nur root-6.06.02.orig/geom/geom/src/TGeoElement.cxx root-6.06.02/geom/geom/src/TGeoElement.cxx
---- root-6.06.02.orig/geom/geom/src/TGeoElement.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/geom/geom/src/TGeoElement.cxx	2016-03-20 14:37:23.746597881 +0100
-@@ -24,6 +24,7 @@
+diff -Nur root-6.08.02.orig/documentation/doxygen/converttonotebook.py root-6.08.02/documentation/doxygen/converttonotebook.py
+--- root-6.08.02.orig/documentation/doxygen/converttonotebook.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/documentation/doxygen/converttonotebook.py	2016-12-06 12:46:10.319969475 +0100
+@@ -601,7 +601,7 @@
+ def rs401dGetFiles(code):
+     if tutName == "rs401d_FeldmanCousins":
+         code = code.replace(
+-         """#if !defined(__CINT__) || defined(__MAKECINT__)\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n#endif""" , """std::string tutDir = gROOT->GetTutorialsDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.c_str());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.c_str());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
++         """#if !defined(__CINT__) || defined(__MAKECINT__)\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly\n#else\n#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly\n#endif""" , """TString tutDir = gROOT->GetTutorialDir();\nTString headerDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.h\\\"", tutDir.Data());\nTString impDir = TString::Format("#include \\\"%s/roostats/NuMuToNuE_Oscillation.cxx\\\"", tutDir.Data());\ngROOT->ProcessLine(headerDir);\ngROOT->ProcessLine(impDir);""")
+     return code
+ 
+ 
+diff -Nur root-6.08.02.orig/geom/geom/src/TGeoElement.cxx root-6.08.02/geom/geom/src/TGeoElement.cxx
+--- root-6.08.02.orig/geom/geom/src/TGeoElement.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/geom/geom/src/TGeoElement.cxx	2016-12-06 12:46:10.319969475 +0100
+@@ -39,6 +39,7 @@
  #include "Riostream.h"
  
  #include "TSystem.h"
@@ -1665,7 +1689,7 @@ diff -Nur root-6.06.02.orig/geom/geom/src/TGeoElement.cxx root-6.06.02/geom/geom
  #include "TObjArray.h"
  #include "TVirtualGeoPainter.h"
  #include "TGeoManager.h"
-@@ -1113,12 +1114,8 @@
+@@ -1128,12 +1129,8 @@
  {
     if (HasRNElements()) return;
     TGeoElementRN *elem;
@@ -1680,27 +1704,18 @@ diff -Nur root-6.06.02.orig/geom/geom/src/TGeoElement.cxx root-6.06.02/geom/geom
     FILE *fp = fopen(rnf, "r");
     if (!fp) {
        Error("ImportElementsRN","File RadioNuclides.txt not found");
-diff -Nur root-6.06.02.orig/graf2d/asimage/src/TASImage.cxx root-6.06.02/graf2d/asimage/src/TASImage.cxx
---- root-6.06.02.orig/graf2d/asimage/src/TASImage.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/asimage/src/TASImage.cxx	2016-03-20 14:37:23.755597966 +0100
-@@ -359,33 +359,33 @@
+diff -Nur root-6.08.02.orig/graf2d/asimage/src/TASImage.cxx root-6.08.02/graf2d/asimage/src/TASImage.cxx
+--- root-6.08.02.orig/graf2d/asimage/src/TASImage.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/asimage/src/TASImage.cxx	2016-12-06 12:46:10.320969463 +0100
+@@ -357,33 +357,33 @@
  
  static void init_icon_paths()
  {
 -   const char *icons = "/icons";
 -#ifdef R__WIN32
 -      icons = "\\icons";
-+   TString icon_path = gEnv->GetValue("Gui.IconPath", "");
-+   if (icon_path.IsNull()) {
-+      icon_path = "icons";
-+      gSystem->PrependPathName(gSystem->HomeDirectory(), icon_path);
-+#ifndef R__WIN32
-+      icon_path = ".:" + icon_path + ":" + TROOT::GetIconPath() + ":" + EXTRAICONPATH;
-+#else
-+      icon_path = ".;" + icon_path + ";" + TROOT::GetIconPath() + ";" + EXTRAICONPATH;
- #endif
-+   }
- 
+-#endif
+-
 -   TString homeIcons = gSystem->HomeDirectory();
 -   homeIcons += icons;
 -
@@ -1716,6 +1731,19 @@ diff -Nur root-6.06.02.orig/graf2d/asimage/src/TASImage.cxx root-6.06.02/graf2d/
 -
 -#ifdef ROOTICONPATH
 -   gIconPaths[4] = StrDup(ROOTICONPATH);
++   TString icon_path = gEnv->GetValue("Gui.IconPath", "");
++   if (icon_path.IsNull()) {
++      icon_path = "icons";
++      gSystem->PrependPathName(gSystem->HomeDirectory(), icon_path);
++#ifndef R__WIN32
++      icon_path = ".:" + icon_path + ":" + TROOT::GetIconPath() + ":" + EXTRAICONPATH;
++#else
++      icon_path = ".;" + icon_path + ";" + TROOT::GetIconPath() + ";" + EXTRAICONPATH;
+ #endif
++   }
+ 
+-#ifdef EXTRAICONPATH
+-   gIconPaths[5] = StrDup(EXTRAICONPATH);
 +   Int_t cnt = 0;
 +   Ssiz_t from = 0;
 +   TString token;
@@ -1724,10 +1752,6 @@ diff -Nur root-6.06.02.orig/graf2d/asimage/src/TASImage.cxx root-6.06.02/graf2d/
 +#else
 +   const char *delim = "\\";
  #endif
--
--#ifdef EXTRAICONPATH
--   gIconPaths[5] = StrDup(EXTRAICONPATH);
--#endif
 -
 -   gIconPaths[6] = 0;
 +   while (icon_path.Tokenize(token, from, delim) && cnt < 6) {
@@ -1741,10 +1765,34 @@ diff -Nur root-6.06.02.orig/graf2d/asimage/src/TASImage.cxx root-6.06.02/graf2d/
  }
  
  ////////////////////////////////////////////////////////////////////////////////
-diff -Nur root-6.06.02.orig/graf2d/cocoa/src/QuartzWindow.mm root-6.06.02/graf2d/cocoa/src/QuartzWindow.mm
---- root-6.06.02.orig/graf2d/cocoa/src/QuartzWindow.mm	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/cocoa/src/QuartzWindow.mm	2016-03-20 14:37:23.762598032 +0100
-@@ -811,11 +811,7 @@
+@@ -2592,14 +2592,19 @@
+ 
+    TString fn = font_name;
+    fn.Strip();
+-   char *tmpstr = 0;
++
++   // This is for backward compatibility...
++   if (fn.Last('/') == 0) fn = fn(1, f.Length() - 1);
++
++   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
++                                       TROOT::GetTTFFontDir());
++   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
++   fn = tmpstr;
++   delete [] tmpstr;
+ 
+    if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
+-      tmpstr = gSystem->ExpandPathName(fn.Data());
+-      fn = tmpstr;
+       ttfont = kTRUE;
+    }
+-   delete [] tmpstr;
+ 
+    if (color) {
+       parse_argb_color(color, &text_color);
+diff -Nur root-6.08.02.orig/graf2d/cocoa/src/QuartzWindow.mm root-6.08.02/graf2d/cocoa/src/QuartzWindow.mm
+--- root-6.08.02.orig/graf2d/cocoa/src/QuartzWindow.mm	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/cocoa/src/QuartzWindow.mm	2016-12-06 12:46:10.321969452 +0100
+@@ -814,11 +814,7 @@
     }
  
     if (pngFileName) {
@@ -1757,7 +1805,7 @@ diff -Nur root-6.06.02.orig/graf2d/cocoa/src/QuartzWindow.mm root-6.06.02/graf2d
        const Util::ScopedArray<const char> arrayGuard(path);
  
        if (!path || path[0] == 0) {
-@@ -3077,11 +3073,7 @@
+@@ -3083,11 +3079,7 @@
     }
  
     if (pngFileName) {
@@ -1770,9 +1818,9 @@ diff -Nur root-6.06.02.orig/graf2d/cocoa/src/QuartzWindow.mm root-6.06.02/graf2d
        const Util::ScopedArray<const char> arrayGuard(path);
  
        if (!path || path[0] == 0) {
-diff -Nur root-6.06.02.orig/graf2d/gpad/src/TClassTree.cxx root-6.06.02/graf2d/gpad/src/TClassTree.cxx
---- root-6.06.02.orig/graf2d/gpad/src/TClassTree.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/gpad/src/TClassTree.cxx	2016-03-20 14:37:23.768598088 +0100
+diff -Nur root-6.08.02.orig/graf2d/gpad/src/TClassTree.cxx root-6.08.02/graf2d/gpad/src/TClassTree.cxx
+--- root-6.08.02.orig/graf2d/gpad/src/TClassTree.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/gpad/src/TClassTree.cxx	2016-12-06 12:46:10.321969452 +0100
 @@ -195,11 +195,7 @@
     fNdata    = 0;
     SetLabelDx();
@@ -1799,9 +1847,9 @@ diff -Nur root-6.06.02.orig/graf2d/gpad/src/TClassTree.cxx root-6.06.02/graf2d/g
  
     // draw list of classes (if specified)
     if (classes && strlen(classes)) {
-diff -Nur root-6.06.02.orig/graf2d/graf/src/TTF.cxx root-6.06.02/graf2d/graf/src/TTF.cxx
---- root-6.06.02.orig/graf2d/graf/src/TTF.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/graf/src/TTF.cxx	2016-03-20 14:37:23.775598154 +0100
+diff -Nur root-6.08.02.orig/graf2d/graf/src/TTF.cxx root-6.08.02/graf2d/graf/src/TTF.cxx
+--- root-6.08.02.orig/graf2d/graf/src/TTF.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/graf/src/TTF.cxx	2016-12-06 12:46:10.322969441 +0100
 @@ -15,12 +15,10 @@
  Interface to the freetype 2 library.
  */
@@ -1845,10 +1893,10 @@ diff -Nur root-6.06.02.orig/graf2d/graf/src/TTF.cxx root-6.06.02/graf2d/graf/src
        char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
        if (ttfont) {
           delete [] ttfont;
-diff -Nur root-6.06.02.orig/graf2d/postscript/src/TPostScript.cxx root-6.06.02/graf2d/postscript/src/TPostScript.cxx
---- root-6.06.02.orig/graf2d/postscript/src/TPostScript.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/postscript/src/TPostScript.cxx	2016-03-20 14:37:23.788598277 +0100
-@@ -1567,12 +1567,7 @@
+diff -Nur root-6.08.02.orig/graf2d/postscript/src/TPostScript.cxx root-6.08.02/graf2d/postscript/src/TPostScript.cxx
+--- root-6.08.02.orig/graf2d/postscript/src/TPostScript.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/postscript/src/TPostScript.cxx	2016-12-06 12:46:10.322969441 +0100
+@@ -1568,12 +1568,7 @@
  
     // try to load font (font must be in Root.TTFontPath resource)
     const char *ttpath = gEnv->GetValue("Root.TTFontPath",
@@ -1862,10 +1910,10 @@ diff -Nur root-6.06.02.orig/graf2d/postscript/src/TPostScript.cxx root-6.06.02/g
  
     for (Int_t fontid = 1; fontid < 30; fontid++) {
        if (fontid != 15 && MustEmbed[fontid-1]) {
-diff -Nur root-6.06.02.orig/graf2d/qt/src/TGQt.cxx root-6.06.02/graf2d/qt/src/TGQt.cxx
---- root-6.06.02.orig/graf2d/qt/src/TGQt.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf2d/qt/src/TGQt.cxx	2016-03-20 14:37:23.800598390 +0100
-@@ -699,13 +699,6 @@
+diff -Nur root-6.08.02.orig/graf2d/qt/src/TGQt.cxx root-6.08.02/graf2d/qt/src/TGQt.cxx
+--- root-6.08.02.orig/graf2d/qt/src/TGQt.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf2d/qt/src/TGQt.cxx	2016-12-06 12:46:10.323969430 +0100
+@@ -707,13 +707,6 @@
                            GetSystemMetrics(SM_CYSMICON));
     HDC dc = tempIcon->handle();
     DrawIcon (dc, 0, 0, icon);
@@ -1879,7 +1927,7 @@ diff -Nur root-6.06.02.orig/graf2d/qt/src/TGQt.cxx root-6.06.02/graf2d/qt/src/TG
  #endif
     return tempIcon;
  }
-@@ -795,13 +788,7 @@
+@@ -803,13 +796,7 @@
     static TQtApplication *app = 0;
     if (!app) {
        //    app = new TQtApplication(gApplication->ApplicationName(),gApplication->Argc(),gApplication->Argv());
@@ -1894,7 +1942,7 @@ diff -Nur root-6.06.02.orig/graf2d/qt/src/TGQt.cxx root-6.06.02/graf2d/qt/src/TG
        gSystem->ExpandPathName(argvString);
        static char *argv[] = {(char *)argvString.Data()};
        static int nArg = 1;
-@@ -989,14 +976,8 @@
+@@ -997,14 +984,8 @@
      }
  
      if (isXdfSupport && !symbolFontFound) {
@@ -1911,7 +1959,7 @@ diff -Nur root-6.06.02.orig/graf2d/qt/src/TGQt.cxx root-6.06.02/graf2d/qt/src/TG
          QString symbolFontFile = fontdir + "/" + QString(fSymbolFontFamily).toLower() + ".ttf";
          symbolFontFound = QFontDatabase::addApplicationFont(symbolFontFile);
      }
-@@ -1006,12 +987,7 @@
+@@ -1014,12 +995,7 @@
          fontFamily = fSymbolFontFamily = "Arial";
          qDebug() << " Substitute it with \""<<fontFamily <<"\"";
          qDebug() << " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
@@ -1925,9 +1973,9 @@ diff -Nur root-6.06.02.orig/graf2d/qt/src/TGQt.cxx root-6.06.02/graf2d/qt/src/TG
                   << "\" directory to get the proper support for ROOT TLatex class";
          // create a custom codec
          new QSymbolCodec();
-diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLFontManager.cxx root-6.06.02/graf3d/gl/src/TGLFontManager.cxx
---- root-6.06.02.orig/graf3d/gl/src/TGLFontManager.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf3d/gl/src/TGLFontManager.cxx	2016-03-20 14:37:23.800598390 +0100
+diff -Nur root-6.08.02.orig/graf3d/gl/src/TGLFontManager.cxx root-6.08.02/graf3d/gl/src/TGLFontManager.cxx
+--- root-6.08.02.orig/graf3d/gl/src/TGLFontManager.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf3d/gl/src/TGLFontManager.cxx	2016-12-06 12:46:10.323969430 +0100
 @@ -14,6 +14,7 @@
  #include "TGLFontManager.h"
  
@@ -1949,9 +1997,9 @@ diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLFontManager.cxx root-6.06.02/graf3d
        {
           //For extenede we have both ttf and otf.
           char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
-diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLSAViewer.cxx root-6.06.02/graf3d/gl/src/TGLSAViewer.cxx
---- root-6.06.02.orig/graf3d/gl/src/TGLSAViewer.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf3d/gl/src/TGLSAViewer.cxx	2016-03-20 14:37:23.801598400 +0100
+diff -Nur root-6.08.02.orig/graf3d/gl/src/TGLSAViewer.cxx root-6.08.02/graf3d/gl/src/TGLSAViewer.cxx
+--- root-6.08.02.orig/graf3d/gl/src/TGLSAViewer.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf3d/gl/src/TGLSAViewer.cxx	2016-12-06 12:46:10.323969430 +0100
 @@ -669,14 +669,7 @@
           switch (parm1) {
           case kGLHelpAbout: {
@@ -1968,9 +2016,9 @@ diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLSAViewer.cxx root-6.06.02/graf3d/gl
              gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLText.cxx root-6.06.02/graf3d/gl/src/TGLText.cxx
---- root-6.06.02.orig/graf3d/gl/src/TGLText.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/graf3d/gl/src/TGLText.cxx	2016-03-20 14:37:23.801598400 +0100
+diff -Nur root-6.08.02.orig/graf3d/gl/src/TGLText.cxx root-6.08.02/graf3d/gl/src/TGLText.cxx
+--- root-6.08.02.orig/graf3d/gl/src/TGLText.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/graf3d/gl/src/TGLText.cxx	2016-12-06 12:46:10.323969430 +0100
 @@ -197,13 +197,7 @@
  
     // try to load font (font must be in Root.TTFontPath resource)
@@ -1986,9 +2034,9 @@ diff -Nur root-6.06.02.orig/graf3d/gl/src/TGLText.cxx root-6.06.02/graf3d/gl/src
     char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
  
     if (fGLTextFont) delete fGLTextFont;
-diff -Nur root-6.06.02.orig/gui/gui/src/TGApplication.cxx root-6.06.02/gui/gui/src/TGApplication.cxx
---- root-6.06.02.orig/gui/gui/src/TGApplication.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TGApplication.cxx	2016-03-20 14:37:23.801598400 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TGApplication.cxx root-6.08.02/gui/gui/src/TGApplication.cxx
+--- root-6.08.02.orig/gui/gui/src/TGApplication.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TGApplication.cxx	2016-12-06 12:46:10.324969418 +0100
 @@ -84,12 +84,7 @@
  
     if (strcmp(appClassName, "proofserv")) {
@@ -2003,9 +2051,9 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TGApplication.cxx root-6.06.02/gui/gui/s
        char *ttfont = gSystem->Which(ttpath, "arialbd.ttf", kReadPermission);
        // Added by cholm for use of DFSG - fonts - based on fix by Kevin
        if (!ttfont)
-diff -Nur root-6.06.02.orig/gui/gui/src/TGResourcePool.cxx root-6.06.02/gui/gui/src/TGResourcePool.cxx
---- root-6.06.02.orig/gui/gui/src/TGResourcePool.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TGResourcePool.cxx	2016-03-20 14:37:23.802598409 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TGResourcePool.cxx root-6.08.02/gui/gui/src/TGResourcePool.cxx
+--- root-6.08.02.orig/gui/gui/src/TGResourcePool.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TGResourcePool.cxx	2016-12-06 12:46:10.324969418 +0100
 @@ -83,46 +83,29 @@
     TString framebgpixmap  = gEnv->GetValue("Gui.FrameBackgroundPixmap", "");
     TString docbgpixmap    = gEnv->GetValue("Gui.DocumentBackgroundPixmap", "");
@@ -2069,9 +2117,42 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TGResourcePool.cxx root-6.06.02/gui/gui/
  
     // Setup colors...
     fClient->GetColorByName("white", fWhite);  // white and black always exist
-diff -Nur root-6.06.02.orig/gui/gui/src/TGTextEditor.cxx root-6.06.02/gui/gui/src/TGTextEditor.cxx
---- root-6.06.02.orig/gui/gui/src/TGTextEditor.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TGTextEditor.cxx	2016-03-20 14:37:23.802598409 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TGSpeedo.cxx root-6.08.02/gui/gui/src/TGSpeedo.cxx
+--- root-6.08.02.orig/gui/gui/src/TGSpeedo.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TGSpeedo.cxx	2016-12-06 12:46:10.324969418 +0100
+@@ -119,8 +119,7 @@
+ {
+    TString sc;
+    Float_t step, mark[5];
+-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-   TString ar = fp + "/arialbd.ttf";
++   TString ar = "arialbd.ttf";
+    Int_t i, nexe, offset;
+ 
+    const TGFont *counterFont = fClient->GetFont("-*-helvetica-bold-r-*-*-12-*-*-*-*-*-*-*");
+@@ -528,8 +527,7 @@
+          delete fImage2;
+       fImage2 = (TImage*)fImage->Clone("fImage2");
+       if (!fImage2 || !fImage2->IsValid()) return;
+-      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-      TString ar = fp + "/arialbd.ttf";
++      TString ar = "arialbd.ttf";
+       // format counter value
+       Int_t nexe = 0;
+       Int_t ww = fCounter;
+@@ -609,8 +607,7 @@
+          delete fImage2;
+       fImage2 = (TImage*)fImage->Clone("fImage2");
+       if (!fImage2 || !fImage2->IsValid()) return;
+-      TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-      TString ar = fp + "/arialbd.ttf";
++      TString ar = "arialbd.ttf";
+       // format counter value
+       Int_t nexe = 0;
+       Int_t ww = fCounter;
+diff -Nur root-6.08.02.orig/gui/gui/src/TGTextEditor.cxx root-6.08.02/gui/gui/src/TGTextEditor.cxx
+--- root-6.08.02.orig/gui/gui/src/TGTextEditor.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TGTextEditor.cxx	2016-12-06 12:46:10.324969418 +0100
 @@ -842,14 +842,7 @@
  void TGTextEditor::About()
  {
@@ -2088,9 +2169,9 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TGTextEditor.cxx root-6.06.02/gui/gui/sr
     gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/gui/gui/src/TRootBrowser.cxx root-6.06.02/gui/gui/src/TRootBrowser.cxx
---- root-6.06.02.orig/gui/gui/src/TRootBrowser.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TRootBrowser.cxx	2016-03-20 14:37:23.802598409 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TRootBrowser.cxx root-6.08.02/gui/gui/src/TRootBrowser.cxx
+--- root-6.08.02.orig/gui/gui/src/TRootBrowser.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TRootBrowser.cxx	2016-12-06 12:46:10.325969407 +0100
 @@ -702,14 +702,7 @@
        case kHelpAbout:
           {
@@ -2107,9 +2188,9 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TRootBrowser.cxx root-6.06.02/gui/gui/sr
              gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/gui/gui/src/TRootBrowserLite.cxx root-6.06.02/gui/gui/src/TRootBrowserLite.cxx
---- root-6.06.02.orig/gui/gui/src/TRootBrowserLite.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TRootBrowserLite.cxx	2016-03-20 14:37:23.803598419 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TRootBrowserLite.cxx root-6.08.02/gui/gui/src/TRootBrowserLite.cxx
+--- root-6.08.02.orig/gui/gui/src/TRootBrowserLite.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TRootBrowserLite.cxx	2016-12-06 12:46:10.325969407 +0100
 @@ -1962,14 +1962,7 @@
                    case kHelpAbout:
                       {
@@ -2126,9 +2207,9 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TRootBrowserLite.cxx root-6.06.02/gui/gu
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/gui/gui/src/TRootCanvas.cxx root-6.06.02/gui/gui/src/TRootCanvas.cxx
---- root-6.06.02.orig/gui/gui/src/TRootCanvas.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/gui/src/TRootCanvas.cxx	2016-03-20 14:37:23.803598419 +0100
+diff -Nur root-6.08.02.orig/gui/gui/src/TRootCanvas.cxx root-6.08.02/gui/gui/src/TRootCanvas.cxx
+--- root-6.08.02.orig/gui/gui/src/TRootCanvas.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/gui/src/TRootCanvas.cxx	2016-12-06 12:46:10.326969396 +0100
 @@ -1192,14 +1192,7 @@
                    case kHelpAbout:
                       {
@@ -2145,9 +2226,9 @@ diff -Nur root-6.06.02.orig/gui/gui/src/TRootCanvas.cxx root-6.06.02/gui/gui/src
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/gui/guihtml/src/TGHtmlBrowser.cxx root-6.06.02/gui/guihtml/src/TGHtmlBrowser.cxx
---- root-6.06.02.orig/gui/guihtml/src/TGHtmlBrowser.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/guihtml/src/TGHtmlBrowser.cxx	2016-03-20 14:37:23.804598428 +0100
+diff -Nur root-6.08.02.orig/gui/guihtml/src/TGHtmlBrowser.cxx root-6.08.02/gui/guihtml/src/TGHtmlBrowser.cxx
+--- root-6.08.02.orig/gui/guihtml/src/TGHtmlBrowser.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/guihtml/src/TGHtmlBrowser.cxx	2016-12-06 12:46:10.326969396 +0100
 @@ -629,14 +629,7 @@
                    case kM_HELP_ABOUT:
                       {
@@ -2164,9 +2245,9 @@ diff -Nur root-6.06.02.orig/gui/guihtml/src/TGHtmlBrowser.cxx root-6.06.02/gui/g
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/gui/sessionviewer/src/TSessionViewer.cxx root-6.06.02/gui/sessionviewer/src/TSessionViewer.cxx
---- root-6.06.02.orig/gui/sessionviewer/src/TSessionViewer.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/sessionviewer/src/TSessionViewer.cxx	2016-03-20 14:37:23.805598437 +0100
+diff -Nur root-6.08.02.orig/gui/sessionviewer/src/TSessionViewer.cxx root-6.08.02/gui/sessionviewer/src/TSessionViewer.cxx
+--- root-6.08.02.orig/gui/sessionviewer/src/TSessionViewer.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/gui/sessionviewer/src/TSessionViewer.cxx	2016-12-06 12:46:10.327969384 +0100
 @@ -5812,14 +5812,7 @@
                    case kHelpAbout:
                       {
@@ -2183,10 +2264,10 @@ diff -Nur root-6.06.02.orig/gui/sessionviewer/src/TSessionViewer.cxx root-6.06.0
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/html/src/THtml.cxx root-6.06.02/html/src/THtml.cxx
---- root-6.06.02.orig/html/src/THtml.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/html/src/THtml.cxx	2016-03-20 14:37:23.805598437 +0100
-@@ -1348,18 +1348,7 @@
+diff -Nur root-6.08.02.orig/html/src/THtml.cxx root-6.08.02/html/src/THtml.cxx
+--- root-6.08.02.orig/html/src/THtml.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/html/src/THtml.cxx	2016-12-06 12:46:10.328969373 +0100
+@@ -1349,18 +1349,7 @@
     R__LOCKGUARD(GetMakeClassMutex());
  
     fPathInfo.fEtcDir = "html";
@@ -2206,7 +2287,7 @@ diff -Nur root-6.06.02.orig/html/src/THtml.cxx root-6.06.02/html/src/THtml.cxx
  
     return fPathInfo.fEtcDir;
  }
-@@ -1666,12 +1655,7 @@
+@@ -1669,12 +1658,7 @@
                    if (posSpace != std::string::npos)
                       lib.erase(posSpace);
                    if (rootLibs.find(lib) == rootLibs.end()) {
@@ -2220,10 +2301,10 @@ diff -Nur root-6.06.02.orig/html/src/THtml.cxx root-6.06.02/html/src/THtml.cxx
                       TString sLib(lib);
                       if (sLib.Index('.') == -1) {
                          sLib += ".";
-diff -Nur root-6.06.02.orig/io/io/src/TFile.cxx root-6.06.02/io/io/src/TFile.cxx
---- root-6.06.02.orig/io/io/src/TFile.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/io/io/src/TFile.cxx	2016-03-20 14:37:23.806598447 +0100
-@@ -3047,11 +3047,7 @@
+diff -Nur root-6.08.02.orig/io/io/src/TFile.cxx root-6.08.02/io/io/src/TFile.cxx
+--- root-6.08.02.orig/io/io/src/TFile.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/io/io/src/TFile.cxx	2016-12-06 12:46:10.328969373 +0100
+@@ -3098,11 +3098,7 @@
           return;
        }
        // Get Makefile.arch
@@ -2236,19 +2317,23 @@ diff -Nur root-6.06.02.orig/io/io/src/TFile.cxx root-6.06.02/io/io/src/TFile.cxx
        if (gSystem->ExpandPathName(mkarchsrc))
           Warning("MakeProject", "problems expanding '%s'", mkarchsrc.Data());
        TString mkarchdst = TString::Format("%s/Makefile.arch", clean_dirname.Data());
-diff -Nur root-6.06.02.orig/main/CMakeLists.txt root-6.06.02/main/CMakeLists.txt
---- root-6.06.02.orig/main/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/main/CMakeLists.txt	2016-03-20 14:37:23.807598456 +0100
-@@ -40,5 +40,5 @@
+diff -Nur root-6.08.02.orig/main/CMakeLists.txt root-6.08.02/main/CMakeLists.txt
+--- root-6.08.02.orig/main/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/main/CMakeLists.txt	2016-12-06 12:46:10.329969362 +0100
+@@ -40,7 +40,7 @@
+   endforeach()
+ 
    install(FILES python/cmdLineUtils.py DESTINATION ${runtimedir})
-   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
-   install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
--  file(COPY python/cmdLineUtils.py DESTINATION ${CMAKE_BINARY_DIR}/${runtimedir})
-+  file(COPY python/cmdLineUtils.py DESTINATION ${localruntimedir})
+-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
+-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${runtimedir}/cmdLineUtils.py )")
+-  configure_file(python/cmdLineUtils.py ${CMAKE_BINARY_DIR}/${runtimedir}/cmdLineUtils.py @ONLY)
++  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${runtimedir}/cmdLineUtils.py)")
++  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${runtimedir}/cmdLineUtils.py)")
++  configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
  endif()
-diff -Nur root-6.06.02.orig/main/src/nbmain.cxx root-6.06.02/main/src/nbmain.cxx
---- root-6.06.02.orig/main/src/nbmain.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/main/src/nbmain.cxx	2016-03-20 14:37:23.824598617 +0100
+diff -Nur root-6.08.02.orig/main/src/nbmain.cxx root-6.08.02/main/src/nbmain.cxx
+--- root-6.08.02.orig/main/src/nbmain.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/main/src/nbmain.cxx	2016-12-06 12:46:10.329969362 +0100
 @@ -173,15 +173,9 @@
  
  int main()
@@ -2268,10 +2353,10 @@ diff -Nur root-6.06.02.orig/main/src/nbmain.cxx root-6.06.02/main/src/nbmain.cxx
  
     // If needed, install ROOT notebook files in the user's home directory
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/Makefile root-6.06.02/Makefile
---- root-6.06.02.orig/Makefile	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/Makefile	2016-03-20 14:37:23.841598777 +0100
-@@ -690,11 +690,9 @@
+diff -Nur root-6.08.02.orig/Makefile root-6.08.02/Makefile
+--- root-6.08.02.orig/Makefile	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/Makefile	2016-12-06 12:46:10.336969282 +0100
+@@ -708,11 +708,9 @@
  .NOTPARALLEL:
  endif
  
@@ -2284,25 +2369,25 @@ diff -Nur root-6.06.02.orig/Makefile root-6.06.02/Makefile
  
  all:            rootexecs postbin
  	@echo " "
-@@ -1119,7 +1117,7 @@
+@@ -1152,7 +1150,7 @@
  
  $(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
- 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(CXXFLAGS)
+ 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTCLING_CXXFLAGS)
 -	@$(MAKEPCH) $@
 +	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
  
  $(MAKEPCH): $(ROOT_SRCDIR)/$(MAKEPCH)
  	@mkdir -p $(dir $@)
-@@ -1224,8 +1222,6 @@
+@@ -1257,8 +1255,6 @@
  	   $(INSTALLDATA) build/misc/root-help.el $(DESTDIR)$(ELISPDIR); \
  	   echo "Installing GDML conversion scripts in $(DESTDIR)$(LIBDIR)"; \
  	   $(INSTALLDATA) $(ROOT_SRCDIR)/geom/gdml/*.py $(DESTDIR)$(LIBDIR); \
 -	   (cd $(DESTDIR)$(TUTDIR); \
--	      LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH && ! $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
+-	      ! LD_LIBRARY_PATH=$(DESTDIR)$(LIBDIR):$$LD_LIBRARY_PATH $(DESTDIR)$(BINDIR)/root -l -b -q -n -x hsimple.C); \
  	fi
  
  uninstall:
-@@ -1352,7 +1348,6 @@
+@@ -1385,7 +1381,6 @@
  		--exclude proofd.xinetd \
  		--exclude rootd.rc.d \
  		--exclude rootd.xinetd \
@@ -2310,9 +2395,9 @@ diff -Nur root-6.06.02.orig/Makefile root-6.06.02/Makefile
  		$(ROOT_SRCDIR)/etc . ; \
  	echo "Rsync'ing $(ROOT_SRCDIR)/macros..."; \
  	$(RSYNC) \
-diff -Nur root-6.06.02.orig/math/mathcore/src/Integrator.cxx root-6.06.02/math/mathcore/src/Integrator.cxx
---- root-6.06.02.orig/math/mathcore/src/Integrator.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/math/mathcore/src/Integrator.cxx	2016-03-20 14:37:23.841598777 +0100
+diff -Nur root-6.08.02.orig/math/mathcore/src/Integrator.cxx root-6.08.02/math/mathcore/src/Integrator.cxx
+--- root-6.08.02.orig/math/mathcore/src/Integrator.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/math/mathcore/src/Integrator.cxx	2016-12-06 12:46:10.336969282 +0100
 @@ -22,9 +22,6 @@
  
  
@@ -2323,10 +2408,10 @@ diff -Nur root-6.06.02.orig/math/mathcore/src/Integrator.cxx root-6.06.02/math/m
  
  #include <algorithm>
  #include <functional>
-diff -Nur root-6.06.02.orig/montecarlo/eg/src/TDatabasePDG.cxx root-6.06.02/montecarlo/eg/src/TDatabasePDG.cxx
---- root-6.06.02.orig/montecarlo/eg/src/TDatabasePDG.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/montecarlo/eg/src/TDatabasePDG.cxx	2016-03-20 14:37:23.885599192 +0100
-@@ -551,11 +551,8 @@
+diff -Nur root-6.08.02.orig/montecarlo/eg/src/TDatabasePDG.cxx root-6.08.02/montecarlo/eg/src/TDatabasePDG.cxx
+--- root-6.08.02.orig/montecarlo/eg/src/TDatabasePDG.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/montecarlo/eg/src/TDatabasePDG.cxx	2016-12-06 12:46:10.336969282 +0100
+@@ -564,11 +564,8 @@
     const char *fn;
  
     if (!FileName[0]) {
@@ -2340,9 +2425,9 @@ diff -Nur root-6.06.02.orig/montecarlo/eg/src/TDatabasePDG.cxx root-6.06.02/mont
        fn = gEnv->GetValue("Root.DatabasePDG", default_name.Data());
     } else {
        fn = FileName;
-diff -Nur root-6.06.02.orig/net/auth/CMakeLists.txt root-6.06.02/net/auth/CMakeLists.txt
---- root-6.06.02.orig/net/auth/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/auth/CMakeLists.txt	2016-03-20 14:37:23.886599202 +0100
+diff -Nur root-6.08.02.orig/net/auth/CMakeLists.txt root-6.08.02/net/auth/CMakeLists.txt
+--- root-6.08.02.orig/net/auth/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/auth/CMakeLists.txt	2016-12-06 12:46:10.336969282 +0100
 @@ -23,7 +23,6 @@
  add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                         ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
@@ -2351,9 +2436,9 @@ diff -Nur root-6.06.02.orig/net/auth/CMakeLists.txt root-6.06.02/net/auth/CMakeL
  
  if(ssl)
    include_directories(${OPENSSL_INCLUDE_DIR})
-diff -Nur root-6.06.02.orig/net/auth/src/DaemonUtils.cxx root-6.06.02/net/auth/src/DaemonUtils.cxx
---- root-6.06.02.orig/net/auth/src/DaemonUtils.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/auth/src/DaemonUtils.cxx	2016-03-20 14:37:23.886599202 +0100
+diff -Nur root-6.08.02.orig/net/auth/src/DaemonUtils.cxx root-6.08.02/net/auth/src/DaemonUtils.cxx
+--- root-6.08.02.orig/net/auth/src/DaemonUtils.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/auth/src/DaemonUtils.cxx	2016-12-06 12:46:10.337969271 +0100
 @@ -95,18 +95,8 @@
  {
     // Executables and conf dirs
@@ -2388,10 +2473,10 @@ diff -Nur root-6.06.02.orig/net/auth/src/DaemonUtils.cxx root-6.06.02/net/auth/s
     if (etcdir.length()) {
        int len = 15 + etcdir.length();
        char *tmp = new char[len+1];
-diff -Nur root-6.06.02.orig/net/auth/src/TAuthenticate.cxx root-6.06.02/net/auth/src/TAuthenticate.cxx
---- root-6.06.02.orig/net/auth/src/TAuthenticate.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/auth/src/TAuthenticate.cxx	2016-03-20 14:37:23.887599211 +0100
-@@ -4110,19 +4110,9 @@
+diff -Nur root-6.08.02.orig/net/auth/src/TAuthenticate.cxx root-6.08.02/net/auth/src/TAuthenticate.cxx
+--- root-6.08.02.orig/net/auth/src/TAuthenticate.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/auth/src/TAuthenticate.cxx	2016-12-06 12:46:10.338969260 +0100
+@@ -4107,19 +4107,9 @@
           ::Info("TAuthenticate::ReadRootAuthrc",
                  "file %s cannot be read (errno: %d)", authrc, errno);
        delete [] authrc;
@@ -2413,10 +2498,10 @@ diff -Nur root-6.06.02.orig/net/auth/src/TAuthenticate.cxx root-6.06.02/net/auth
        if (gSystem->AccessPathName(authrc, kReadPermission)) {
           if (gDebug > 1)
              ::Info("TAuthenticate::ReadRootAuthrc",
-diff -Nur root-6.06.02.orig/net/http/src/THttpServer.cxx root-6.06.02/net/http/src/THttpServer.cxx
---- root-6.06.02.orig/net/http/src/THttpServer.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/http/src/THttpServer.cxx	2016-03-20 14:37:23.887599211 +0100
-@@ -147,11 +147,7 @@
+diff -Nur root-6.08.02.orig/net/http/src/THttpServer.cxx root-6.08.02/net/http/src/THttpServer.cxx
+--- root-6.08.02.orig/net/http/src/THttpServer.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/http/src/THttpServer.cxx	2016-12-06 12:46:10.338969260 +0100
+@@ -148,11 +148,7 @@
     if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
  
     if (fJSROOTSYS.Length() == 0) {
@@ -2429,7 +2514,7 @@ diff -Nur root-6.06.02.orig/net/http/src/THttpServer.cxx root-6.06.02/net/http/s
        if (gSystem->ExpandPathName(jsdir)) {
           Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
           fJSROOTSYS = ".";
-@@ -162,18 +158,7 @@
+@@ -163,18 +159,7 @@
  
     AddLocation("currentdir/", ".");
     AddLocation("jsrootsys/", fJSROOTSYS);
@@ -2449,9 +2534,9 @@ diff -Nur root-6.06.02.orig/net/http/src/THttpServer.cxx root-6.06.02/net/http/s
  
     fDefaultPage = fJSROOTSYS + "/files/online.htm";
     fDrawPage = fJSROOTSYS + "/files/draw.htm";
-diff -Nur root-6.06.02.orig/net/net/src/TApplicationServer.cxx root-6.06.02/net/net/src/TApplicationServer.cxx
---- root-6.06.02.orig/net/net/src/TApplicationServer.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/net/src/TApplicationServer.cxx	2016-03-20 14:37:23.888599221 +0100
+diff -Nur root-6.08.02.orig/net/net/src/TApplicationServer.cxx root-6.08.02/net/net/src/TApplicationServer.cxx
+--- root-6.08.02.orig/net/net/src/TApplicationServer.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/net/src/TApplicationServer.cxx	2016-12-06 12:46:10.338969260 +0100
 @@ -1275,17 +1275,7 @@
     TString name = ".rootlogon.C";
     TString sname = "system";
@@ -2471,9 +2556,9 @@ diff -Nur root-6.06.02.orig/net/net/src/TApplicationServer.cxx root-6.06.02/net/
     if (!gSystem->AccessPathName(s, kReadPermission)) {
        ProcessFile(s);
     }
-diff -Nur root-6.06.02.orig/net/net/src/TServerSocket.cxx root-6.06.02/net/net/src/TServerSocket.cxx
---- root-6.06.02.orig/net/net/src/TServerSocket.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/net/src/TServerSocket.cxx	2016-03-20 14:37:23.888599221 +0100
+diff -Nur root-6.08.02.orig/net/net/src/TServerSocket.cxx root-6.08.02/net/net/src/TServerSocket.cxx
+--- root-6.08.02.orig/net/net/src/TServerSocket.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/net/src/TServerSocket.cxx	2016-12-06 12:46:10.338969260 +0100
 @@ -335,22 +335,7 @@
        }
     }
@@ -2498,10 +2583,10 @@ diff -Nur root-6.06.02.orig/net/net/src/TServerSocket.cxx root-6.06.02/net/net/s
     if (!confdir.Length()) {
        Error("Authenticate", "config dir undefined");
        return kFALSE;
-diff -Nur root-6.06.02.orig/net/rootd/src/rootd.cxx root-6.06.02/net/rootd/src/rootd.cxx
---- root-6.06.02.orig/net/rootd/src/rootd.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/rootd/src/rootd.cxx	2016-03-20 14:37:23.889599230 +0100
-@@ -2528,10 +2528,13 @@
+diff -Nur root-6.08.02.orig/net/rootd/src/rootd.cxx root-6.08.02/net/rootd/src/rootd.cxx
+--- root-6.08.02.orig/net/rootd/src/rootd.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/rootd/src/rootd.cxx	2016-12-06 12:46:10.339969248 +0100
+@@ -2523,10 +2523,13 @@
  
     if (argc > 0) {
        confdir = std::string(*argv);
@@ -2518,7 +2603,7 @@ diff -Nur root-6.06.02.orig/net/rootd/src/rootd.cxx root-6.06.02/net/rootd/src/r
           if (getenv("ROOTSYS")) {
              confdir = getenv("ROOTSYS");
              if (gDebug > 0)
-@@ -2542,31 +2545,26 @@
+@@ -2537,31 +2540,26 @@
                 ErrorInfo("main: no config directory specified");
           }
        }
@@ -2561,9 +2646,9 @@ diff -Nur root-6.06.02.orig/net/rootd/src/rootd.cxx root-6.06.02/net/rootd/src/r
     if (rootetcdir.length()) {
        char *tmp1 = new char[15 + rootetcdir.length()];
        sprintf(tmp1, "ROOTETCDIR=%s", rootetcdir.c_str());
-diff -Nur root-6.06.02.orig/net/rpdutils/CMakeLists.txt root-6.06.02/net/rpdutils/CMakeLists.txt
---- root-6.06.02.orig/net/rpdutils/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/net/rpdutils/CMakeLists.txt	2016-03-20 14:37:23.889599230 +0100
+diff -Nur root-6.08.02.orig/net/rpdutils/CMakeLists.txt root-6.08.02/net/rpdutils/CMakeLists.txt
+--- root-6.08.02.orig/net/rpdutils/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/net/rpdutils/CMakeLists.txt	2016-12-06 12:46:10.339969248 +0100
 @@ -31,7 +31,6 @@
  
  #---static library needed for rootd and proofd --------------------------------------------
@@ -2572,10 +2657,10 @@ diff -Nur root-6.06.02.orig/net/rpdutils/CMakeLists.txt root-6.06.02/net/rpdutil
  
  ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx LIBRARIES rpdutil rsa ${CRYPTLIBS} ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES} DEPENDENCIES Net)
  
-diff -Nur root-6.06.02.orig/proof/proof/src/TProofLite.cxx root-6.06.02/proof/proof/src/TProofLite.cxx
---- root-6.06.02.orig/proof/proof/src/TProofLite.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proof/src/TProofLite.cxx	2016-03-20 14:37:23.922599542 +0100
-@@ -436,17 +436,7 @@
+diff -Nur root-6.08.02.orig/proof/proof/src/TProofLite.cxx root-6.08.02/proof/proof/src/TProofLite.cxx
+--- root-6.08.02.orig/proof/proof/src/TProofLite.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proof/src/TProofLite.cxx	2016-12-06 12:46:10.340969237 +0100
+@@ -409,17 +409,7 @@
     if (fgWrksMax == -2) {
        // Find the max number of workers, if any
        TString sysname = "system.rootrc";
@@ -2594,7 +2679,7 @@ diff -Nur root-6.06.02.orig/proof/proof/src/TProofLite.cxx root-6.06.02/proof/pr
        TEnv sysenv(0);
        sysenv.ReadFile(s, kEnvGlobal);
        fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);
-@@ -792,17 +782,9 @@
+@@ -765,17 +755,9 @@
        return -1;
     }
     // ROOTSYS
@@ -2614,10 +2699,10 @@ diff -Nur root-6.06.02.orig/proof/proof/src/TProofLite.cxx root-6.06.02/proof/pr
     // TMPDIR
     fprintf(fenv, "export TMPDIR=%s\n", gSystem->TempDirectory());
     // Log file in the log dir
-diff -Nur root-6.06.02.orig/proof/proof/src/TProofServ.cxx root-6.06.02/proof/proof/src/TProofServ.cxx
---- root-6.06.02.orig/proof/proof/src/TProofServ.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proof/src/TProofServ.cxx	2016-03-20 14:37:23.945599759 +0100
-@@ -3026,13 +3026,7 @@
+diff -Nur root-6.08.02.orig/proof/proof/src/TProofServ.cxx root-6.08.02/proof/proof/src/TProofServ.cxx
+--- root-6.08.02.orig/proof/proof/src/TProofServ.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proof/src/TProofServ.cxx	2016-12-06 12:46:10.341969226 +0100
+@@ -2964,13 +2964,7 @@
  #ifdef R__UNIX
     // Add bindir to PATH
     TString path(gSystem->Getenv("PATH"));
@@ -2632,10 +2717,10 @@ diff -Nur root-6.06.02.orig/proof/proof/src/TProofServ.cxx root-6.06.02/proof/pr
     // Augment PATH, if required
     // ^<compiler>, <compiler>, ^<sysbin>, <sysbin>
     TString paths = gEnv->GetValue("ProofServ.BinPaths", "");
-diff -Nur root-6.06.02.orig/proof/proof/src/TSlaveLite.cxx root-6.06.02/proof/proof/src/TSlaveLite.cxx
---- root-6.06.02.orig/proof/proof/src/TSlaveLite.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proof/src/TSlaveLite.cxx	2016-03-20 14:37:24.000600278 +0100
-@@ -78,13 +78,8 @@
+diff -Nur root-6.08.02.orig/proof/proof/src/TSlaveLite.cxx root-6.08.02/proof/proof/src/TSlaveLite.cxx
+--- root-6.08.02.orig/proof/proof/src/TSlaveLite.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proof/src/TSlaveLite.cxx	2016-12-06 12:46:10.341969226 +0100
+@@ -88,13 +88,8 @@
  {
     // Command to be executed
     TString cmd;
@@ -2650,9 +2735,9 @@ diff -Nur root-6.06.02.orig/proof/proof/src/TSlaveLite.cxx root-6.06.02/proof/pr
              gSystem->GetPid(), gDebug);
     // Execute
     if (gSystem->Exec(cmd) != 0) {
-diff -Nur root-6.06.02.orig/proof/proofbench/CMakeLists.txt root-6.06.02/proof/proofbench/CMakeLists.txt
---- root-6.06.02.orig/proof/proofbench/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofbench/CMakeLists.txt	2016-03-20 14:37:24.041600664 +0100
+diff -Nur root-6.08.02.orig/proof/proofbench/CMakeLists.txt root-6.08.02/proof/proofbench/CMakeLists.txt
+--- root-6.08.02.orig/proof/proofbench/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofbench/CMakeLists.txt	2016-12-06 12:46:10.341969226 +0100
 @@ -14,7 +14,7 @@
  # Generation and installation of the PAR files required by the benchmark 
  add_custom_target(ProofBenchPARFiles ALL DEPENDS ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
@@ -2662,10 +2747,10 @@ diff -Nur root-6.06.02.orig/proof/proofbench/CMakeLists.txt root-6.06.02/proof/p
  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchCPUSel.par
                            ${CMAKE_BINARY_DIR}/etc/proof/proofbench/ProofBenchDataSel.par
      COMMAND etc/proof/utils/makepbenchpars.sh ARGS ProofBenchCPUSel ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} 
-diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBench.cxx root-6.06.02/proof/proofbench/src/TProofBench.cxx
---- root-6.06.02.orig/proof/proofbench/src/TProofBench.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofbench/src/TProofBench.cxx	2016-03-20 14:37:24.059600834 +0100
-@@ -1331,11 +1331,7 @@
+diff -Nur root-6.08.02.orig/proof/proofbench/src/TProofBench.cxx root-6.08.02/proof/proofbench/src/TProofBench.cxx
+--- root-6.08.02.orig/proof/proofbench/src/TProofBench.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofbench/src/TProofBench.cxx	2016-12-06 12:46:10.342969214 +0100
+@@ -1338,11 +1338,7 @@
        // Is it the default selector?
        if (fDataGenSel == kPROOF_BenchSelDataGenDef) {
           // Load the parfile
@@ -2678,10 +2763,10 @@ diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBench.cxx root-6.06.02/pr
           Info("MakeDataSet", "uploading '%s' ...", par.Data());
           if (fProof->UploadPackage(par) != 0) {
              Error("MakeDataSet", "problems uploading '%s' - cannot continue", par.Data());
-diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx root-6.06.02/proof/proofbench/src/TProofBenchDataSet.cxx
---- root-6.06.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofbench/src/TProofBenchDataSet.cxx	2016-03-20 14:37:24.070600938 +0100
-@@ -26,6 +26,7 @@
+diff -Nur root-6.08.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx root-6.08.02/proof/proofbench/src/TProofBenchDataSet.cxx
+--- root-6.08.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofbench/src/TProofBenchDataSet.cxx	2016-12-06 12:46:10.342969214 +0100
+@@ -25,6 +25,7 @@
  #include "TMap.h"
  #include "TProof.h"
  #include "TProofBenchTypes.h"
@@ -2689,7 +2774,7 @@ diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx root-6.0
  
  
  ClassImp(TProofBenchDataSet)
-@@ -145,11 +146,7 @@
+@@ -144,11 +145,7 @@
     TString selName("TSelHandleDataSet");
     if (!TClass::GetClass(selName)) {
        // Load the parfile
@@ -2702,10 +2787,10 @@ diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchDataSet.cxx root-6.0
        Info("Handle", "Uploading '%s' ...", par.Data());
        if (fProof->UploadPackage(par) != 0) {
           Error("Handle", "problems uploading '%s' - cannot continue", par.Data());
-diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchRunCPU.cxx root-6.06.02/proof/proofbench/src/TProofBenchRunCPU.cxx
---- root-6.06.02.orig/proof/proofbench/src/TProofBenchRunCPU.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofbench/src/TProofBenchRunCPU.cxx	2016-03-20 14:37:24.079601023 +0100
-@@ -275,11 +275,7 @@
+diff -Nur root-6.08.02.orig/proof/proofbench/src/TProofBenchRunCPU.cxx root-6.08.02/proof/proofbench/src/TProofBenchRunCPU.cxx
+--- root-6.08.02.orig/proof/proofbench/src/TProofBenchRunCPU.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofbench/src/TProofBenchRunCPU.cxx	2016-12-06 12:46:10.342969214 +0100
+@@ -274,11 +274,7 @@
        // Is it the default selector?
        if (fSelName == kPROOF_BenchSelCPUDef) {
           // Load the parfile
@@ -2718,10 +2803,10 @@ diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchRunCPU.cxx root-6.06
           Info("Run", "Uploading '%s' ...", par.Data());
           if (fProof->UploadPackage(par) != 0) {
              Error("Run", "problems uploading '%s' - cannot continue", par.Data());
-diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchRunDataRead.cxx root-6.06.02/proof/proofbench/src/TProofBenchRunDataRead.cxx
---- root-6.06.02.orig/proof/proofbench/src/TProofBenchRunDataRead.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofbench/src/TProofBenchRunDataRead.cxx	2016-03-20 14:37:24.088601108 +0100
-@@ -163,11 +163,7 @@
+diff -Nur root-6.08.02.orig/proof/proofbench/src/TProofBenchRunDataRead.cxx root-6.08.02/proof/proofbench/src/TProofBenchRunDataRead.cxx
+--- root-6.08.02.orig/proof/proofbench/src/TProofBenchRunDataRead.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofbench/src/TProofBenchRunDataRead.cxx	2016-12-06 12:46:10.342969214 +0100
+@@ -162,11 +162,7 @@
        // Is it the default selector?
        if (fSelName == kPROOF_BenchSelDataDef) {
           // Load the parfile
@@ -2734,10 +2819,10 @@ diff -Nur root-6.06.02.orig/proof/proofbench/src/TProofBenchRunDataRead.cxx root
           Info("Run", "Uploading '%s' ...", par.Data());
           if (fProof->UploadPackage(par) != 0) {
              Error("Run", "problems uploading '%s' - cannot continue", par.Data());
-diff -Nur root-6.06.02.orig/proof/proofd/src/proofd.cxx root-6.06.02/proof/proofd/src/proofd.cxx
---- root-6.06.02.orig/proof/proofd/src/proofd.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofd/src/proofd.cxx	2016-03-20 14:37:24.097601193 +0100
-@@ -1005,49 +1005,48 @@
+diff -Nur root-6.08.02.orig/proof/proofd/src/proofd.cxx root-6.08.02/proof/proofd/src/proofd.cxx
+--- root-6.08.02.orig/proof/proofd/src/proofd.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofd/src/proofd.cxx	2016-12-06 12:46:10.343969203 +0100
+@@ -1001,49 +1001,48 @@
  
     if (argc > 0) {
        gConfDir = std::string(*argv);
@@ -2814,9 +2899,9 @@ diff -Nur root-6.06.02.orig/proof/proofd/src/proofd.cxx root-6.06.02/proof/proof
     if (rootetcdir.length()) {
        char *tmp = new char[15 + rootetcdir.length()];
        snprintf(tmp, 15 + rootetcdir.length(), "ROOTETCDIR=%s", rootetcdir.c_str());
-diff -Nur root-6.06.02.orig/proof/proofd/src/XrdROOT.cxx root-6.06.02/proof/proofd/src/XrdROOT.cxx
---- root-6.06.02.orig/proof/proofd/src/XrdROOT.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/proof/proofd/src/XrdROOT.cxx	2016-03-20 14:37:24.102601240 +0100
+diff -Nur root-6.08.02.orig/proof/proofd/src/XrdROOT.cxx root-6.08.02/proof/proofd/src/XrdROOT.cxx
+--- root-6.08.02.orig/proof/proofd/src/XrdROOT.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/proof/proofd/src/XrdROOT.cxx	2016-12-06 12:46:10.343969203 +0100
 @@ -384,11 +384,19 @@
     } else {
        // Check the ROOT dirs
@@ -2841,9 +2926,9 @@ diff -Nur root-6.06.02.orig/proof/proofd/src/XrdROOT.cxx root-6.06.02/proof/proo
  #endif
           // None defined: use ROOTSYS as default, if any; otherwise we fail
           if (dir.length() > 0) {
-diff -Nur root-6.06.02.orig/roofit/histfactory/CMakeLists.txt root-6.06.02/roofit/histfactory/CMakeLists.txt
---- root-6.06.02.orig/roofit/histfactory/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/roofit/histfactory/CMakeLists.txt	2016-03-20 14:37:24.102601240 +0100
+diff -Nur root-6.08.02.orig/roofit/histfactory/CMakeLists.txt root-6.08.02/roofit/histfactory/CMakeLists.txt
+--- root-6.08.02.orig/roofit/histfactory/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/roofit/histfactory/CMakeLists.txt	2016-12-06 12:46:10.343969203 +0100
 @@ -25,10 +25,4 @@
                              WORLD_EXECUTE WORLD_READ
                  DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -2856,9 +2941,32 @@ diff -Nur root-6.06.02.orig/roofit/histfactory/CMakeLists.txt root-6.06.02/roofi
 -                       REGEX "LinkDef" EXCLUDE )
 -set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 +ROOT_INSTALL_HEADERS()
-diff -Nur root-6.06.02.orig/roofit/roostats/CMakeLists.txt root-6.06.02/roofit/roostats/CMakeLists.txt
---- root-6.06.02.orig/roofit/roostats/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/roofit/roostats/CMakeLists.txt	2016-03-20 14:37:24.102601240 +0100
+diff -Nur root-6.08.02.orig/roofit/histfactory/config/prepareHistFactory root-6.08.02/roofit/histfactory/config/prepareHistFactory
+--- root-6.08.02.orig/roofit/histfactory/config/prepareHistFactory	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/roofit/histfactory/config/prepareHistFactory	2016-12-06 12:46:10.343969203 +0100
+@@ -2,16 +2,10 @@
+ 
+ # HistFactory workplace setup script
+ 
+-ROOTPREFDIR=`root-config --prefix`
+-ROOTETCDIR=`root-config --etcdir`
++ROOTETCDIR=`root -b -q -l -n -e "std::cout << TROOT::GetEtcDir() << std::endl;" | tail -1`
+ echo "Using etcdir "$ROOTETCDIR
+-ROOTTUTDIR=$ROOTPREFDIR/tutorials
+-if test -e $ROOTTUTDIR; then
+-    echo "Using tutorials dir" $ROOTTUTDIR 
+-else     
+-    ROOTTUTDIR=${ROOTPREFDIR}/share/doc/root/tutorials
+-    echo "Using tutorials dir" $ROOTTUTDIR 
+-fi
++ROOTTUTDIR=`root -b -q -l -n -e "std::cout << TROOT::GetTutorialDir() << std::endl;" | tail -1`
++echo "Using tutorials dir" $ROOTTUTDIR 
+ 
+ if [ $# -eq 1 ]
+ then
+diff -Nur root-6.08.02.orig/roofit/roostats/CMakeLists.txt root-6.08.02/roofit/roostats/CMakeLists.txt
+--- root-6.08.02.orig/roofit/roostats/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/roofit/roostats/CMakeLists.txt	2016-12-06 12:46:10.344969192 +0100
 @@ -8,9 +8,4 @@
  ROOT_LINKER_LIBRARY(RooStats  *.cxx G__RooStats.cxx LIBRARIES Core 
                                 DEPENDENCIES RooFit RooFitCore Tree RIO Hist Matrix MathCore Minuit Foam Graf Gpad )
@@ -2870,10 +2978,10 @@ diff -Nur root-6.06.02.orig/roofit/roostats/CMakeLists.txt root-6.06.02/roofit/r
 -                       REGEX "LinkDef" EXCLUDE )
 -set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 +ROOT_INSTALL_HEADERS()
-diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
---- root-6.06.02.orig/rootx/src/rootx.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/rootx/src/rootx.cxx	2016-03-20 14:37:24.103601249 +0100
-@@ -200,7 +200,6 @@
+diff -Nur root-6.08.02.orig/rootx/src/rootx.cxx root-6.08.02/rootx/src/rootx.cxx
+--- root-6.08.02.orig/rootx/src/rootx.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/rootx/src/rootx.cxx	2016-12-06 12:46:10.344969192 +0100
+@@ -218,7 +218,6 @@
     return 0;
  }
  
@@ -2881,7 +2989,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  static const char *GetExePath()
  {
     static std::string exepath;
-@@ -247,7 +246,6 @@
+@@ -265,7 +264,6 @@
        delete [] ep;
     }
  }
@@ -2889,7 +2997,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  
  static void SetDisplay()
  {
-@@ -296,7 +294,9 @@
+@@ -314,7 +312,9 @@
  
  static void SetLibraryPath()
  {
@@ -2900,7 +3008,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
     // Set library path for the different platforms.
  
     char *msg;
-@@ -343,6 +343,8 @@
+@@ -361,6 +361,8 @@
     }
  #  endif
     putenv(msg);
@@ -2909,7 +3017,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  #endif
  }
  
-@@ -440,7 +442,9 @@
+@@ -458,7 +460,9 @@
     char **argvv;
     char  arg0[kMAXPATHLEN];
  
@@ -2920,7 +3028,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
     // Try to set ROOTSYS depending on pathname of the executable
     SetRootSys();
  
-@@ -449,6 +453,8 @@
+@@ -467,6 +471,8 @@
                argv[0], argv[0]);
        return 1;
     }
@@ -2929,7 +3037,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  #endif
  
     // In batch mode don't show splash screen, idem for no logo mode,
-@@ -473,23 +479,20 @@
+@@ -491,23 +497,20 @@
     if (notebook) {
        // Build command
  #ifdef ROOTBINDIR
@@ -2962,7 +3070,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  
        return 1;
     }
-@@ -586,9 +589,12 @@
+@@ -604,9 +607,12 @@
     // Build argv vector
     argvv = new char* [argc+2];
  #ifdef ROOTBINDIR
@@ -2978,7 +3086,7 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  #endif
     argvv[0] = arg0;
     argvv[1] = (char *) "-splash";
-@@ -604,14 +610,8 @@
+@@ -622,14 +628,8 @@
     execv(arg0, argvv);
  
     // Exec failed
@@ -2995,9 +3103,9 @@ diff -Nur root-6.06.02.orig/rootx/src/rootx.cxx root-6.06.02/rootx/src/rootx.cxx
  
     return 1;
  }
-diff -Nur root-6.06.02.orig/test/rhtml/rhtml.cxx root-6.06.02/test/rhtml/rhtml.cxx
---- root-6.06.02.orig/test/rhtml/rhtml.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/rhtml/rhtml.cxx	2016-03-20 14:37:24.103601249 +0100
+diff -Nur root-6.08.02.orig/test/rhtml/rhtml.cxx root-6.08.02/test/rhtml/rhtml.cxx
+--- root-6.08.02.orig/test/rhtml/rhtml.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/test/rhtml/rhtml.cxx	2016-12-06 12:46:10.344969192 +0100
 @@ -475,14 +475,7 @@
                    case M_HELP_ABOUT:
                       {
@@ -3014,9 +3122,9 @@ diff -Nur root-6.06.02.orig/test/rhtml/rhtml.cxx root-6.06.02/test/rhtml/rhtml.c
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/test/RootIDE/TGRootIDE.cxx root-6.06.02/test/RootIDE/TGRootIDE.cxx
---- root-6.06.02.orig/test/RootIDE/TGRootIDE.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/RootIDE/TGRootIDE.cxx	2016-03-20 14:37:24.103601249 +0100
+diff -Nur root-6.08.02.orig/test/RootIDE/TGRootIDE.cxx root-6.08.02/test/RootIDE/TGRootIDE.cxx
+--- root-6.08.02.orig/test/RootIDE/TGRootIDE.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/test/RootIDE/TGRootIDE.cxx	2016-12-06 12:46:10.344969192 +0100
 @@ -1270,14 +1270,7 @@
  void TGRootIDE::About()
  {
@@ -3033,11 +3141,11 @@ diff -Nur root-6.06.02.orig/test/RootIDE/TGRootIDE.cxx root-6.06.02/test/RootIDE
     gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/tmva/tmva/CMakeLists.txt root-6.06.02/tmva/tmva/CMakeLists.txt
---- root-6.06.02.orig/tmva/tmva/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tmva/tmva/CMakeLists.txt	2016-03-20 14:37:24.104601259 +0100
-@@ -48,11 +48,7 @@
- ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
+diff -Nur root-6.08.02.orig/tmva/tmva/CMakeLists.txt root-6.08.02/tmva/tmva/CMakeLists.txt
+--- root-6.08.02.orig/tmva/tmva/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tmva/tmva/CMakeLists.txt	2016-12-06 12:46:10.345969180 +0100
+@@ -79,11 +79,7 @@
+                     LIBRARIES Core ${DNN_CUDA_LIBRARIES} ${DNN_CPU_LIBRARIES}
                      DEPENDENCIES RIO Hist Tree TreePlayer MLP Minuit XMLIO)
  
 -install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
@@ -3049,9 +3157,9 @@ diff -Nur root-6.06.02.orig/tmva/tmva/CMakeLists.txt root-6.06.02/tmva/tmva/CMak
  
  if(NOT gnuinstall)
    install(DIRECTORY test DESTINATION tmva 
-diff -Nur root-6.06.02.orig/tmva/tmvagui/CMakeLists.txt root-6.06.02/tmva/tmvagui/CMakeLists.txt
---- root-6.06.02.orig/tmva/tmvagui/CMakeLists.txt	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tmva/tmvagui/CMakeLists.txt	2016-03-20 14:37:24.104601259 +0100
+diff -Nur root-6.08.02.orig/tmva/tmvagui/CMakeLists.txt root-6.08.02/tmva/tmvagui/CMakeLists.txt
+--- root-6.08.02.orig/tmva/tmvagui/CMakeLists.txt	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tmva/tmvagui/CMakeLists.txt	2016-12-06 12:46:10.345969180 +0100
 @@ -31,11 +31,7 @@
  ROOT_LINKER_LIBRARY(TMVAGui *.cxx G__TMVAGui.cxx LIBRARIES Core
                      DEPENDENCIES RIO Hist Tree TreeViewer  MLP Minuit XMLIO TMVA Gui)
@@ -3065,10 +3173,10 @@ diff -Nur root-6.06.02.orig/tmva/tmvagui/CMakeLists.txt root-6.06.02/tmva/tmvagu
  
  if(NOT gnuinstall)
    install(DIRECTORY test DESTINATION tmva 
-diff -Nur root-6.06.02.orig/tree/treeviewer/src/TTreeViewer.cxx root-6.06.02/tree/treeviewer/src/TTreeViewer.cxx
---- root-6.06.02.orig/tree/treeviewer/src/TTreeViewer.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tree/treeviewer/src/TTreeViewer.cxx	2016-03-20 14:37:24.115601363 +0100
-@@ -2049,14 +2049,7 @@
+diff -Nur root-6.08.02.orig/tree/treeviewer/src/TTreeViewer.cxx root-6.08.02/tree/treeviewer/src/TTreeViewer.cxx
+--- root-6.08.02.orig/tree/treeviewer/src/TTreeViewer.cxx	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tree/treeviewer/src/TTreeViewer.cxx	2016-12-06 12:46:10.345969180 +0100
+@@ -2048,14 +2048,7 @@
                    case kHelpAbout:
                       {
  #ifdef R__UNIX
@@ -3084,10 +3192,20 @@ diff -Nur root-6.06.02.orig/tree/treeviewer/src/TTreeViewer.cxx root-6.06.02/tre
                          gSystem->Exec(rootx);
  #else
  #ifdef WIN32
-diff -Nur root-6.06.02.orig/tutorials/eve/SplitGLView.C root-6.06.02/tutorials/eve/SplitGLView.C
---- root-6.06.02.orig/tutorials/eve/SplitGLView.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/eve/SplitGLView.C	2016-03-20 14:37:24.116601372 +0100
-@@ -1017,14 +1017,7 @@
+diff -Nur root-6.08.02.orig/tutorials/eve/SplitGLView.C root-6.08.02/tutorials/eve/SplitGLView.C
+--- root-6.08.02.orig/tutorials/eve/SplitGLView.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/eve/SplitGLView.C	2016-12-06 12:46:10.346969169 +0100
+@@ -291,8 +291,7 @@
+    const char *str = fText.Data();
+    char *string = strdup(str);
+    Int_t nlines = 0, size = fTextH;
+-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-   TString ar = fp + "/arial.ttf";
++   TString ar = "arial.ttf";
+    char *s = strtok((char *)string, "\n");
+    TImage *img = (TImage*)fImage->Clone("img");
+    img->DrawText(fTextX, fTextY+(nlines*size), s, size, fTextCol, ar);
+@@ -1020,14 +1019,7 @@
        case kHelpAbout:
           {
  #ifdef R__UNIX
@@ -3103,3 +3221,608 @@ diff -Nur root-6.06.02.orig/tutorials/eve/SplitGLView.C root-6.06.02/tutorials/e
              gSystem->Exec(rootx);
  #else
  #ifdef WIN32
+diff -Nur root-6.08.02.orig/tutorials/fit/fit1.C root-6.08.02/tutorials/fit/fit1.C
+--- root-6.08.02.orig/tutorials/fit/fit1.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/fit/fit1.C	2016-12-06 12:46:10.346969169 +0100
+@@ -35,7 +35,7 @@
+    // We connect the ROOT file generated in a previous tutorial
+    // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>) 
+    //
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/fit/");
+    TFile *file = TFile::Open("fillrandom.root");
+    if (!file) {
+diff -Nur root-6.08.02.orig/tutorials/fit/fitslicesy.C root-6.08.02/tutorials/fit/fitslicesy.C
+--- root-6.08.02.orig/tutorials/fit/fitslicesy.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/fit/fitslicesy.C	2016-12-06 12:46:10.346969169 +0100
+@@ -23,7 +23,7 @@
+    gStyle->SetTitleH(0.1);
+ 
+ // Connect the input file and get the 2-d histogram in memory
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/hsimple.C");
+    dir.ReplaceAll("/./","/");
+    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
+diff -Nur root-6.08.02.orig/tutorials/fit/myfit.C root-6.08.02/tutorials/fit/myfit.C
+--- root-6.08.02.orig/tutorials/fit/myfit.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/fit/myfit.C	2016-12-06 12:46:10.346969169 +0100
+@@ -25,7 +25,7 @@
+ }
+ void myfit()
+ {
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/hsimple.C");
+    dir.ReplaceAll("/./","/");
+    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
+diff -Nur root-6.08.02.orig/tutorials/foam/foam_demopers.C root-6.08.02/tutorials/foam/foam_demopers.C
+--- root-6.08.02.orig/tutorials/foam/foam_demopers.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/foam/foam_demopers.C	2016-12-06 12:46:10.347969158 +0100
+@@ -24,7 +24,7 @@
+    gSystem->Load("libFoam");
+ 
+    // need to load the foam_demo tutorial for the definition of the function
+-   TString macroName = gROOT->GetTutorialsDir();
++   TString macroName = gROOT->GetTutorialDir();
+    macroName.Append("/foam/foam_demo.C");
+    gROOT->ProcessLine(TString::Format(".L %s+",macroName.Data()));
+ 
+diff -Nur root-6.08.02.orig/tutorials/geom/runplugin.C root-6.08.02/tutorials/geom/runplugin.C
+--- root-6.08.02.orig/tutorials/geom/runplugin.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/geom/runplugin.C	2016-12-06 12:46:10.347969158 +0100
+@@ -27,7 +27,7 @@
+ {
+ 
+ 
+-   TString tutdir = gROOT->GetTutorialsDir();
++   TString tutdir = gROOT->GetTutorialDir();
+    gROOT->ProcessLine(".x " + tutdir + "/geom/rootgeom.C");
+    plugin = new iterplugin();
+    gGeoManager->GetGeomPainter()->SetIteratorPlugin(plugin);
+diff -Nur root-6.08.02.orig/tutorials/graphics/earth.C root-6.08.02/tutorials/graphics/earth.C
+--- root-6.08.02.orig/tutorials/graphics/earth.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/graphics/earth.C	2016-12-06 12:46:10.347969158 +0100
+@@ -26,7 +26,7 @@
+    TH2F *hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
+    TH2F *hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
+ 
+-   TString dat = gROOT->GetTutorialsDir();
++   TString dat = gROOT->GetTutorialDir();
+    dat.Append("/graphics/earth.dat");
+    dat.ReplaceAll("/./","/");
+ 
+diff -Nur root-6.08.02.orig/tutorials/graphics/psview.C root-6.08.02/tutorials/graphics/psview.C
+--- root-6.08.02.orig/tutorials/graphics/psview.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/graphics/psview.C	2016-12-06 12:46:10.347969158 +0100
+@@ -32,7 +32,7 @@
+    gROOT->SetBatch(1);
+ 
+    // create a PostScript file
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/graphics/feynman.C");
+    gROOT->Macro(dir);
+    gPad->Print("feynman.eps");
+diff -Nur root-6.08.02.orig/tutorials/graphs/motorcycle.C root-6.08.02/tutorials/graphs/motorcycle.C
+--- root-6.08.02.orig/tutorials/graphs/motorcycle.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/graphs/motorcycle.C	2016-12-06 12:46:10.347969158 +0100
+@@ -43,7 +43,7 @@
+ void motorcycle()
+ {
+ // data taken from R library MASS: mcycle.txt
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/graphs/");
+    dir.ReplaceAll("/./","/");
+ 
+diff -Nur root-6.08.02.orig/tutorials/hist/FirstContour.C root-6.08.02/tutorials/hist/FirstContour.C
+--- root-6.08.02.orig/tutorials/hist/FirstContour.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/hist/FirstContour.C	2016-12-06 12:46:10.347969158 +0100
+@@ -13,7 +13,7 @@
+ 
+ void FirstContour()
+ {
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/hsimple.C");
+    dir.ReplaceAll("/./","/");
+    if (!gInterpreter->IsLoaded(dir.Data())) gInterpreter->LoadMacro(dir.Data());
+diff -Nur root-6.08.02.orig/tutorials/hist/h1draw.C root-6.08.02/tutorials/hist/h1draw.C
+--- root-6.08.02.orig/tutorials/hist/h1draw.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/hist/h1draw.C	2016-12-06 12:46:10.348969146 +0100
+@@ -25,7 +25,7 @@
+ 
+ void h1draw()
+ {
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/hsimple.C");
+    dir.ReplaceAll("/./","/");
+    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
+diff -Nur root-6.08.02.orig/tutorials/hist/hbars.C root-6.08.02/tutorials/hist/hbars.C
+--- root-6.08.02.orig/tutorials/hist/hbars.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/hist/hbars.C	2016-12-06 12:46:10.348969146 +0100
+@@ -10,7 +10,7 @@
+ 
+ TCanvas *hbars() {
+      // Try to open first the file cernstaff.root in tutorials/tree directory
+-   TString filedir = gROOT->GetTutorialsDir();
++   TString filedir = gROOT->GetTutorialDir();
+    filedir += TString("/tree/");
+    TString filename = "cernstaff.root";
+    bool fileNotFound = gSystem->AccessPathName(filename); // note opposite return code
+diff -Nur root-6.08.02.orig/tutorials/hsimple.C root-6.08.02/tutorials/hsimple.C
+--- root-6.08.02.orig/tutorials/hsimple.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/hsimple.C	2016-12-06 12:46:10.348969146 +0100
+@@ -34,7 +34,7 @@
+ TFile *hsimple(Int_t getFile=0)
+ {
+    TString filename = "hsimple.root";
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.ReplaceAll("/./","/");
+    TFile *hfile = 0;
+    if (getFile) {
+diff -Nur root-6.08.02.orig/tutorials/image/rose_image.C root-6.08.02/tutorials/image/rose_image.C
+--- root-6.08.02.orig/tutorials/image/rose_image.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/image/rose_image.C	2016-12-06 12:46:10.348969146 +0100
+@@ -30,9 +30,8 @@
+    img->SetConstRatio(0);
+    img->SetImageQuality(TAttImage::kImgBest);
+ 
+-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
+-   TString bc = fp + "/BlackChancery.ttf";
+-   TString ar = fp + "/arial.ttf";
++   TString bc = "BlackChancery.ttf";
++   TString ar = "arial.ttf";
+ 
+    // draw text over image with funny font
+    img->DrawText(120, 160, "Hello World!", 32,
+diff -Nur root-6.08.02.orig/tutorials/io/importCode.C root-6.08.02/tutorials/io/importCode.C
+--- root-6.08.02.orig/tutorials/io/importCode.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/io/importCode.C	2016-12-06 12:46:10.348969146 +0100
+@@ -54,7 +54,7 @@
+ }
+ void importCode() {
+    TFile *f = new TFile("code.root","recreate");
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    importdir(dir); //change the directory as you like
+    delete f;
+ }
+diff -Nur root-6.08.02.orig/tutorials/io/mergeSelective.C root-6.08.02/tutorials/io/mergeSelective.C
+--- root-6.08.02.orig/tutorials/io/mergeSelective.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/io/mergeSelective.C	2016-12-06 12:46:10.348969146 +0100
+@@ -49,7 +49,7 @@
+    // Create the files to be merged
+    TStopwatch timer;
+    timer.Start();
+-   TString tutdir = gROOT->GetTutorialsDir();
++   TString tutdir = gROOT->GetTutorialDir();
+    if (gROOT->LoadMacro(tutdir + "/hsimple.C")) return;
+    Int_t i;
+    for (i=0; i<nfiles; i++) CreateFile(Form("tomerge%03d.root",i));
+diff -Nur root-6.08.02.orig/tutorials/io/testMergeCont.C root-6.08.02/tutorials/io/testMergeCont.C
+--- root-6.08.02.orig/tutorials/io/testMergeCont.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/io/testMergeCont.C	2016-12-06 12:46:10.349969135 +0100
+@@ -39,7 +39,7 @@
+ 
+ void testMergeCont()
+ {
+-   TString tutdir = gROOT->GetTutorialsDir();
++   TString tutdir = gROOT->GetTutorialDir();
+    gROOT->LoadMacro(tutdir+"/hsimple.C");
+    TList *list1 = (TList *)GetCollection();
+    TList *inputs = new TList();
+diff -Nur root-6.08.02.orig/tutorials/multicore/mp103_processSelector.C root-6.08.02/tutorials/multicore/mp103_processSelector.C
+--- root-6.08.02.orig/tutorials/multicore/mp103_processSelector.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/multicore/mp103_processSelector.C	2016-12-06 12:46:10.349969135 +0100
+@@ -26,7 +26,7 @@
+   // MacOSX may generate connection to WindowServer errors
+   gROOT->SetBatch(kTRUE);
+ 
+-  TString selectorPath = gROOT->GetTutorialsDir();
++  TString selectorPath = gROOT->GetTutorialDir();
+   selectorPath += "/tree/h1analysis.C+";
+   std::cout << "selector used is: "<< selectorPath<<"\n";
+   TSelector *sel = TSelector::GetSelector(selectorPath);
+diff -Nur root-6.08.02.orig/tutorials/pyroot/benchmarks.py root-6.08.02/tutorials/pyroot/benchmarks.py
+--- root-6.08.02.orig/tutorials/pyroot/benchmarks.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/pyroot/benchmarks.py	2016-12-06 12:46:10.349969135 +0100
+@@ -45,7 +45,7 @@
+ ## --------------------------------------------------------------------------
+ if __name__ == '__main__':
+ 
+-   macrodir = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'pyroot')
++   macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
+ 
+  # window for keeping track of bench marks that are run
+    bench = ROOT.TCanvas( 'bench','Benchmarks Summary', -1000, 50, 200, 500 )
+diff -Nur root-6.08.02.orig/tutorials/pyroot/fit1.py root-6.08.02/tutorials/pyroot/fit1.py
+--- root-6.08.02.orig/tutorials/pyroot/fit1.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/pyroot/fit1.py	2016-12-06 12:46:10.349969135 +0100
+@@ -51,7 +51,7 @@
+ fitlabel = TPaveText( 0.6, 0.3, 0.9, 0.80, 'NDC' )
+ fitlabel.SetTextAlign( 12 )
+ fitlabel.SetFillColor( 42 )
+-fitlabel.ReadFile(path.join(gROOT.GetTutorialsDir(), 'pyroot', 'fit1_py.py'))
++fitlabel.ReadFile(path.join(str(gROOT.GetTutorialDir()), 'pyroot', 'fit1_py.py'))
+ fitlabel.Draw()
+ c1.Update()
+ gBenchmark.Show( 'fit1' )
+diff -Nur root-6.08.02.orig/tutorials/pyroot/geometry.py root-6.08.02/tutorials/pyroot/geometry.py
+--- root-6.08.02.orig/tutorials/pyroot/geometry.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/pyroot/geometry.py	2016-12-06 12:46:10.349969135 +0100
+@@ -10,7 +10,7 @@
+ import os
+ import ROOT
+ 
+-macrodir = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'pyroot')
++macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
+ 
+ # the na49.C file was generated, so no python conversion is provided
+ ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'geom', 'na49.C' ) ) )
+diff -Nur root-6.08.02.orig/tutorials/pyroot/rootmarks.py root-6.08.02/tutorials/pyroot/rootmarks.py
+--- root-6.08.02.orig/tutorials/pyroot/rootmarks.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/pyroot/rootmarks.py	2016-12-06 12:46:10.349969135 +0100
+@@ -13,7 +13,7 @@
+ import os
+ import ROOT
+ 
+-macrodir = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'pyroot')
++macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
+ 
+ # use ROOT macro to make sure that bench numbers get updated in one place
+ ROOT.gROOT.Macro( ROOT.gSystem.UnixPathName( os.path.join( macrodir, os.pardir, 'rootmarks.C' ) ) )
+diff -Nur root-6.08.02.orig/tutorials/pyroot/staff.py root-6.08.02/tutorials/pyroot/staff.py
+--- root-6.08.02.orig/tutorials/pyroot/staff.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/pyroot/staff.py	2016-12-06 12:46:10.350969124 +0100
+@@ -47,7 +47,7 @@
+     tree.Branch( 'Nation', AddressOf( staff, 'Nation' ), 'Nation/C' )
+ 
+     # note that the branches Division and Nation cannot be on the first branch
+-    fname = os.path.join(ROOT.gROOT.GetTutorialsDir(), 'tree', 'cernstaff.dat')
++    fname = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'tree', 'cernstaff.dat')
+     for line in open(fname).readlines():
+         t = list(filter( lambda x: x, re.split( '\s+', line ) ) )
+         staff.Category = int(t[0])             # assign as integers
+diff -Nur root-6.08.02.orig/tutorials/roofit/rf505_asciicfg.C root-6.08.02/tutorials/roofit/rf505_asciicfg.C
+--- root-6.08.02.orig/tutorials/roofit/rf505_asciicfg.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/roofit/rf505_asciicfg.C	2016-12-06 12:46:10.350969124 +0100
+@@ -60,9 +60,9 @@
+    params->writeToFile("rf505_asciicfg_example.txt") ;
+ 
+ 
+-   TString dir1 = gROOT->GetTutorialsDir() ;
++   TString dir1 = gROOT->GetTutorialDir() ;
+    dir1.Append("/roofit/rf505_asciicfg.txt") ;
+-   TString dir2 = gROOT->GetTutorialsDir() ;
++   TString dir2 = gROOT->GetTutorialDir() ;
+    dir2.Append("/roofit/rf505_asciicfg_example.txt") ;
+    // R e a d    p a r a m e t e r s   f r o m    a s c i i   f i l e 
+    // ----------------------------------------------------------------
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_compton.C root-6.08.02/tutorials/spectrum/Background_compton.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_compton.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_compton.C	2016-12-06 12:46:10.350969124 +0100
+@@ -19,7 +19,7 @@
+ 
+    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back3");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_decr.C root-6.08.02/tutorials/spectrum/Background_decr.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_decr.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_decr.C	2016-12-06 12:46:10.350969124 +0100
+@@ -18,7 +18,7 @@
+ 
+    TH1F *d    = new TH1F("d","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back1");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_incr.C root-6.08.02/tutorials/spectrum/Background_incr.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_incr.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_incr.C	2016-12-06 12:46:10.350969124 +0100
+@@ -18,7 +18,7 @@
+ 
+    TH1F *d    = new TH1F("d","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back1");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_order.C root-6.08.02/tutorials/spectrum/Background_order.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_order.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_order.C	2016-12-06 12:46:10.350969124 +0100
+@@ -22,7 +22,7 @@
+    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
+    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back2");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_smooth.C root-6.08.02/tutorials/spectrum/Background_smooth.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_smooth.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_smooth.C	2016-12-06 12:46:10.351969112 +0100
+@@ -20,7 +20,7 @@
+    TH1F *d1 = new TH1F("d1","",nbins,xmin,xmax);
+    TH1F *d2 = new TH1F("d2","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back1");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_width2.C root-6.08.02/tutorials/spectrum/Background_width2.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_width2.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_width2.C	2016-12-06 12:46:10.351969112 +0100
+@@ -22,7 +22,7 @@
+    TH1F *d3 = new TH1F("d3","",nbins,xmin,xmax);
+    TH1F *d4 = new TH1F("d4","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back2");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Background_width.C root-6.08.02/tutorials/spectrum/Background_width.C
+--- root-6.08.02.orig/tutorials/spectrum/Background_width.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Background_width.C	2016-12-06 12:46:10.352969101 +0100
+@@ -17,7 +17,7 @@
+    Double_t source[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *back = (TH1F*) f->Get("back1");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Deconvolution.C root-6.08.02/tutorials/spectrum/Deconvolution.C
+--- root-6.08.02.orig/tutorials/spectrum/Deconvolution.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Deconvolution.C	2016-12-06 12:46:10.352969101 +0100
+@@ -17,7 +17,7 @@
+    Double_t response[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *h = (TH1F*) f->Get("decon1");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/DeconvolutionRL_wide_boost.C root-6.08.02/tutorials/spectrum/DeconvolutionRL_wide_boost.C
+--- root-6.08.02.orig/tutorials/spectrum/DeconvolutionRL_wide_boost.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/DeconvolutionRL_wide_boost.C	2016-12-06 12:46:10.353969090 +0100
+@@ -17,7 +17,7 @@
+    Double_t response[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    h = (TH1F*) f->Get("decon3");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/DeconvolutionRL_wide.C root-6.08.02/tutorials/spectrum/DeconvolutionRL_wide.C
+--- root-6.08.02.orig/tutorials/spectrum/DeconvolutionRL_wide.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/DeconvolutionRL_wide.C	2016-12-06 12:46:10.353969090 +0100
+@@ -17,7 +17,7 @@
+    Double_t response[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    h = (TH1F*) f->Get("decon3");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Deconvolution_wide_boost.C root-6.08.02/tutorials/spectrum/Deconvolution_wide_boost.C
+--- root-6.08.02.orig/tutorials/spectrum/Deconvolution_wide_boost.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Deconvolution_wide_boost.C	2016-12-06 12:46:10.353969090 +0100
+@@ -20,7 +20,7 @@
+    TH1F *h = new TH1F("h","Deconvolution",nbins,xmin,xmax);
+    TH1F *d = new TH1F("d","",nbins,xmin,xmax);
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    h = (TH1F*) f->Get("decon3");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Deconvolution_wide.C root-6.08.02/tutorials/spectrum/Deconvolution_wide.C
+--- root-6.08.02.orig/tutorials/spectrum/Deconvolution_wide.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Deconvolution_wide.C	2016-12-06 12:46:10.353969090 +0100
+@@ -17,7 +17,7 @@
+    Double_t response[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *h = (TH1F*) f->Get("decon3");
+diff -Nur root-6.08.02.orig/tutorials/spectrum/Smoothing.C root-6.08.02/tutorials/spectrum/Smoothing.C
+--- root-6.08.02.orig/tutorials/spectrum/Smoothing.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/spectrum/Smoothing.C	2016-12-06 12:46:10.353969090 +0100
+@@ -16,7 +16,7 @@
+    Double_t source[nbins];
+    gROOT->ForceStyle();
+ 
+-   TString dir  = gROOT->GetTutorialsDir();
++   TString dir  = gROOT->GetTutorialDir();
+    TString file = dir+"/spectrum/TSpectrum.root";
+    TFile *f     = new TFile(file.Data());
+    TH1F *h = (TH1F*) f->Get("back1");
+diff -Nur root-6.08.02.orig/tutorials/tmva/keras/MulticlassKeras.py root-6.08.02/tutorials/tmva/keras/MulticlassKeras.py
+--- root-6.08.02.orig/tutorials/tmva/keras/MulticlassKeras.py	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tmva/keras/MulticlassKeras.py	2016-12-06 12:46:10.354969079 +0100
+@@ -19,7 +19,7 @@
+ 
+ # Load data
+ if not isfile('tmva_example_multiple_background.root'):
+-    createDataMacro = gROOT.GetTutorialsDir() + '/tmva/createData.C'
++    createDataMacro = str(gROOT.GetTutorialDir()) + '/tmva/createData.C'
+     print(createDataMacro)
+     gROOT.ProcessLine('.L {}'.format(createDataMacro))
+     gROOT.ProcessLine('create_MultipleBackground(4000)')
+diff -Nur root-6.08.02.orig/tutorials/tmva/TMVAClassificationCategoryApplication.C root-6.08.02/tutorials/tmva/TMVAClassificationCategoryApplication.C
+--- root-6.08.02.orig/tutorials/tmva/TMVAClassificationCategoryApplication.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tmva/TMVAClassificationCategoryApplication.C	2016-12-06 12:46:10.354969079 +0100
+@@ -85,7 +85,7 @@
+    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
+    // if directory data not found try using tutorials dir
+    if (gSystem->AccessPathName( fname + "toy_sigbkg_categ_offset.root"  )) {
+-      fname = TString(gROOT->GetTutorialsDir()) + "/tmva/data/";
++      fname = gROOT->GetTutorialDir() + "/tmva/data/";
+    }
+    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
+    else                 fname += "toy_sigbkg_categ_varoff.root";
+diff -Nur root-6.08.02.orig/tutorials/tmva/TMVAClassificationCategory.C root-6.08.02/tutorials/tmva/TMVAClassificationCategory.C
+--- root-6.08.02.orig/tutorials/tmva/TMVAClassificationCategory.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tmva/TMVAClassificationCategory.C	2016-12-06 12:46:10.354969079 +0100
+@@ -89,7 +89,7 @@
+    TString fname = TString(gSystem->DirName(__FILE__) ) + "/data/";
+    if (gSystem->AccessPathName( fname + "toy_sigbkg_categ_offset.root")) {
+       // if directory data not found try using tutorials dir
+-      fname = TString(gROOT->GetTutorialsDir()) + "/tmva/data/";
++      fname = gROOT->GetTutorialDir() + "/tmva/data/";
+    }
+    if (UseOffsetMethod) fname += "toy_sigbkg_categ_offset.root";
+    else                 fname += "toy_sigbkg_categ_varoff.root";
+diff -Nur root-6.08.02.orig/tutorials/tmva/TMVAMulticlass.C root-6.08.02/tutorials/tmva/TMVAMulticlass.C
+--- root-6.08.02.orig/tutorials/tmva/TMVAMulticlass.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tmva/TMVAMulticlass.C	2016-12-06 12:46:10.354969079 +0100
+@@ -98,7 +98,7 @@
+    }
+    else {
+       std::cout << "Creating testdata...." << std::endl;
+-      TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
++      TString createDataMacro = gROOT->GetTutorialDir() + "/tmva/createData.C";
+       gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
+       gROOT->ProcessLine("create_MultipleBackground(2000)");
+       std::cout << " created tmva_example_multiple_background.root for tests of the multiclass features"<<std::endl;
+diff -Nur root-6.08.02.orig/tutorials/tmva/TMVAMultipleBackgroundExample.C root-6.08.02/tutorials/tmva/TMVAMultipleBackgroundExample.C
+--- root-6.08.02.orig/tutorials/tmva/TMVAMultipleBackgroundExample.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tmva/TMVAMultipleBackgroundExample.C	2016-12-06 12:46:10.354969079 +0100
+@@ -476,7 +476,7 @@
+         << "========================" << endl
+         << endl;
+ 
+-   TString createDataMacro = TString(gROOT->GetTutorialsDir()) + "/tmva/createData.C";
++   TString createDataMacro = gROOT->GetTutorialDir() + "/tmva/createData.C";
+    gROOT->ProcessLine(TString::Format(".L %s",createDataMacro.Data()));
+    gROOT->ProcessLine("create_MultipleBackground(2000)");
+ 
+diff -Nur root-6.08.02.orig/tutorials/tree/basic2.C root-6.08.02/tutorials/tree/basic2.C
+--- root-6.08.02.orig/tutorials/tree/basic2.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/basic2.C	2016-12-06 12:46:10.354969079 +0100
+@@ -10,7 +10,7 @@
+ /// \author Rene Brun
+ 
+ void basic2() {
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/tree/");
+    dir.ReplaceAll("/./","/");
+ 
+diff -Nur root-6.08.02.orig/tutorials/tree/basic.C root-6.08.02/tutorials/tree/basic.C
+--- root-6.08.02.orig/tutorials/tree/basic.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/basic.C	2016-12-06 12:46:10.355969067 +0100
+@@ -12,7 +12,7 @@
+ void basic() {
+ // read file $ROOTSYS/tutorials/tree/basic.dat
+ // this file has 3 columns of float data
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/tree/");
+    dir.ReplaceAll("/./","/");
+    ifstream in;
+diff -Nur root-6.08.02.orig/tutorials/tree/cernbuild.C root-6.08.02/tutorials/tree/cernbuild.C
+--- root-6.08.02.orig/tutorials/tree/cernbuild.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/cernbuild.C	2016-12-06 12:46:10.355969067 +0100
+@@ -25,7 +25,7 @@
+    //The input file cern.dat is a copy of the CERN staff data base
+    //from 1988
+    TString filename = "cernstaff.root";
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/tree/");
+    dir.ReplaceAll("/./","/");
+    FILE *fp = fopen(Form("%scernstaff.dat",dir.Data()),"r");
+diff -Nur root-6.08.02.orig/tutorials/tree/cernstaff.C root-6.08.02/tutorials/tree/cernstaff.C
+--- root-6.08.02.orig/tutorials/tree/cernstaff.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/cernstaff.C	2016-12-06 12:46:10.355969067 +0100
+@@ -9,7 +9,7 @@
+ /// \author Rene Brun
+ 
+ void cernstaff () {
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/tree/cernstaff.C");
+    if (gSystem->AccessPathName("cernstaff.root")) {
+       gROOT->SetMacroPath(dir);
+diff -Nur root-6.08.02.orig/tutorials/tree/jets.C root-6.08.02/tutorials/tree/jets.C
+--- root-6.08.02.orig/tutorials/tree/jets.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/jets.C	2016-12-06 12:46:10.355969067 +0100
+@@ -99,7 +99,7 @@
+ //void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun);
+ void jets(Int_t nev=100, Int_t npileup=200) {
+    gSystem->Load("libPhysics");
+-   TString tutdir = gROOT->GetTutorialsDir();
++   TString tutdir = gROOT->GetTutorialDir();
+    gROOT->ProcessLine(".L " + tutdir + "/tree/JetEvent.cxx+");
+    gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
+    gROOT->ProcessLine("#include \"" __FILE__ "\"");
+diff -Nur root-6.08.02.orig/tutorials/tree/ntuple1.C root-6.08.02/tutorials/tree/ntuple1.C
+--- root-6.08.02.orig/tutorials/tree/ntuple1.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/tree/ntuple1.C	2016-12-06 12:46:10.355969067 +0100
+@@ -31,7 +31,7 @@
+    //
+    // Connect ROOT histogram/ntuple demonstration file
+    // generated by example $ROOTSYS/tutorials/hsimple.C.
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    dir.Append("/hsimple.C");
+    dir.ReplaceAll("/./","/");
+    if (gBenchmark->GetBench("hsimple") < 0) gInterpreter->LoadMacro(dir.Data());
+diff -Nur root-6.08.02.orig/tutorials/xml/DOMParsePerson.C root-6.08.02/tutorials/xml/DOMParsePerson.C
+--- root-6.08.02.orig/tutorials/xml/DOMParsePerson.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/xml/DOMParsePerson.C	2016-12-06 12:46:10.356969056 +0100
+@@ -234,7 +234,7 @@
+ {
+    PersonList personlist;
+    gROOT->ProcessLine(".O 0");
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    if (personlist.ParseFile(dir+"/xml/person.xml") == 0)
+       cout << personlist << endl;
+ }
+diff -Nur root-6.08.02.orig/tutorials/xml/DOMRecursive.C root-6.08.02/tutorials/xml/DOMRecursive.C
+--- root-6.08.02.orig/tutorials/xml/DOMRecursive.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/xml/DOMRecursive.C	2016-12-06 12:46:10.356969056 +0100
+@@ -54,7 +54,7 @@
+ void DOMRecursive()
+ {
+   TDOMParser *domParser = new TDOMParser();
+-  TString dir = gROOT->GetTutorialsDir();
++  TString dir = gROOT->GetTutorialDir();
+   domParser->SetValidate(false); // do not validate with DTD
+   domParser->ParseFile(dir+"/xml/person.xml");
+ 
+diff -Nur root-6.08.02.orig/tutorials/xml/SAXHandler.C root-6.08.02/tutorials/xml/SAXHandler.C
+--- root-6.08.02.orig/tutorials/xml/SAXHandler.C	2016-12-03 00:07:29.000000000 +0100
++++ root-6.08.02/tutorials/xml/SAXHandler.C	2016-12-06 12:46:10.356969056 +0100
+@@ -104,6 +104,6 @@
+    SaxHandler *saxHandler = new SaxHandler();
+ 
+    saxParser->ConnectToHandler("SaxHandler", saxHandler);
+-   TString dir = gROOT->GetTutorialsDir();
++   TString dir = gROOT->GetTutorialDir();
+    saxParser->ParseFile(dir+"/xml/saxexample.xml");
+ }

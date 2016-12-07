@@ -1,7 +1,8 @@
-diff -ur root-6.06.02.orig/hist/histpainter/src/THistPainter.cxx root-6.06.02/hist/histpainter/src/THistPainter.cxx
---- root-6.06.02.orig/hist/histpainter/src/THistPainter.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/hist/histpainter/src/THistPainter.cxx	2016-03-31 20:09:00.566638573 +0200
-@@ -1907,8 +1907,8 @@
+diff --git a/hist/histpainter/src/THistPainter.cxx b/hist/histpainter/src/THistPainter.cxx
+index 778381a..e9701c6 100644
+--- a/hist/histpainter/src/THistPainter.cxx
++++ b/hist/histpainter/src/THistPainter.cxx
+@@ -2264,8 +2264,8 @@ Begin_Macro(source)
     Double_t lat2 = 50;
     TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
  
@@ -12,10 +13,11 @@ diff -ur root-6.06.02.orig/hist/histpainter/src/THistPainter.cxx root-6.06.02/hi
  
     TMultiGraph *mg;
     TKey *key;
-diff -ur root-6.06.02.orig/test/stressGraphics.cxx root-6.06.02/test/stressGraphics.cxx
---- root-6.06.02.orig/test/stressGraphics.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/stressGraphics.cxx	2016-03-31 20:09:57.680125335 +0200
-@@ -1956,7 +1956,8 @@
+diff --git a/test/stressGraphics.cxx b/test/stressGraphics.cxx
+index c734bf6..a95b226 100644
+--- a/test/stressGraphics.cxx
++++ b/test/stressGraphics.cxx
+@@ -1984,7 +1984,8 @@ void th2poly()
     Double_t lat2 = 50;
     TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
  
@@ -25,10 +27,11 @@ diff -ur root-6.06.02.orig/test/stressGraphics.cxx root-6.06.02/test/stressGraph
  
     if (!f) {
        printf("Cannot access usa.root. Is internet working ?\n");
-diff -ur root-6.06.02.orig/test/stressHistogram.cxx root-6.06.02/test/stressHistogram.cxx
---- root-6.06.02.orig/test/stressHistogram.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/stressHistogram.cxx	2016-03-30 05:39:17.309313821 +0200
-@@ -10164,7 +10164,8 @@
+diff --git a/test/stressHistogram.cxx b/test/stressHistogram.cxx
+index 25f2c59..f6a3c67 100644
+--- a/test/stressHistogram.cxx
++++ b/test/stressHistogram.cxx
+@@ -10167,7 +10167,8 @@ int stressHistogram()
        refFile = TFile::Open(refFileName, "RECREATE");
     }
     else {
@@ -38,27 +41,30 @@ diff -ur root-6.06.02.orig/test/stressHistogram.cxx root-6.06.02/test/stressHist
     }
  
     if ( refFile != 0 ) {
-diff -ur root-6.06.02.orig/test/stressRooFit.cxx root-6.06.02/test/stressRooFit.cxx
---- root-6.06.02.orig/test/stressRooFit.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/stressRooFit.cxx	2016-03-30 05:39:17.330313983 +0200
-@@ -78,9 +78,10 @@
+diff --git a/test/stressRooFit.cxx b/test/stressRooFit.cxx
+index 8256069..fe2a3e1 100644
+--- a/test/stressRooFit.cxx
++++ b/test/stressRooFit.cxx
+@@ -78,10 +78,11 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t
           cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
           return 1;
        }
 -      fref = new TWebFile(refFile) ;
 +      TFile::SetCacheFileDir(".");
 +      fref = TFile::Open(refFile,"CACHEREAD") ;
+       //std::cout << "using WEB file " << refFile << std::endl;
      } else {
 -      fref = new TFile(refFile,writeRef?"RECREATE":"") ;
 +      fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
+       //std::cout << "using file " << refFile << std::endl;
      }
      if (fref->IsZombie()) {
-       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
-diff -ur root-6.06.02.orig/test/stressTMVA.cxx root-6.06.02/test/stressTMVA.cxx
---- root-6.06.02.orig/test/stressTMVA.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/test/stressTMVA.cxx	2016-03-30 06:11:11.630058265 +0200
-@@ -2011,21 +2011,15 @@
-   factory->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
+diff --git a/test/stressTMVA.cxx b/test/stressTMVA.cxx
+index 23f522c..128024a 100644
+--- a/test/stressTMVA.cxx
++++ b/test/stressTMVA.cxx
+@@ -2020,21 +2020,15 @@ void MethodUnitTestWithROCLimits::run()
+   dataloader->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
  
    TFile* input(0);
 -
@@ -82,7 +88,7 @@ diff -ur root-6.06.02.orig/test/stressTMVA.cxx root-6.06.02/test/stressTMVA.cxx
    if (input == NULL) {
       cerr << "broken/inaccessible input file" << endl;
    }
-@@ -2440,14 +2434,12 @@
+@@ -2451,14 +2445,12 @@ void RegressionUnitTestWithDeviation::run()
     TFile* input(0);
     FileStat_t stat;
  
@@ -100,10 +106,11 @@ diff -ur root-6.06.02.orig/test/stressTMVA.cxx root-6.06.02/test/stressTMVA.cxx
     }
     if (input == NULL) {
        cerr << "broken/inaccessible input file" << endl;
-diff -ur root-6.06.02.orig/tmva/pymva/test/Classification.C root-6.06.02/tmva/pymva/test/Classification.C
---- root-6.06.02.orig/tmva/pymva/test/Classification.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tmva/pymva/test/Classification.C	2016-04-01 18:09:27.283029169 +0200
-@@ -27,23 +27,26 @@
+diff --git a/tmva/pymva/test/Classification.C b/tmva/pymva/test/Classification.C
+index 71987a7..d5c8c6e 100644
+--- a/tmva/pymva/test/Classification.C
++++ b/tmva/pymva/test/Classification.C
+@@ -27,23 +27,26 @@ void Classification()
     TMVA::Factory *factory = new TMVA::Factory("TMVAClassification", outputFile,
           "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
  
@@ -139,10 +146,11 @@ diff -ur root-6.06.02.orig/tmva/pymva/test/Classification.C root-6.06.02/tmva/py
  
     std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
  
-diff -ur root-6.06.02.orig/tmva/rmva/test/Classification.C root-6.06.02/tmva/rmva/test/Classification.C
---- root-6.06.02.orig/tmva/rmva/test/Classification.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tmva/rmva/test/Classification.C	2016-04-01 18:09:50.932225431 +0200
-@@ -36,12 +36,19 @@
+diff --git a/tmva/rmva/test/Classification.C b/tmva/rmva/test/Classification.C
+index 5a2668f..fba8505 100644
+--- a/tmva/rmva/test/Classification.C
++++ b/tmva/rmva/test/Classification.C
+@@ -36,12 +36,19 @@ void Classification()
     factory->AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
     factory->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
  
@@ -167,10 +175,11 @@ diff -ur root-6.06.02.orig/tmva/rmva/test/Classification.C root-6.06.02/tmva/rmv
  
     std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
  
-diff -ur root-6.06.02.orig/tutorials/hist/th2polyUSA.C root-6.06.02/tutorials/hist/th2polyUSA.C
---- root-6.06.02.orig/tutorials/hist/th2polyUSA.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/hist/th2polyUSA.C	2016-03-31 20:10:42.970511332 +0200
-@@ -44,8 +44,8 @@
+diff --git a/tutorials/hist/th2polyUSA.C b/tutorials/hist/th2polyUSA.C
+index 5dc69fe..f7adef0 100644
+--- a/tutorials/hist/th2polyUSA.C
++++ b/tutorials/hist/th2polyUSA.C
+@@ -49,8 +49,8 @@ void th2polyUSA()
     Double_t lat2 = 50;
     TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
  
@@ -181,47 +190,22 @@ diff -ur root-6.06.02.orig/tutorials/hist/th2polyUSA.C root-6.06.02/tutorials/hi
  
     if (!f) {
        printf("Cannot access usa.root. Is internet working ?\n");
-diff -ur root-6.06.02.orig/tutorials/tmva/TMVAClassificationApplication.C root-6.06.02/tutorials/tmva/TMVAClassificationApplication.C
---- root-6.06.02.orig/tutorials/tmva/TMVAClassificationApplication.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/tmva/TMVAClassificationApplication.C	2016-04-01 18:06:14.522429453 +0200
-@@ -221,14 +221,16 @@
-    // Prepare input tree (this must be replaced by your data source)
-    // in this example, there is a toy tree with signal and one with background events
-    // we'll later on use only the "signal" events for the test in this example.
--   //   
-+   //
-    TFile *input(0);
--   TString fname = "./tmva_example.root";   
--   if (!gSystem->AccessPathName( fname )) 
-+   TString fname = "./tmva_class_example.root";
-+   if (!gSystem->AccessPathName( fname )) {
-       input = TFile::Open( fname ); // check if file in local directory exists
--   else    
--      input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" ); // if not: download from ROOT server
--   
-+   }
-+   else {
-+      TFile::SetCacheFileDir(".");
-+      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD"); // if not: download from ROOT server
-+   }
-    if (!input) {
-       std::cout << "ERROR: could not open data file" << std::endl;
-       exit(1);
-diff -ur root-6.06.02.orig/tutorials/tmva/TMVAClassification.C root-6.06.02/tutorials/tmva/TMVAClassification.C
---- root-6.06.02.orig/tutorials/tmva/TMVAClassification.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/tmva/TMVAClassification.C	2016-04-01 18:05:40.808149659 +0200
-@@ -201,13 +201,19 @@
+diff --git a/tutorials/tmva/TMVAClassification.C b/tutorials/tmva/TMVAClassification.C
+index ee2056f..1602cab 100644
+--- a/tutorials/tmva/TMVAClassification.C
++++ b/tutorials/tmva/TMVAClassification.C
+@@ -164,13 +164,19 @@ int TMVAClassification( TString myMethodList = "" )
  
     // Read training and test data
     // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
 +   TFile *input(0);
     TString fname = "./tmva_class_example.root";
--   
+-
 -   if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
 -      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
--   
+-
 -   TFile *input = TFile::Open( fname );
--   
+-
 +   if (!gSystem->AccessPathName( fname )) {
 +      input = TFile::Open( fname ); // check if file in local directory exists
 +   }
@@ -234,12 +218,86 @@ diff -ur root-6.06.02.orig/tutorials/tmva/TMVAClassification.C root-6.06.02/tuto
 +      exit(1);
 +   }
     std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
-    
-    // --- Register the training and test trees
-diff -ur root-6.06.02.orig/tutorials/tmva/TMVARegressionApplication.C root-6.06.02/tutorials/tmva/TMVARegressionApplication.C
---- root-6.06.02.orig/tutorials/tmva/TMVARegressionApplication.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/tmva/TMVARegressionApplication.C	2016-04-01 18:07:00.137808013 +0200
-@@ -123,16 +123,16 @@
+ 
+    // Register the training and test trees
+diff --git a/tutorials/tmva/TMVAClassificationApplication.C b/tutorials/tmva/TMVAClassificationApplication.C
+index 255e187..b03b472 100644
+--- a/tutorials/tmva/TMVAClassificationApplication.C
++++ b/tutorials/tmva/TMVAClassificationApplication.C
+@@ -232,12 +232,14 @@ void TMVAClassificationApplication( TString myMethodList = "" )
+    // we'll later on use only the "signal" events for the test in this example.
+    //
+    TFile *input(0);
+-   TString fname = "./tmva_example.root";
+-   if (!gSystem->AccessPathName( fname ))
++   TString fname = "./tmva_class_example.root";
++   if (!gSystem->AccessPathName( fname )) {
+       input = TFile::Open( fname ); // check if file in local directory exists
+-   else
+-      input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" ); // if not: download from ROOT server
+-
++   }
++   else {
++      TFile::SetCacheFileDir(".");
++      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD"); // if not: download from ROOT server
++   }
+    if (!input) {
+       std::cout << "ERROR: could not open data file" << std::endl;
+       exit(1);
+diff --git a/tutorials/tmva/TMVACrossValidation.C b/tutorials/tmva/TMVACrossValidation.C
+index 1b85b98..b46004e 100644
+--- a/tutorials/tmva/TMVACrossValidation.C
++++ b/tutorials/tmva/TMVACrossValidation.C
+@@ -26,10 +26,19 @@ void TMVACrossValidation()
+    TMVA::Tools::Instance();
+ 
+    // Load data
++   TFile *input(0);
+    TString fname = "./tmva_class_example.root";
+-   if (gSystem->AccessPathName(fname))
+-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+-   TFile *input = TFile::Open(fname);
++   if (!gSystem->AccessPathName( fname )) {
++      input = TFile::Open( fname ); // check if file in local directory exists
++   }
++   else {
++      TFile::SetCacheFileDir(".");
++      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
++   }
++   if (!input) {
++      std::cout << "ERROR: could not open data file" << std::endl;
++      exit(1);
++   }
+ 
+    TTree* signalTree = (TTree*)input->Get("TreeS");
+    TTree* background = (TTree*)input->Get("TreeB");
+diff --git a/tutorials/tmva/TMVARegression.C b/tutorials/tmva/TMVARegression.C
+index 850ff84..c94ce13 100644
+--- a/tutorials/tmva/TMVARegression.C
++++ b/tutorials/tmva/TMVARegression.C
+@@ -166,11 +166,13 @@ void TMVARegression( TString myMethodList = "" )
+    // load the signal and background event samples from ROOT trees
+    TFile *input(0);
+    TString fname = "./tmva_reg_example.root";
+-   if (!gSystem->AccessPathName( fname ))
++   if (!gSystem->AccessPathName( fname )) {
+       input = TFile::Open( fname ); // check if file in local directory exists
+-   else
+-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
+-
++   }
++   else {
++      TFile::SetCacheFileDir(".");
++      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD"); // if not: download from ROOT server
++   }
+    if (!input) {
+       std::cout << "ERROR: could not open data file" << std::endl;
+       exit(1);
+diff --git a/tutorials/tmva/TMVARegressionApplication.C b/tutorials/tmva/TMVARegressionApplication.C
+index 9ceefdf..8a8e62f 100644
+--- a/tutorials/tmva/TMVARegressionApplication.C
++++ b/tutorials/tmva/TMVARegressionApplication.C
+@@ -128,16 +128,16 @@ void TMVARegressionApplication( TString myMethodList = "" )
     // Prepare input tree (this must be replaced by your data source)
     // in this example, there is a toy tree with signal and one with background events
     // we'll later on use only the "signal" events for the test in this example.
@@ -254,27 +312,6 @@ diff -ur root-6.06.02.orig/tutorials/tmva/TMVARegressionApplication.C root-6.06.
 -      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
     }
 -   
-+   else {
-+      TFile::SetCacheFileDir(".");
-+      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD"); // if not: download from ROOT server
-+   }
-    if (!input) {
-       std::cout << "ERROR: could not open data file" << std::endl;
-       exit(1);
-diff -ur root-6.06.02.orig/tutorials/tmva/TMVARegression.C root-6.06.02/tutorials/tmva/TMVARegression.C
---- root-6.06.02.orig/tutorials/tmva/TMVARegression.C	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/tutorials/tmva/TMVARegression.C	2016-03-30 05:58:14.955076174 +0200
-@@ -158,11 +158,13 @@
-    // load the signal and background event samples from ROOT trees
-    TFile *input(0);
-    TString fname = "./tmva_reg_example.root";
--   if (!gSystem->AccessPathName( fname )) 
-+   if (!gSystem->AccessPathName( fname )) {
-       input = TFile::Open( fname ); // check if file in local directory exists
--   else 
--      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
--   
-+   }
 +   else {
 +      TFile::SetCacheFileDir(".");
 +      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD"); // if not: download from ROOT server

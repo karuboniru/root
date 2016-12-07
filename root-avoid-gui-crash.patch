@@ -1,25 +1,3 @@
-diff -ur root-6.06.02.orig/gui/ged/src/TArrowEditor.cxx root-6.06.02/gui/ged/src/TArrowEditor.cxx
---- root-6.06.02.orig/gui/ged/src/TArrowEditor.cxx	2016-03-03 10:36:03.000000000 +0100
-+++ root-6.06.02/gui/ged/src/TArrowEditor.cxx	2016-03-29 15:00:55.706652094 +0200
-@@ -30,7 +30,7 @@
- shape, size, angle.</h2></center>
- The picture below shows this interface.
- End_Html
--Begin_Macro(GUI)
-+~~~
- {
-    gROOT->ProcessLine(".x $ROOTSYS/tutorials/graphics/arrow.C");
-    TCanvas *c1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c1");
-@@ -41,7 +41,8 @@
-    r->SetWindowSize(700,500);
-    return r->GetMainFrame();
- }
--End_Macro */
-+~~~
-+*/
- 
- 
- ////////////////////////////////////////////////////////////////////////////////
 diff -ur root-6.06.02.orig/gui/gui/src/TGTable.cxx root-6.06.02/gui/gui/src/TGTable.cxx
 --- root-6.06.02.orig/gui/gui/src/TGTable.cxx	2016-03-03 10:36:03.000000000 +0100
 +++ root-6.06.02/gui/gui/src/TGTable.cxx	2016-03-29 15:05:17.952862862 +0200
