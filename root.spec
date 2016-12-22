@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3098,6 +3098,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Thu Dec 22 2016 Miro Hrončok <mhroncok@redhat.com> - 6.08.02-2
+- Rebuild for Python 3.6
+
 * Tue Dec 06 2016 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.02-1
 - Update to 6.08.02
 - Drop patches accepted upstream
