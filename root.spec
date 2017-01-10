@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3098,6 +3098,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Tue Jan 10 2017 Orion Poplawski <orion@cora.nwra.com> - 6.08.02-3
+- Rebuild for glew 2.0.0
+
 * Thu Dec 22 2016 Miro Hrončok <mhroncok@redhat.com> - 6.08.02-2
 - Rebuild for Python 3.6
 
