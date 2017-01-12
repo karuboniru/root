@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3098,6 +3098,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Thu Jan 12 2017 Igor Gnatenko <ignatenko@redhat.com> - 6.08.02-4
+- Rebuild for readline 7.x
+
 * Tue Jan 10 2017 Orion Poplawski <orion@cora.nwra.com> - 6.08.02-3
 - Rebuild for glew 2.0.0
 
