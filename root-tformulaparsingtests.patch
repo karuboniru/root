@@ -1,5 +1,5 @@
 diff --git a/test/TFormulaParsingTests.h b/test/TFormulaParsingTests.h
-index 1ba19ce..d9e3ee8 100644
+index 060d149..4a2957c 100644
 --- a/test/TFormulaParsingTests.h
 +++ b/test/TFormulaParsingTests.h
 @@ -6,26 +6,26 @@
@@ -451,7 +451,7 @@ index 1ba19ce..d9e3ee8 100644
     TF1 f3("f3","f1+[0]");
     // param order should be the same
 -   f3.SetParameters( f2.GetParameters() );
--   ok &= fpEqual(f2.Eval(1) , f0.Eval(1) );
+-   ok &= fpEqual(f3.Eval(1) , f0.Eval(1) );
 +   f3.SetParameters(f2.GetParameters());
 +   ok &= fpEqual(f3.Eval(1), f0.Eval(1), 7e-16);
     return ok;
@@ -702,7 +702,7 @@ index 1ba19ce..d9e3ee8 100644
     return ok;
  }
  
-@@ -593,129 +571,128 @@ bool test33() {
+@@ -593,69 +571,69 @@ bool test33() {
     f1.SetParameters(1,0,1,1,2,0.);
     TF2 f2("f2","xygaus",-10,10,-10,10);
     f2.SetParameters(1,0,1,1,2);
@@ -781,11 +781,35 @@ index 1ba19ce..d9e3ee8 100644
  
 -   
 -   return ok; 
--} 
--   
--void PrintError(int itest)  { 
 +   return ok;
-+}
+ }
+ 
+ bool test37() {
+   // test for inserting correcting polynomials (bug ROOT-8496)
+   bool ok = true;
+   TF1 f1("f1","[0]*pol1(1) + pol2(3)*[6]",0,1);
+-  f1.SetParameters(2,1,2,1,2,3,4); 
++  f1.SetParameters(2,1,2,1,2,3,4);
+   auto ref = [](double x) { return 2 * (1 + 2*x ) +  (1 + 2*x + 3*x*x) * 4 ; };
+ 
+-  ok &= TMath::AreEqualAbs( f1.Eval(0.5), ref(0.5), 1.E-10);
+-  return ok; 
++  ok &= fpEqual(f1.Eval(0.5), ref(0.5), 1.E-10);
++  return ok;
+ }
+ 
+ bool test38() {
+@@ -666,81 +644,80 @@ bool test38() {
+   ok &= (f1.Eval(0) == 2.);
+   TF1 f2("f2","[A]+[1]*x",0,1);
+   f2.SetParameters(999,2,3);
+-  ok &= (f2.Eval(2) == 7.);  
+-  return ok; 
++  ok &= (f2.Eval(2) == 7.);
++  return ok;
+ }
+- 
+-void PrintError(int itest)  { 
 +
 +void PrintError(int itest) {
     Error("TFormula test","test%d FAILED ",itest);
@@ -843,6 +867,8 @@ index 1ba19ce..d9e3ee8 100644
 -   IncrTest(itest); if (!test34() ) { PrintError(itest); }
 -   IncrTest(itest); if (!test35() ) { PrintError(itest); }
 -   IncrTest(itest); if (!test36() ) { PrintError(itest); }
+-   IncrTest(itest); if (!test37() ) { PrintError(itest); }
+-   IncrTest(itest); if (!test38() ) { PrintError(itest); }
 +   IncrTest(itest); if (!test1()) { PrintError(itest); }
 +   IncrTest(itest); if (!test2()) { PrintError(itest); }
 +   IncrTest(itest); if (!test3()) { PrintError(itest); }
@@ -879,6 +905,8 @@ index 1ba19ce..d9e3ee8 100644
 +   IncrTest(itest); if (!test34()) { PrintError(itest); }
 +   IncrTest(itest); if (!test35()) { PrintError(itest); }
 +   IncrTest(itest); if (!test36()) { PrintError(itest); }
++   IncrTest(itest); if (!test37()) { PrintError(itest); }
++   IncrTest(itest); if (!test38()) { PrintError(itest); }
  
     std::cout << ".\n";
 -    

@@ -21,9 +21,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.08.02
+Version:	6.08.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -89,6 +89,11 @@ Patch15:	%{name}-rose-image.patch
 #		Fix stressGraphics.ref
 #		https://github.com/root-mirror/root/pull/312
 Patch16:	%{name}-stressgraphics.patch
+#		Fix broken TPad::WaitPrimitive (backport from git)
+Patch17:	%{name}-TPad-WaitPrimitive.patch
+#		Don't wait for user interaction in batch mode
+#		https://github.com/root-mirror/root/pull/322
+Patch18:	%{name}-spectrum-batch.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -326,7 +331,6 @@ Obsoletes:	%{name}-ruby < 6.00.00
 %if %{hadoop} == 0
 Obsoletes:	%{name}-io-hdfs < 6.06.04-2
 %endif
-Obsoletes:	%{name}-rootaas < 6.08.00
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -423,6 +427,7 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package -n python2-jupyroot
 Summary:	ROOT Jupyter kernel
 Requires:	python2-%{name} = %{version}-%{release}
+Obsoletes:	%{name}-rootaas < 6.08.00
 
 %description -n python2-jupyroot
 The Jupyter kernel for the ROOT notebook.
@@ -1532,11 +1537,9 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 23
 #		Jupyter is not available in RHEL/EPEL
 Requires:	/usr/bin/jupyter
-#		Fedora's /usr/bin/jupyter uses Python 3
-#		Therefore depend on the Python 3 JupyROOT kernel
-Requires:	%{python3pkg}-jupyroot = %{version}-%{release}
-Requires:	%{python3pkg}-jsmva = %{version}-%{release}
 %endif
+Requires:	python2-jupyroot = %{version}-%{release}
+Requires:	python2-jsmva = %{version}-%{release}
 
 %description notebook
 ROOT as a Jupyter Notebook.
@@ -1561,6 +1564,8 @@ ROOT as a Jupyter Notebook.
 %patch14 -p1
 %patch15 -p1
 %patch16 -p1
+%patch17 -p1
+%patch18 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3098,6 +3103,11 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat Jan 14 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.04-1
+- Update to 6.08.04
+- Fix broken TPad::WaitPrimitive (backport from git)
+- Rebuild for gcc 6.3
+
 * Thu Jan 12 2017 Igor Gnatenko <ignatenko@redhat.com> - 6.08.02-4
 - Rebuild for readline 7.x
 

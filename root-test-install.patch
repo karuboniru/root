@@ -1772,7 +1772,7 @@ diff -Nur root-6.08.02.orig/graf2d/asimage/src/TASImage.cxx root-6.08.02/graf2d/
 -   char *tmpstr = 0;
 +
 +   // This is for backward compatibility...
-+   if (fn.Last('/') == 0) fn = fn(1, f.Length() - 1);
++   if (fn.Last('/') == 0) fn = fn(1, fn.Length() - 1);
 +
 +   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
 +                                       TROOT::GetTTFFontDir());
