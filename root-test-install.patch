@@ -1748,9 +1748,9 @@ diff -Nur root-6.08.02.orig/graf2d/asimage/src/TASImage.cxx root-6.08.02/graf2d/
 +   Ssiz_t from = 0;
 +   TString token;
 +#ifndef R__WIN32
-+   const char *delim = "/";
++   const char *delim = ":";
 +#else
-+   const char *delim = "\\";
++   const char *delim = ";";
  #endif
 -
 -   gIconPaths[6] = 0;

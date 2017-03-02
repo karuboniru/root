@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -94,7 +94,22 @@ Patch17:	%{name}-TPad-WaitPrimitive.patch
 #		Don't wait for user interaction in batch mode
 #		https://github.com/root-mirror/root/pull/322
 Patch18:	%{name}-spectrum-batch.patch
+#		Add missing header (gcc 7)
+#		https://github.com/root-mirror/root/pull/353
+Patch19:	%{name}-missing-header-gcc7.patch
+#		Fix for test suite on Fedora 26 i686
+#		https://github.com/root-mirror/root/pull/359
+Patch20:	%{name}-Quantiles.patch
+#		Fix format warnings/errors
+#		https://github.com/root-mirror/root/pull/376
+Patch21:	%{name}-format.patch
+#		Allow both absolute and relative python install paths
+#		https://github.com/root-mirror/root/pull/382
+Patch22:	%{name}-python-install-path.patch
 
+#		The build on aarch64 used to work, but is now broken again
+#		https://pagure.io/releng/issue/6653
+ExcludeArch:	aarch64
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
 ExcludeArch:	s390
@@ -1566,6 +1581,10 @@ ROOT as a Jupyter Notebook.
 %patch16 -p1
 %patch17 -p1
 %patch18 -p1
+%patch19 -p1
+%patch20 -p1
+%patch21 -p1
+%patch22 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1782,7 +1801,7 @@ py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
 py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
 py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,lib${py2l},lib${py3l},g" -e 's, python , python3 ,g' \
+    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python},%{__python3},g' \
     -e 's,lib/libPyROOT,python/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python!g' -i `find bindings/python -type f`
@@ -2074,14 +2093,18 @@ popd
 # - tutorial-multicore-imt101_parTreeProcessing
 #   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
 #
+# - tutorial-r-*
+#   occasionally causes random crashes
+#
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
-# - tutorial-r-*
+# - test-stressHistFactory-interpreted
+# - tutorial-histfactory-example
 #   currently fails on 32 bit arm - reported upstream:
 #   https://sft.its.cern.ch/jira/browse/ROOT-8500
-excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing"
+excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing|tutorial-r-.*"
 %ifarch %{arm}
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|test-stressHistFactory-interpreted|tutorial-histfactory-example"
 %endif
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
@@ -3103,6 +3126,14 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Wed Mar 01 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.04-3
+- Disable building on aarch64 (it is now broken again)
+- Add missing header (gcc 7)
+- Fix a test failure on Fedora 26 i686
+- Fix some format warnings/errors in GlobusAuth
+- Use the right delimiter when splitting the icon path in TASImage
+- Disable two more tests on 32 bit arm
+
 * Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 6.08.04-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
