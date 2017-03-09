@@ -12,10 +12,10 @@ index d768160..8c223ee 100644
     iret |= compare("legendre(10, -0.5) ", legendre(10, -0.5), -0.1882286071777345);
  
 diff --git a/test/stressMathCore.cxx b/test/stressMathCore.cxx
-index 1006dd1..5dc96ee 100644
+index 1006dd1..b862f36 100644
 --- a/test/stressMathCore.cxx
 +++ b/test/stressMathCore.cxx
-@@ -1117,11 +1117,11 @@ int testVector(int ngen, bool testio=false) {
+@@ -1117,7 +1117,7 @@ int testVector(int ngen, bool testio=false) {
  
     s1 = a.testOperations(v1);  a.print(VecType<V1>::name()+" operations");
     scale = Dim*20;
@@ -24,8 +24,3 @@ index 1006dd1..5dc96ee 100644
     if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") scale *= 10;
  #if defined (R__LINUX) && !defined(R__B64)
     // problem of precision on linux 32
--   if (Dim ==4) scale = 1000000000;
-+   if (Dim ==4) scale = 5000000000;
- #endif
-    // for problem with PtEtaPhiE
-    if (Dim==4 && VecType<V2>::name() == "PtEtaPhiEVector") scale = 0.01/(std::numeric_limits<double>::epsilon());

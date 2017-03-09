@@ -21,9 +21,9 @@
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
-Version:	6.08.04
+Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -42,7 +42,7 @@ Source2:	%{name}-testfiles.sh
 Source3:	rootd.service
 Source4:	proofd.service
 #		Allow running tests
-#		https://github.com/root-mirror/root/pull/130
+#		https://github.com/root-project/root/pull/130
 Patch0:		%{name}-test-install.patch
 #		Use system fonts
 Patch1:		%{name}-fontconfig.patch
@@ -52,63 +52,58 @@ Patch2:		%{name}-dont-link-jvm.patch
 Patch3:		%{name}-doc-no-notebooks.patch
 #		Don't run gui macros
 Patch4:		%{name}-avoid-gui-crash.patch
-
-#		Test fixes
-#		https://github.com/root-mirror/root/pull/155
-
 #		Use files in source tree during tests
+#		https://github.com/root-project/root/pull/403
 Patch5:		%{name}-template-files.patch
 #		Use cache read option
+#		https://github.com/root-project/root/pull/404
 Patch6:		%{name}-cache-test.patch
 #		Fixes for tests on ix86
+#		https://github.com/root-project/root/pull/400
+#		https://github.com/root-project/root/pull/401
 Patch7:		%{name}-32bit.patch
-#		Clean up TFormulaParsingTests
-Patch8:		%{name}-tformulaparsingtests.patch
+#		Fix root-config for s390/s390x
+#		https://github.com/root-project/root/pull/406
+Patch8:		%{name}-s390x.patch
 #		Typo in TFormulaTests
+#		https://github.com/root-project/root/pull/405
 Patch9:		%{name}-tformulatests-typo.patch
 #		Don't download testdata
+#		https://github.com/root-project/root/pull/402
 Patch10:	%{name}-no-testdata.patch
-
-#		Miscellaneous
-
 #		Missing includes
-#		https://github.com/root-mirror/root/pull/269
+#		https://github.com/root-project/root/pull/269
 Patch11:	%{name}-missing-includes.patch
 #		Old FSF address
-#		https://github.com/root-mirror/root/pull/270
+#		https://github.com/root-project/root/pull/270
 Patch12:	%{name}-fsf-addr.patch
 #		Name clash HZ
-#		https://github.com/root-mirror/root/pull/309
+#		https://github.com/root-project/root/pull/309
 Patch13:	%{name}-hz.patch
 #		Fix errors when building documentation
-#		https://github.com/root-mirror/root/pull/310
+#		https://github.com/root-project/root/pull/310
 Patch14:	%{name}-global-name-not-defined.patch
 #		Fix paths in image tutorial
-#		https://github.com/root-mirror/root/pull/311
+#		https://github.com/root-project/root/pull/311
 Patch15:	%{name}-rose-image.patch
 #		Fix stressGraphics.ref
-#		https://github.com/root-mirror/root/pull/312
+#		https://github.com/root-project/root/pull/312
 Patch16:	%{name}-stressgraphics.patch
 #		Fix broken TPad::WaitPrimitive (backport from git)
 Patch17:	%{name}-TPad-WaitPrimitive.patch
-#		Don't wait for user interaction in batch mode
-#		https://github.com/root-mirror/root/pull/322
-Patch18:	%{name}-spectrum-batch.patch
-#		Add missing header (gcc 7)
-#		https://github.com/root-mirror/root/pull/353
-Patch19:	%{name}-missing-header-gcc7.patch
 #		Fix for test suite on Fedora 26 i686
-#		https://github.com/root-mirror/root/pull/359
-Patch20:	%{name}-Quantiles.patch
+#		https://github.com/root-project/root/pull/359
+Patch18:	%{name}-Quantiles.patch
 #		Fix format warnings/errors
-#		https://github.com/root-mirror/root/pull/376
-Patch21:	%{name}-format.patch
+#		https://github.com/root-project/root/pull/376
+Patch19:	%{name}-format.patch
 #		Allow both absolute and relative python install paths
-#		https://github.com/root-mirror/root/pull/382
-Patch22:	%{name}-python-install-path.patch
+#		https://github.com/root-project/root/pull/382
+Patch20:	%{name}-python-install-path.patch
 
 #		The build on aarch64 used to work, but is now broken again
 #		https://pagure.io/releng/issue/6653
+#		https://sft.its.cern.ch/jira/browse/ROOT-8702
 ExcludeArch:	aarch64
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -1583,8 +1578,6 @@ ROOT as a Jupyter Notebook.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
-%patch21 -p1
-%patch22 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2093,18 +2086,35 @@ popd
 # - tutorial-multicore-imt101_parTreeProcessing
 #   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
 #
-# - tutorial-r-*
-#   occasionally causes random crashes
-#
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
 # - test-stressHistFactory-interpreted
 # - tutorial-histfactory-example
+# - tutorial-r-*
 #   currently fails on 32 bit arm - reported upstream:
 #   https://sft.its.cern.ch/jira/browse/ROOT-8500
-excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing|tutorial-r-.*"
+#
+# - test-stresshistogram
+# - test-stresshistogram-interpreted
+# - test-stressroostats
+# - test-stressroostats-interpreted
+# - test-stresshistofit
+# - test-stresshistofit-interpreted
+# - tutorial-roofit-rf511_wsfactory_basic
+# - tutorial-roostats-HybridInstructional
+# - tutorial-roostats-rs701_BayesianCalculator
+# - tutorial-pyroot-benchmarks
+# - tutorial-pyroot-ratioplot
+# - tutorial-pyroot-shapes
+#   currently fails on s390x - reported upstream
+#   https://sft.its.cern.ch/jira/browse/ROOT-8703
+
+excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing"
 %ifarch %{arm}
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|test-stressHistFactory-interpreted|tutorial-histfactory-example"
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|test-stressHistFactory-interpreted|tutorial-histfactory-example|tutorial-r-.*"
+%endif
+%ifarch s390x
+excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-HybridInstructional|tutorial-roostats-rs701_BayesianCalculator|tutorial-pyroot-benchmarks|tutorial-pyroot-ratioplot|tutorial-pyroot-shapes"
 %endif
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
@@ -3126,6 +3136,13 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Thu Mar 02 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-1
+- Update to 6.08.06
+- Drop obsolete patch: root-tformulaparsingtests.patch
+- Drop patches accepted upstream: root-spectrum-batch.patch and
+  root-missing-header-gcc7.patch
+- Disable failing tests on s390x
+
 * Wed Mar 01 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.04-3
 - Disable building on aarch64 (it is now broken again)
 - Add missing header (gcc 7)
