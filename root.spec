@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -100,11 +100,14 @@ Patch19:	%{name}-format.patch
 #		Allow both absolute and relative python install paths
 #		https://github.com/root-project/root/pull/382
 Patch20:	%{name}-python-install-path.patch
-
-#		The build on aarch64 used to work, but is now broken again
+#		Fix relocation problems on aarch64
+#		Based on the patch in Fedora's llvm package
+#		https://reviews.llvm.org/D27609
 #		https://pagure.io/releng/issue/6653
 #		https://sft.its.cern.ch/jira/browse/ROOT-8702
-ExcludeArch:	aarch64
+#		https://github.com/root-project/root/pull/430
+Patch21:	%{name}-aarch64.patch
+
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
 ExcludeArch:	s390
@@ -1578,6 +1581,7 @@ ROOT as a Jupyter Notebook.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3136,6 +3140,10 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Wed Mar 15 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-2
+- Fix relocation problems on aarch64 - using patch from the llvm package
+- Re-enable building on aarch64 - works again with the above patch
+
 * Thu Mar 02 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-1
 - Update to 6.08.06
 - Drop obsolete patch: root-tformulaparsingtests.patch
