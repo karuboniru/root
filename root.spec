@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -107,6 +107,9 @@ Patch20:	%{name}-python-install-path.patch
 #		https://sft.its.cern.ch/jira/browse/ROOT-8702
 #		https://github.com/root-project/root/pull/430
 Patch21:	%{name}-aarch64.patch
+#		Python 3 compatibility fixes
+#		Backported from upstream git (6.08 branch)
+Patch22:	%{name}-python3-support.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -1582,6 +1585,7 @@ ROOT as a Jupyter Notebook.
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3140,6 +3144,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri Apr 21 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-3
+- Python 3 compatibility fixes (backport from upstream)
+
 * Wed Mar 15 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-2
 - Fix relocation problems on aarch64 - using patch from the llvm package
 - Re-enable building on aarch64 - works again with the above patch
