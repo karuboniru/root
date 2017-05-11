@@ -23,7 +23,7 @@
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3144,6 +3144,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Thu May 11 2017 Richard Shaw <hobbes1069@gmail.com> - 6.08.06-4
+- Rebuild for OCE 0.18.1.
+
 * Fri Apr 21 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-3
 - Python 3 compatibility fixes (backport from upstream)
 
