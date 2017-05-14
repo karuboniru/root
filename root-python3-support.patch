@@ -407,3 +407,48 @@ index 6c41980..0a17e85 100644
      enableCppHighlighting()
      enhanceROOTModule()
      welcomeMsg()
+diff --git a/bindings/pyroot/src/Converters.cxx b/bindings/pyroot/src/Converters.cxx
+index 0926256..01f5526 100644
+--- a/bindings/pyroot/src/Converters.cxx
++++ b/bindings/pyroot/src/Converters.cxx
+@@ -1537,6 +1537,7 @@ namespace {
+ // converter factories for ROOT types
+    typedef std::pair< const char*, ConverterFactory_t > NFp_t;
+ 
++   // clang-format off
+    NFp_t factories_[] = {
+    // factories for built-ins
+       NFp_t( "bool",                      &CreateBoolConverter               ),
+@@ -1617,8 +1618,14 @@ namespace {
+       NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
+       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
+       NFp_t( "_object*",                  &CreatePyObjectConverter           ),
+-      NFp_t( "FILE*",                     &CreateVoidArrayConverter          )
++      NFp_t( "FILE*",                     &CreateVoidArrayConverter          ),
++      NFp_t( "Float16_t",                 &CreateFloatConverter              ),
++      NFp_t( "const Float16_t&",          &CreateConstFloatRefConverter      ),
++      NFp_t( "Double32_t",                &CreateDoubleConverter             ),
++      NFp_t( "Double32_t&",               &CreateDoubleRefConverter          ),
++      NFp_t( "const Double32_t&",         &CreateConstDoubleRefConverter     )
+    };
++   // clang-format on
+ 
+    struct InitConvFactories_t {
+    public:
+diff --git a/bindings/pyroot/src/Executors.cxx b/bindings/pyroot/src/Executors.cxx
+index 4056322..842e9f9 100644
+--- a/bindings/pyroot/src/Executors.cxx
++++ b/bindings/pyroot/src/Executors.cxx
+@@ -840,8 +840,12 @@ namespace {
+ 
+       NFp_t( "float",              &CreateFloatExecutor               ),
+       NFp_t( "float&",             &CreateFloatRefExecutor            ),
++      NFp_t( "Float16_t",          &CreateFloatExecutor               ),
++      NFp_t( "Float16_t&",         &CreateFloatRefExecutor            ),
+       NFp_t( "double",             &CreateDoubleExecutor              ),
+       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
++      NFp_t( "Double32_t",         &CreateDoubleExecutor              ),
++      NFp_t( "Double32_t&",        &CreateDoubleRefExecutor           ),
+       NFp_t( "long double",        &CreateLongDoubleExecutor          ),   // TODO: lost precision
+       NFp_t( "long double&",       &CreateLongDoubleRefExecutor       ),
+       NFp_t( "void",               &CreateVoidExecutor                ),

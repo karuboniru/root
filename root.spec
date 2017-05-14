@@ -15,15 +15,13 @@
 %global hadoop 0
 %endif
 
-%{!?_pkgdocdir: %global _pkgdocdir %{_docdir}/%{name}-%{version}}
-
 # Do not create .orig files when patching source
 %global _default_patch_flags --no-backup-if-mismatch
 
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -110,10 +108,23 @@ Patch21:	%{name}-aarch64.patch
 #		Python 3 compatibility fixes
 #		Backported from upstream git (6.08 branch)
 Patch22:	%{name}-python3-support.patch
+#		Fix for macro scope issue
+#		Backported from upstream git (6.08 branch)
+Patch23:	%{name}-macro-scope.patch
+#		Use absolute path when loading libJupyROOT.so
+#		https://github.com/root-project/root/pull/569
+Patch24:	%{name}-jupyroot-path.patch
+#		Fix for TMVA tests
+#		Backported from upstream git (master)
+Patch25:	%{name}-tmva-test.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
 ExcludeArch:	s390
+#		s390x suffers from endian issues resulting in failing tests
+#		and broken documentation generation
+#		https://sft.its.cern.ch/jira/browse/ROOT-8703
+ExcludeArch:	s390x
 #		ppc/ppc64/ppc64le does not yet work
 #		https://sft.its.cern.ch/jira/browse/ROOT-6434
 #		https://sft.its.cern.ch/jira/browse/ROOT-7314
@@ -205,6 +216,7 @@ BuildRequires:	expat-devel
 %if %{pythia8}
 BuildRequires:	pythia8-devel >= 8.1.80
 %endif
+BuildRequires:	blas-devel
 BuildRequires:	numpy
 BuildRequires:	doxygen
 BuildRequires:	graphviz
@@ -344,9 +356,6 @@ Requires:	font(droidsansfallback)
 %if %{ruby} == 0
 Obsoletes:	%{name}-ruby < 6.00.00
 %endif
-%if %{hadoop} == 0
-Obsoletes:	%{name}-io-hdfs < 6.06.04-2
-%endif
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -418,6 +427,9 @@ transparent interface.
 
 %package -n python2-%{name}
 Summary:	Python extension for ROOT
+%{?py2_dist:
+Provides:	%{py2_dist %{name}} = %{version}
+}
 Provides:	root-python = %{version}-%{release}
 Obsoletes:	root-python < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -430,6 +442,9 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package -n %{python3pkg}-%{name}
 Summary:	Python extension for ROOT
+%{?py3_dist:
+Provides:	%{py3_dist %{name}} = %{version}
+}
 Provides:	root-%{python3pkg} = %{version}-%{release}
 Obsoletes:	root-%{python3pkg} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -442,7 +457,15 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package -n python2-jupyroot
 Summary:	ROOT Jupyter kernel
+%{?py2_dist:
+Provides:	%{py2_dist jupyroot} = %{version}
+}
 Requires:	python2-%{name} = %{version}-%{release}
+%if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
+Requires:	python2-ipython
+%else
+Requires:	python-ipython-console
+%endif
 Obsoletes:	%{name}-rootaas < 6.08.00
 
 %description -n python2-jupyroot
@@ -450,7 +473,18 @@ The Jupyter kernel for the ROOT notebook.
 
 %package -n %{python3pkg}-jupyroot
 Summary:	ROOT Jupyter kernel
+%{?py3_dist:
+Provides:	%{py3_dist jupyroot} = %{version}
+}
 Requires:	%{python3pkg}-%{name} = %{version}-%{release}
+%if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
+Requires:	%{python3pkg}-ipython
+%else
+%if %{?fedora}%{!?fedora:0}
+#		ipython for python3 not available in RHEL/EPEL
+Requires:	%{python3pkg}-ipython-console
+%endif
+%endif
 
 %description -n %{python3pkg}-jupyroot
 The Jupyter kernel for the ROOT notebook.
@@ -458,6 +492,9 @@ The Jupyter kernel for the ROOT notebook.
 %package -n python2-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
+%{?py2_dist:
+Provides:	%{py2_dist jsmva} = %{version}
+}
 Requires:	%{name}-tmva = %{version}-%{release}
 Requires:	python2-jupyroot = %{version}-%{release}
 
@@ -467,6 +504,9 @@ TMVA interface used by JupyROOT.
 %package -n %{python3pkg}-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
+%{?py3_dist:
+Provides:	%{py3_dist jsmva} = %{version}
+}
 Requires:	%{name}-tmva = %{version}-%{release}
 Requires:	%{python3pkg}-jupyroot = %{version}-%{release}
 
@@ -1586,6 +1626,9 @@ ROOT as a Jupyter Notebook.
 %patch20 -p1
 %patch21 -p1
 %patch22 -p1
+%patch23 -p1
+%patch24 -p1
+%patch25 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1688,6 +1731,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dchirp:BOOL=OFF \
        -Dcling:BOOL=ON \
        -Dcocoa:BOOL=OFF \
+       -Dcuda:BOOL=OFF \
 %if %{?fedora}%{!?fedora:0} >= 24
        -Dcxx14:BOOL=ON \
        -Droot7:BOOL=ON \
@@ -1696,7 +1740,6 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Droot7:BOOL=OFF \
 %endif
        -Dcxxmodules:BOOL=OFF \
-       -Dcuda:BOOL=OFF \
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
        -Dexceptions:BOOL=ON \
@@ -1888,7 +1931,7 @@ mkdir -p %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
 mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libJupyROOT%{py3soabi}.so
+   %{buildroot}%{python3_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
 rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
@@ -2096,33 +2139,13 @@ popd
 #
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
-# - test-stressHistFactory-interpreted
-# - tutorial-histfactory-example
 # - tutorial-r-*
 #   currently fails on 32 bit arm - reported upstream:
 #   https://sft.its.cern.ch/jira/browse/ROOT-8500
-#
-# - test-stresshistogram
-# - test-stresshistogram-interpreted
-# - test-stressroostats
-# - test-stressroostats-interpreted
-# - test-stresshistofit
-# - test-stresshistofit-interpreted
-# - tutorial-roofit-rf511_wsfactory_basic
-# - tutorial-roostats-HybridInstructional
-# - tutorial-roostats-rs701_BayesianCalculator
-# - tutorial-pyroot-benchmarks
-# - tutorial-pyroot-ratioplot
-# - tutorial-pyroot-shapes
-#   currently fails on s390x - reported upstream
-#   https://sft.its.cern.ch/jira/browse/ROOT-8703
 
 excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing"
 %ifarch %{arm}
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|test-stressHistFactory-interpreted|tutorial-histfactory-example|tutorial-r-.*"
-%endif
-%ifarch s390x
-excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-HybridInstructional|tutorial-roostats-rs701_BayesianCalculator|tutorial-pyroot-benchmarks|tutorial-pyroot-ratioplot|tutorial-pyroot-shapes"
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
 %endif
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
@@ -2576,7 +2599,7 @@ fi
 
 %files -n %{python3pkg}-jupyroot
 %{python3_sitearch}/JupyROOT
-%{python3_sitearch}/libJupyROOT%{py3soabi}.so
+%{python3_sitearch}/libJupyROOT.so
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python2-jsmva
@@ -3144,6 +3167,14 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri May 12 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-5
+- Fix for macro scope issue (backport from upstream)
+- Fix a problem loading the libJupyROOT CDLL module (use absolute path)
+- Add ipython dependencies to the jupyroot packages
+- Exclude s390x - endian issues
+- Re-enable two tests on 32 bit arm - no longer failing
+- Add BuildRequires on blas-devel (for TMVA)
+
 * Thu May 11 2017 Richard Shaw <hobbes1069@gmail.com> - 6.08.06-4
 - Rebuild for OCE 0.18.1.
 

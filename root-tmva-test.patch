@@ -1,0 +1,195 @@
+diff --git a/tmva/tmva/test/DNN/TestBackpropagationCpu.cxx b/tmva/tmva/test/DNN/TestBackpropagationCpu.cxx
+index c44405b..ba796d1 100644
+--- a/tmva/tmva/test/DNN/TestBackpropagationCpu.cxx
++++ b/tmva/tmva/test/DNN/TestBackpropagationCpu.cxx
+@@ -26,22 +26,23 @@ int main()
+    std::cout << "Testing Backpropagation:" << std::endl;
+ 
+    double error;
++   int iret = 0;
+ 
+    error = testBackpropagationWeightsLinear<TCpu<Scalar_t>>(1.0);
+    if (error > 1e-3)
+-       return 1;
++       iret++;
+ 
+    error = testBackpropagationL1Regularization<TCpu<Scalar_t>>(1e-2);
+    if (error > 1e-3)
+-       return 1;
++       iret++;
+ 
+    error = testBackpropagationL2Regularization<TCpu<Scalar_t>>(1.0);
+    if (error > 1e-3)
+-       return 1;
++       iret++;
+ 
+    error = testBackpropagationBiasesLinear<TCpu<Scalar_t>>(1.0);
+    if (error > 1e-3)
+-       return 1;
++       iret++;
+ 
+-   return 0;
++   return iret;
+ }
+diff --git a/tmva/tmva/test/DNN/TestDerivatives.h b/tmva/tmva/test/DNN/TestDerivatives.h
+index 1acf46f..956bdde 100644
+--- a/tmva/tmva/test/DNN/TestDerivatives.h
++++ b/tmva/tmva/test/DNN/TestDerivatives.h
+@@ -104,7 +104,7 @@ auto testActivationFunctionDerivatives()
+       {
+          evaluateDerivative<Architecture>(X, af, Y);
+       };
+-      error = testDerivatives<Architecture>(f, df, 5e-3);
++      error = testDerivatives<Architecture>(f, df, 1.0e-04);
+ 
+       std::cout << "Testing " << static_cast<int>(af) << ": ";
+       std::cout << "Maximum Relative Error = " << error << std::endl;
+diff --git a/tmva/tmva/test/DNN/TestMatrixArithmetic.h b/tmva/tmva/test/DNN/TestMatrixArithmetic.h
+index 10aed0e..330cf49 100644
+--- a/tmva/tmva/test/DNN/TestMatrixArithmetic.h
++++ b/tmva/tmva/test/DNN/TestMatrixArithmetic.h
+@@ -38,8 +38,7 @@ auto testMultiplication(size_t ntests)
+       n = rand() % 100 + 1;
+       k = rand() % 100 + 1;
+ 
+-      TMatrixT<Double_t> ARef(m,k), A2Ref(m,k), ATRef(k,m) , BRef(k,n),
+-          BTRef(n,k), CRef(m,n);
++      TMatrixT<Scalar_t> ARef(m,k), A2Ref(m,k), ATRef(k,m) , BRef(k,n), BTRef(n,k), CRef(m,n);
+       TMVA::DNN::randomMatrix(ARef);
+       TMVA::DNN::randomMatrix(A2Ref);
+       TMVA::DNN::randomMatrix(ATRef);
+@@ -50,19 +49,19 @@ auto testMultiplication(size_t ntests)
+       // A * B
+       CRef.Mult(ARef,BRef);
+       Architecture_t::Multiply(C, A, B);
+-      Scalar_t error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
++      Scalar_t error = TMVA::DNN::maximumRelativeError(C, CRef);
+       maximumError   = std::max(error, maximumError);
+ 
+       // A^T * B
+       CRef.TMult(ATRef,BRef);
+       Architecture_t::TransposeMultiply(C, AT, B);
+-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
++      error = TMVA::DNN::maximumRelativeError(C, CRef);
+       maximumError   = std::max(error, maximumError);
+ 
+       // A * B^T
+       CRef.MultT(ARef,BTRef);
+       Architecture_t::MultiplyTranspose(C, A, BT);
+-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
++      error = TMVA::DNN::maximumRelativeError(C, CRef);
+       maximumError   = std::max(error, maximumError);
+ 
+       // A .* B
+@@ -72,7 +71,7 @@ auto testMultiplication(size_t ntests)
+          }
+       }
+       Architecture_t::Hadamard(A, A2);
+-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) A, ARef);
++      error = TMVA::DNN::maximumRelativeError(A, ARef);
+       maximumError   = std::max(error, maximumError);
+    }
+ 
+diff --git a/tmva/tmva/test/DNN/Utility.h b/tmva/tmva/test/DNN/Utility.h
+index 46077fc..a0c29b5 100644
+--- a/tmva/tmva/test/DNN/Utility.h
++++ b/tmva/tmva/test/DNN/Utility.h
+@@ -1,6 +1,7 @@
+ #ifndef TMVA_TEST_DNN_UTILITY
+ #define TMVA_TEST_DNN_UTILITY
+ 
++#include <cassert>
+ #include <iostream>
+ #include <sstream>
+ #include <type_traits>
+@@ -172,64 +173,48 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
+     return result / (AFloat) (m * n);
+ }
+ 
+-/** Compute the relative error of x and y normalized by y. Specialized for
+- *  float and double to make sure both arguments are above expected machine
+- *  precision (1e-5 and 1e-10). */
++/** Compute the relative error of x and y */
+ //______________________________________________________________________________
+-template <typename AFloat>
+-inline AFloat relativeError(const AFloat &x,
+-                            const AFloat &y);
++template <typename T>
++inline T relativeError(const T &x, const T &y)
++{
++  using std::abs;
+ 
++  if (x == y)
++    return T(0.0);
+ 
+-//______________________________________________________________________________
+-template <>
+-inline Double_t relativeError(const Double_t &x,
+-                              const Double_t &y)
+-{
+-    if ((std::abs(x) > 1e-10) && (std::abs(y) > 1e-10)) {
+-        return std::fabs((x - y) / y);
+-    } else {
+-        return std::fabs(x - y);
+-    }
+-}
++  T diff = abs(x - y);
+ 
+-//______________________________________________________________________________
+-template <>
+-inline Real_t relativeError(const Real_t &x,
+-                            const Real_t &y)
+-{
+-    if ((std::abs(x) > 1e-5) && (std::abs(y) > 1e-5)) {
+-        return std::fabs((x - y) / y);
+-    } else {
+-        return std::fabs(x - y);
+-    }
++  if (x * y == T(0.0) ||
++      diff < std::numeric_limits<T>::epsilon())
++    return diff;
++
++  return diff / (abs(x) + abs(y));
+ }
+ 
+ /*! Compute the maximum, element-wise relative error of the matrices
+ *  X and Y normalized by the element of Y. Protected against division
+ *  by zero. */
+ //______________________________________________________________________________
+-template <typename AMatrix>
+-auto maximumRelativeError(const AMatrix &X,
+-                          const AMatrix &Y)
+--> decltype(X(0,0))
++template <typename Matrix1, typename Matrix2>
++auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0))
+ {
++    decltype(X(0,0)) curError, maxError = 0.0;
+ 
+-    using AFloat = decltype(X(0,0));
++    Int_t m = X.GetNrows();
++    Int_t n = X.GetNcols();
+ 
+-    size_t m,n;
+-    m = X.GetNrows();
+-    n = X.GetNcols();
++    assert(m == Y.GetNrows());
++    assert(n == Y.GetNcols());
+ 
+-    AFloat maximumError = 0.0;
+-
+-    for (size_t i = 0; i < m; i++) {
+-        for (size_t j = 0; j < n; j++) {
+-        AFloat error = relativeError(X(i,j), Y(i,j));
+-        maximumError = std::max(error, maximumError);
++    for (Int_t i = 0; i < m; i++) {
++        for (Int_t j = 0; j < n; j++) {
++            curError = relativeError(X(i,j), Y(i,j));
++            maxError = std::max(curError, maxError);
+         }
+     }
+-    return maximumError;
++
++    return maxError;
+ }
+ 
+ /*! Numerically compute the derivative of the functional f using finite
