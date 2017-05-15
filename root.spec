@@ -21,7 +21,7 @@
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3167,6 +3167,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Mon May 15 2017 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 6.08.06-6
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_27_Mass_Rebuild
+
 * Fri May 12 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-5
 - Fix for macro scope issue (backport from upstream)
 - Fix a problem loading the libJupyROOT CDLL module (use absolute path)
