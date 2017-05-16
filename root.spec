@@ -18,10 +18,14 @@
 # Do not create .orig files when patching source
 %global _default_patch_flags --no-backup-if-mismatch
 
+# Do not generate autoprovides for libJupyROOT.so
+# Note: the ones from libPyROOT.so we do want though
+%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
+
 Name:		root
 Version:	6.08.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	6%{?dist}
+Release:	7%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -1905,19 +1909,20 @@ mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
    %{buildroot}%{_datadir}/%{name}/cli
 
 # Move the python modules to sitearch/sitelib
-mkdir -p %{buildroot}%{python_sitearch}
+mkdir -p %{buildroot}%{python2_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python_sitearch}/libPyROOT.so
+   %{buildroot}%{python2_sitearch}/libPyROOT.so
 mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python_sitearch}/libJupyROOT.so
-mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python_sitearch}
+   %{buildroot}%{python2_sitearch}/libJupyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
 rm %{buildroot}%{_libdir}/%{name}/JupyROOT/README.md
-mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python_sitearch}
+rm -rf %{buildroot}%{_libdir}/%{name}/JupyROOT/src
+mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python2_sitearch}
 rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
 rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
 
-mkdir -p %{buildroot}%{python_sitelib}
-mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python_sitelib}
+mkdir -p %{buildroot}%{python2_sitelib}
+mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
 
 tmpdir=`mktemp -d`
 
@@ -1935,6 +1940,7 @@ mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
 rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
+rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
 mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_sitearch}
 rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
 rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
@@ -1970,7 +1976,10 @@ sed -e 's!/usr/bin/env python!/usr/bin/python!' \
        %{buildroot}%{_bindir}/rootmv \
        %{buildroot}%{_bindir}/rootprint \
        %{buildroot}%{_bindir}/rootrm
-sed '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
+sed -e '/^\#!/d' \
+    -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py \
+       %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py \
+       %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
 sed 's!/usr/bin/env python!/usr/bin/python!' \
     -i %{buildroot}%{_bindir}/rootdrawtree \
        %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
@@ -2009,12 +2018,14 @@ rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
-# Remove mathtext and minicern references from cmake files
+# Remove mathtext, minicern and JupyROOT references from cmake files
 sed -e 's/ mathtext / /' -e /mathtext/d \
     -e 's/ minicern / /' -e /minicern/d \
+    -e 's/ JupyROOT / /' -e /JupyROOT/d \
     -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
 sed -e '/Import target "mathtext"/,/FILES_FOR_mathtext/d' -e 's/;mathtext//' \
     -e '/Import target "minicern"/,/FILES_FOR_minicern/d' -e 's/;minicern//' \
+    -e '/Import target "JupyROOT"/,/FILES_FOR_JupyROOT/d' -e 's/;JupyROOT//' \
     -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 
 # Only used on Windows
@@ -2199,20 +2210,20 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
 	-i /var/lib/alternatives/libPyROOT.so
     for alt in `grep python2 /var/lib/alternatives/libPyROOT.so` ; do
-	if [ "$alt" != "%{python_sitearch}/libPyROOT.so" ] ; then
+	if [ "$alt" != "%{python2_sitearch}/libPyROOT.so" ] ; then
 	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
 	fi
     done
 fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python_sitearch}/libPyROOT.so 20
+    libPyROOT.so %{python2_sitearch}/libPyROOT.so 20
 /sbin/ldconfig
 
 %preun -n python2-%{name}
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python_sitearch}/libPyROOT.so
+	libPyROOT.so %{python2_sitearch}/libPyROOT.so
 fi
 
 %postun -n python2-%{name} -p /sbin/ldconfig
@@ -2222,7 +2233,7 @@ fi
 # for python2-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python_sitearch}/libPyROOT.so 20
+    libPyROOT.so %{python2_sitearch}/libPyROOT.so 20
 /sbin/ldconfig
 
 %post -n %{python3pkg}-%{name}
@@ -2575,10 +2586,10 @@ fi
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python_sitearch}/libPyROOT.so
-%{python_sitearch}/ROOT.py*
-%{python_sitearch}/cppyy.py*
-%{python_sitearch}/_pythonization.py*
+%{python2_sitearch}/libPyROOT.so
+%{python2_sitearch}/ROOT.py*
+%{python2_sitearch}/cppyy.py*
+%{python2_sitearch}/_pythonization.py*
 
 %files -n %{python3pkg}-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
@@ -2593,8 +2604,8 @@ fi
 %{python3_sitearch}/__pycache__
 
 %files -n python2-jupyroot
-%{python_sitearch}/JupyROOT
-%{python_sitearch}/libJupyROOT.so
+%{python2_sitearch}/JupyROOT
+%{python2_sitearch}/libJupyROOT.so
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n %{python3pkg}-jupyroot
@@ -2603,7 +2614,7 @@ fi
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python2-jsmva
-%{python_sitelib}/JsMVA
+%{python2_sitelib}/JsMVA
 
 %files -n %{python3pkg}-jsmva
 %{python3_sitelib}/JsMVA
@@ -3167,6 +3178,10 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Tue May 16 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-7
+- Remove JupyROOT references from cmake files
+- Do not generate autoprovides for libJupyROOT.so
+
 * Mon May 15 2017 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 6.08.06-6
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_27_Mass_Rebuild
 
