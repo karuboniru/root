@@ -23,9 +23,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.08.06
+Version:	6.10.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	7%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -43,84 +43,19 @@ Source2:	%{name}-testfiles.sh
 #		systemd unit files
 Source3:	rootd.service
 Source4:	proofd.service
-#		Allow running tests
-#		https://github.com/root-project/root/pull/130
-Patch0:		%{name}-test-install.patch
 #		Use system fonts
-Patch1:		%{name}-fontconfig.patch
+Patch0:		%{name}-fontconfig.patch
 #		Don't link to libjvm (handled properly inside libhdfs)
-Patch2:		%{name}-dont-link-jvm.patch
+Patch1:		%{name}-dont-link-jvm.patch
 #		Don't create documentation notebooks
-Patch3:		%{name}-doc-no-notebooks.patch
+Patch2:		%{name}-doc-no-notebooks.patch
 #		Don't run gui macros
-Patch4:		%{name}-avoid-gui-crash.patch
-#		Use files in source tree during tests
-#		https://github.com/root-project/root/pull/403
-Patch5:		%{name}-template-files.patch
-#		Use cache read option
-#		https://github.com/root-project/root/pull/404
-Patch6:		%{name}-cache-test.patch
-#		Fixes for tests on ix86
-#		https://github.com/root-project/root/pull/400
-#		https://github.com/root-project/root/pull/401
-Patch7:		%{name}-32bit.patch
-#		Fix root-config for s390/s390x
-#		https://github.com/root-project/root/pull/406
-Patch8:		%{name}-s390x.patch
-#		Typo in TFormulaTests
-#		https://github.com/root-project/root/pull/405
-Patch9:		%{name}-tformulatests-typo.patch
-#		Don't download testdata
-#		https://github.com/root-project/root/pull/402
-Patch10:	%{name}-no-testdata.patch
-#		Missing includes
-#		https://github.com/root-project/root/pull/269
-Patch11:	%{name}-missing-includes.patch
-#		Old FSF address
-#		https://github.com/root-project/root/pull/270
-Patch12:	%{name}-fsf-addr.patch
-#		Name clash HZ
-#		https://github.com/root-project/root/pull/309
-Patch13:	%{name}-hz.patch
-#		Fix errors when building documentation
-#		https://github.com/root-project/root/pull/310
-Patch14:	%{name}-global-name-not-defined.patch
-#		Fix paths in image tutorial
-#		https://github.com/root-project/root/pull/311
-Patch15:	%{name}-rose-image.patch
+Patch3:		%{name}-avoid-gui-crash.patch
+#		Unbundle gtest
+Patch4:		%{name}-unbundle-gtest.patch
 #		Fix stressGraphics.ref
-#		https://github.com/root-project/root/pull/312
-Patch16:	%{name}-stressgraphics.patch
-#		Fix broken TPad::WaitPrimitive (backport from git)
-Patch17:	%{name}-TPad-WaitPrimitive.patch
-#		Fix for test suite on Fedora 26 i686
-#		https://github.com/root-project/root/pull/359
-Patch18:	%{name}-Quantiles.patch
-#		Fix format warnings/errors
-#		https://github.com/root-project/root/pull/376
-Patch19:	%{name}-format.patch
-#		Allow both absolute and relative python install paths
-#		https://github.com/root-project/root/pull/382
-Patch20:	%{name}-python-install-path.patch
-#		Fix relocation problems on aarch64
-#		Based on the patch in Fedora's llvm package
-#		https://reviews.llvm.org/D27609
-#		https://pagure.io/releng/issue/6653
-#		https://sft.its.cern.ch/jira/browse/ROOT-8702
-#		https://github.com/root-project/root/pull/430
-Patch21:	%{name}-aarch64.patch
-#		Python 3 compatibility fixes
-#		Backported from upstream git (6.08 branch)
-Patch22:	%{name}-python3-support.patch
-#		Fix for macro scope issue
-#		Backported from upstream git (6.08 branch)
-Patch23:	%{name}-macro-scope.patch
-#		Use absolute path when loading libJupyROOT.so
-#		https://github.com/root-project/root/pull/569
-Patch24:	%{name}-jupyroot-path.patch
-#		Fix for TMVA tests
-#		Backported from upstream git (master)
-Patch25:	%{name}-tmva-test.patch
+#		https://github.com/root-project/root/pull/659
+Patch5:		%{name}-stressgraphics.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -226,6 +161,8 @@ BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	perl-generators
 BuildRequires:	systemd-units
+BuildRequires:	gtest-devel
+BuildRequires:	gmock-devel
 #		Some of the tests call lsb_release
 BuildRequires:	redhat-lsb-core
 #		Fonts
@@ -255,7 +192,7 @@ the functionality needed to handle and analyze large amounts of data
 in a very efficient way. Having the data defined as a set of objects,
 specialized storage methods are used to get direct access to the
 separate attributes of the selected objects, without having to touch
-the bulk of the data. Included are histograming methods in an
+the bulk of the data. Included are histogramming methods in an
 arbitrary number of dimensions, curve fitting, function evaluation,
 minimization, graphics and visualization classes to allow the easy
 setup of an analysis system that can query and process the data
@@ -360,6 +297,7 @@ Requires:	font(droidsansfallback)
 %if %{ruby} == 0
 Obsoletes:	%{name}-ruby < 6.00.00
 %endif
+Obsoletes:	%{name}-vdt < 6.10.00
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -467,8 +405,11 @@ Provides:	%{py2_dist jupyroot} = %{version}
 Requires:	python2-%{name} = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
 Requires:	python2-ipython
+Requires:	python2-metakernel
 %else
 Requires:	python-ipython-console
+#		python-metakernel for python2 not available in
+#		Fedora <= 25 or RHEL/EPEL - some functionality missing
 %endif
 Obsoletes:	%{name}-rootaas < 6.08.00
 
@@ -483,11 +424,14 @@ Provides:	%{py3_dist jupyroot} = %{version}
 Requires:	%{python3pkg}-%{name} = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
 Requires:	%{python3pkg}-ipython
+Requires:	%{python3pkg}-metakernel
 %else
 %if %{?fedora}%{!?fedora:0}
 #		ipython for python3 not available in RHEL/EPEL
 Requires:	%{python3pkg}-ipython-console
 %endif
+#		python-metakernel for python3 not available in
+#		Fedora <= 25 or RHEL/EPEL - some functionality missing
 %endif
 
 %description -n %{python3pkg}-jupyroot
@@ -1163,15 +1107,6 @@ init-program computes all tables and constants necessary for the
 random variate generation. The sample program can then generate
 variates from the desired distribution.
 
-%package vdt
-Summary:	VDT mathematical library
-BuildArch:	noarch
-
-%description vdt
-VDT is a library of mathematical functions implemented in double and
-single precision. The implementation is fast and with the aid of
-modern compilers (e.g. gcc 4.7) vectorizable.
-
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1582,6 +1517,16 @@ Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 %description tree-viewer
 This package contains a plugin for browsing a ROOT tree in ROOT.
 
+%package unfold
+Summary:	Distribution unfolding
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+
+%description unfold
+An algorithm to unfold distributions from detector to truth level.
+
 %package cli
 Summary:	ROOT command line utilities
 BuildArch:	noarch
@@ -1613,26 +1558,6 @@ ROOT as a Jupyter Notebook.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
-%patch6 -p1
-%patch7 -p1
-%patch8 -p1
-%patch9 -p1
-%patch10 -p1
-%patch11 -p1
-%patch12 -p1
-%patch13 -p1
-%patch14 -p1
-%patch15 -p1
-%patch16 -p1
-%patch17 -p1
-%patch18 -p1
-%patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch25 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1664,8 +1589,8 @@ sed 's!\(MATHJAX_RELPATH\s*=\).*!\1 file:///usr/share/javascript/mathjax!' \
     -i documentation/doxygen/Doxyfile
 %if %{?fedora}%{!?fedora:0} >= 24
 #  * string_view
-rm core/metautils/inc/libcpp_string_view.h \
-   core/metautils/inc/RWrap_libcpp_string_view.h
+rm core/foundation/inc/libcpp_string_view.h \
+   core/foundation/inc/RWrap_libcpp_string_view.h
 %endif
 
 # Remove bundled fonts provided by the OS distributions
@@ -1678,6 +1603,15 @@ sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
 
 # Build PyROOT for python 3
 cp -pr bindings/pyroot bindings/python
+
+# Work around missing libraries in Fedora's gmock packaging
+mkdir googlemock
+pushd googlemock
+g++ %{optflags} -DGTEST_HAS_PTHREAD=1 -c -o gmock-all.o /usr/src/gmock/gmock-all.cc
+ar rv libgmock.a gmock-all.o
+g++ %{optflags} -DGTEST_HAS_PTHREAD=1 -c -o gmock_main.o /usr/src/gmock/gmock_main.cc
+ar rv libgmock_main.a gmock_main.o
+popd
 
 %build
 unset QTDIR
@@ -1722,6 +1656,8 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_tbb:BOOL=OFF \
        -Dbuiltin_unuran:BOOL=OFF \
        -Dbuiltin_vc:BOOL=OFF \
+       -Dbuiltin_vdt:BOOL=OFF \
+       -Dbuiltin_veccore:BOOL=OFF \
        -Dbuiltin_xrootd:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
        -Dafdsmgrd:BOOL=OFF \
@@ -1820,7 +1756,8 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dtmva:BOOL=ON \
        -Dunuran:BOOL=ON \
        -Dvc:BOOL=OFF \
-       -Dvdt:BOOL=ON \
+       -Dvdt:BOOL=OFF \
+       -Dveccore:BOOL=OFF \
        -Dvecgeom:BOOL=OFF \
        -Dx11:BOOL=ON \
        -Dxft:BOOL=ON \
@@ -1832,6 +1769,9 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 %endif
        -Dfail-on-missing:BOOL=ON \
        -Dtesting:BOOL=ON \
+       -Dclingtest:BOOL=OFF \
+       -Dcoverage:BOOL=OFF \
+       -Droottest:BOOL=OFF \
        ..
 
 # Build PyROOT for python 3 (prep)
@@ -1963,7 +1903,7 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_vendorarchdir}`/libRuby.so \
 mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
-sed 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
+sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
 sed -e 's!/usr/bin/env python!/usr/bin/python!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
@@ -1975,17 +1915,23 @@ sed -e 's!/usr/bin/env python!/usr/bin/python!' \
        %{buildroot}%{_bindir}/rootmkdir \
        %{buildroot}%{_bindir}/rootmv \
        %{buildroot}%{_bindir}/rootprint \
-       %{buildroot}%{_bindir}/rootrm
+       %{buildroot}%{_bindir}/rootrm \
+       %{buildroot}%{_bindir}/rootslimtree
 sed -e '/^\#!/d' \
     -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py \
        %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py \
        %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
-sed 's!/usr/bin/env python!/usr/bin/python!' \
+sed -e 's!/usr/bin/env python!/usr/bin/python!' \
     -i %{buildroot}%{_bindir}/rootdrawtree \
        %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
-       %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
-       %{buildroot}%{_pkgdocdir}/tutorials/pyroot/parse_CSV_file_with_TTree_ReadStream.py
+       %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/ApplicationClassificationKeras.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/ApplicationRegressionKeras.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/ClassificationKeras.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/GenerateModel.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/MulticlassKeras.py \
+       %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/RegressionKeras.py
 
 # Remove some junk
 rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
@@ -1999,9 +1945,14 @@ rm %{buildroot}%{_datadir}/%{name}/root.desktop
 rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
 rm %{buildroot}%{_libdir}/%{name}/libmathtext.a
 rm %{buildroot}%{_libdir}/%{name}/libminicern.a
+rm %{buildroot}%{_bindir}/corebasetestUnit
+rm %{buildroot}%{_bindir}/coreconttestUnit
 rm %{buildroot}%{_bindir}/setenvwrap.csh
 rm %{buildroot}%{_bindir}/setxrd*
 rm %{buildroot}%{_bindir}/thisroot*
+rm %{buildroot}%{_bindir}/testTBufferMerger
+rm %{buildroot}%{_bindir}/testTProfile2Poly
+rm %{buildroot}%{_bindir}/treetreeplayertestUnit
 rm %{buildroot}%{_mandir}/man1/g2rootold.1
 rm %{buildroot}%{_mandir}/man1/genmap.1
 rm %{buildroot}%{_mandir}/man1/proofserva.1
@@ -2012,8 +1963,6 @@ rm %{buildroot}%{_mandir}/man1/xproofd.1
 %endif
 rm %{buildroot}%{_includedir}/%{name}/*.cw
 rm %{buildroot}%{_includedir}/%{name}/*.pri
-rm %{buildroot}%{_includedir}/%{name}/proofdp.h
-rm %{buildroot}%{_includedir}/%{name}/rootdp.h
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
@@ -2140,9 +2089,12 @@ popd
 # - test-stressIOPlugins-*
 #   requires network access (by design since they test the remote file IO)
 #
+# - tutorial-dataframe-tdf101_h1Analysis
 # - tutorial-tree-run_h1analysis
 # - tutorial-multicore-imt001_parBranchProcessing
 # - tutorial-multicore-mp103_processSelector
+# - tutorial-multicore-mp104_processH1
+# - tutorial-multicore-mp105_processEntryList
 #   requires network access: http://root.cern.ch/files/h1/
 #
 # - tutorial-multicore-imt101_parTreeProcessing
@@ -2154,7 +2106,7 @@ popd
 #   currently fails on 32 bit arm - reported upstream:
 #   https://sft.its.cern.ch/jira/browse/ROOT-8500
 
-excluded="test-stressIOPlugins-.*|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-imt101_parTreeProcessing"
+excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing"
 %ifarch %{arm}
 excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
 %endif
@@ -2457,6 +2409,8 @@ fi
 %postun tree-player -p /sbin/ldconfig
 %post tree-viewer -p /sbin/ldconfig
 %postun tree-viewer -p /sbin/ldconfig
+%post unfold -p /sbin/ldconfig
+%postun unfold -p /sbin/ldconfig
 
 %files
 %{_bindir}/hadd
@@ -2488,7 +2442,6 @@ fi
 
 %files core -f includelist-core
 %{_bindir}/memprobe
-%{_bindir}/rlibmap
 %{_bindir}/rmkdepend
 %{_bindir}/root-config
 %{_mandir}/man1/memprobe.1*
@@ -2496,6 +2449,7 @@ fi
 %{_mandir}/man1/root-config.1*
 %dir %{_libdir}/%{name}
 %{_libdir}/%{name}/libCore.*
+%{_libdir}/%{name}/libImt.*
 %{_libdir}/%{name}/libNew.*
 %{_libdir}/%{name}/libRint.*
 %{_libdir}/%{name}/libThread.*
@@ -2953,12 +2907,6 @@ fi
 %{_libdir}/%{name}/libUnuran_rdict.pcm
 %{_datadir}/%{name}/plugins/ROOT@@Math@@DistSampler/P010_TUnuranSampler.C
 
-%files vdt -f includelist-math-vdt
-%dir %{_includedir}/%{name}
-%dir %{_includedir}/%{name}/vdt
-%doc math/vdt/ReadMe.md math/vdt/ReleaseNotes.txt
-%license math/vdt/Licence.md
-
 %files memstat -f includelist-misc-memstat
 %{_libdir}/%{name}/libMemStat.*
 %{_libdir}/%{name}/libMemStat_rdict.pcm
@@ -2997,7 +2945,7 @@ fi
 %{_datadir}/%{name}/plugins/TSystem/P070_TNetSystem.C
 %{_datadir}/%{name}/plugins/TVirtualMonitoringWriter/P020_TSQLMonitoringWriter.C
 
-%files net-rpdutils -f includelist-net-rpdutils
+%files net-rpdutils
 %{_libdir}/%{name}/libSrvAuth.*
 
 %files net-bonjour -f includelist-net-bonjour
@@ -3074,7 +3022,7 @@ fi
 %{_libdir}/%{name}/libProofBench_rdict.pcm
 %{_datadir}/%{name}/proof
 
-%files proof-pq2 -f includelist-proof-pq2
+%files proof-pq2
 %{_bindir}/pq2*
 %{_mandir}/man1/pq2*.1*
 
@@ -3153,6 +3101,8 @@ fi
 %files tree-player -f includelist-tree-treeplayer
 %{_libdir}/%{name}/libTreePlayer.*
 %{_libdir}/%{name}/libTreePlayer_rdict.pcm
+%{_libdir}/%{name}/libDataFrame.rootmap
+%{_libdir}/%{name}/libTreePlayer_G__DataFrame_rdict.pcm
 %{_datadir}/%{name}/plugins/TFileDrawMap/P010_TFileDrawMap.C
 %{_datadir}/%{name}/plugins/TVirtualTreePlayer/P010_TTreePlayer.C
 
@@ -3160,6 +3110,10 @@ fi
 %{_libdir}/%{name}/libTreeViewer.*
 %{_libdir}/%{name}/libTreeViewer_rdict.pcm
 %{_datadir}/%{name}/plugins/TVirtualTreeViewer/P010_TTreeViewer.C
+
+%files unfold -f includelist-hist-unfold
+%{_libdir}/%{name}/libUnfold.*
+%{_libdir}/%{name}/libUnfold_rdict.pcm
 
 %files cli
 %{_bindir}/rootbrowse
@@ -3171,6 +3125,7 @@ fi
 %{_bindir}/rootmv
 %{_bindir}/rootprint
 %{_bindir}/rootrm
+%{_bindir}/rootslimtree
 %{_datadir}/%{name}/cli
 
 %files notebook
@@ -3178,6 +3133,13 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Wed Jun 14 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.00-1
+- Update to 6.10.00
+- Drop patches accepted upstream
+- Drop previously backported patches
+- New sub-package: root-unfold
+- Dropped sub-package: root-vdt
+
 * Tue May 16 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.08.06-7
 - Remove JupyROOT references from cmake files
 - Do not generate autoprovides for libJupyROOT.so
