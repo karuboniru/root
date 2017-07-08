@@ -23,7 +23,7 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.10.00
+Version:	6.10.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -3101,8 +3101,6 @@ fi
 %files tree-player -f includelist-tree-treeplayer
 %{_libdir}/%{name}/libTreePlayer.*
 %{_libdir}/%{name}/libTreePlayer_rdict.pcm
-%{_libdir}/%{name}/libDataFrame.rootmap
-%{_libdir}/%{name}/libTreePlayer_G__DataFrame_rdict.pcm
 %{_datadir}/%{name}/plugins/TFileDrawMap/P010_TFileDrawMap.C
 %{_datadir}/%{name}/plugins/TVirtualTreePlayer/P010_TTreePlayer.C
 
@@ -3133,6 +3131,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri Jul 07 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-1
+- Update to 6.10.02
+
 * Wed Jun 14 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.00-1
 - Update to 6.10.00
 - Drop patches accepted upstream
