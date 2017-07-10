@@ -25,7 +25,7 @@
 Name:		root
 Version:	6.10.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -1968,13 +1968,16 @@ rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
 # Remove mathtext, minicern and JupyROOT references from cmake files
-sed -e 's/ mathtext / /' -e /mathtext/d \
-    -e 's/ minicern / /' -e /minicern/d \
-    -e 's/ JupyROOT / /' -e /JupyROOT/d \
+sed -e 's/ ROOT::mathtext / /' -e /ROOT::mathtext/d \
+    -e 's/ ROOT::minicern / /' -e /ROOT::minicern/d \
+    -e 's/ ROOT::JupyROOT / /' -e /ROOT::JupyROOT/d \
     -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
-sed -e '/Import target "mathtext"/,/FILES_FOR_mathtext/d' -e 's/;mathtext//' \
-    -e '/Import target "minicern"/,/FILES_FOR_minicern/d' -e 's/;minicern//' \
-    -e '/Import target "JupyROOT"/,/FILES_FOR_JupyROOT/d' -e 's/;JupyROOT//' \
+sed -e '/Import target "ROOT::mathtext"/,/FILES_FOR_ROOT::mathtext/d' \
+    -e 's/;ROOT::mathtext//' \
+    -e '/Import target "ROOT::minicern"/,/FILES_FOR_ROOT::minicern/d' \
+    -e 's/;ROOT::minicern//' \
+    -e '/Import target "ROOT::JupyROOT"/,/FILES_FOR_ROOT::JupyROOT/d' \
+    -e 's/;ROOT::JupyROOT//' \
     -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 
 # Only used on Windows
@@ -3131,6 +3134,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Mon Jul 10 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-2
+- Fix removal of mathtext, minicern and JupyROOT references from cmake files
+
 * Fri Jul 07 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-1
 - Update to 6.10.02
 
