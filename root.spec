@@ -25,7 +25,7 @@
 Name:		root
 Version:	6.10.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -1967,17 +1967,15 @@ rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
-# Remove mathtext, minicern and JupyROOT references from cmake files
-sed -e 's/ ROOT::mathtext / /' -e /ROOT::mathtext/d \
-    -e 's/ ROOT::minicern / /' -e /ROOT::minicern/d \
-    -e 's/ ROOT::JupyROOT / /' -e /ROOT::JupyROOT/d \
-    -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
-sed -e '/Import target "ROOT::mathtext"/,/FILES_FOR_ROOT::mathtext/d' \
-    -e 's/;ROOT::mathtext//' \
-    -e '/Import target "ROOT::minicern"/,/FILES_FOR_ROOT::minicern/d' \
-    -e 's/;ROOT::minicern//' \
-    -e '/Import target "ROOT::JupyROOT"/,/FILES_FOR_ROOT::JupyROOT/d' \
-    -e 's/;ROOT::JupyROOT//' \
+# Remove references to deleted (or moved) files from cmake files
+for target in mathtext minicern JupyROOT coreconttestUnit corebasetestUnit \
+	      testTProfile2Poly treetreeplayertestUnit testTBufferMerger ; do
+    sed -e "s/ ROOT::${target} / /" -e "/ROOT::${target}/d" \
+	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
+    sed -e "/Import target \"ROOT::${target}\"/,/FILES_FOR_ROOT::${target}/d" \
+	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
+done
+sed -e 's/;ROOT::minicern//' \
     -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 
 # Only used on Windows
@@ -3134,6 +3132,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Wed Jul 12 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-3
+- Remove additional references in cmake files
+
 * Mon Jul 10 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-2
 - Fix removal of mathtext, minicern and JupyROOT references from cmake files
 
