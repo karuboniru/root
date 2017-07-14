@@ -1,0 +1,35 @@
+From 70eeecccca163cc9ae0a6d7f99baf8520552b27a Mon Sep 17 00:00:00 2001
+From: Guilherme Amadio <amadio@cern.ch>
+Date: Wed, 12 Jul 2017 17:33:16 +0200
+Subject: [PATCH] Make stressEntryList Test2() more robust against rounding
+ errors
+
+---
+ test/stressEntryList.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/test/stressEntryList.cxx b/test/stressEntryList.cxx
+index ee6303bb01..0d3a623af1 100644
+--- a/test/stressEntryList.cxx
++++ b/test/stressEntryList.cxx
+@@ -253,7 +253,7 @@ Bool_t Test2()
+    elistsum->Subtract(elist2);
+    n = elistsum->GetN();
+    TEntryList *elistcheck2 = new TEntryList("elistcheck2","elistcheck2");
+-   chain->Draw(">>elistcheck2", "x>0 && (y>0.1 || y<-0.1)", "entrylist");
++   chain->Draw(">>elistcheck2", cut1 && !cut2, "entrylist");
+ 
+    wrongentries4 = 0;
+    for (Int_t i=0; i<n; i++){
+@@ -270,7 +270,7 @@ Bool_t Test2()
+    //subtract the first list
+    elistsum2->Subtract(elist1);
+    elistcheck2->Reset();
+-   chain->Draw(">>elistcheck2", "x<0 && y<0.1 && y>-0.1", "entrylist");
++   chain->Draw(">>elistcheck2", !cut1 && cut2, "entrylist");
+    wrongentries5 = 0;
+    n = elistcheck2->GetN();
+    for (Int_t i=0; i<n; i++){
+-- 
+2.13.0
+

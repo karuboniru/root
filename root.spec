@@ -56,6 +56,12 @@ Patch4:		%{name}-unbundle-gtest.patch
 #		Fix stressGraphics.ref
 #		https://github.com/root-project/root/pull/659
 Patch5:		%{name}-stressgraphics.patch
+#		Avoid build failures due to temporary file name clashes
+#		Backported from upstream git (master)
+Patch6:		%{name}-rootcling-tmpfile.patch
+#		Avoid test failures due to rounding errors
+#		Backported from upstream git (6.10 branch)
+Patch7:		%{name}-stressEntryList.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -1558,6 +1564,8 @@ ROOT as a Jupyter Notebook.
 %patch3 -p1
 %patch4 -p1
 %patch5 -p1
+%patch6 -p1
+%patch7 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
