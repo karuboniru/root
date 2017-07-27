@@ -25,7 +25,7 @@
 Name:		root
 Version:	6.10.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3140,6 +3140,9 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 6.10.02-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Wed Jul 12 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.02-3
 - Remove additional references in cmake files
 
