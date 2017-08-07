@@ -1,0 +1,21 @@
+diff -ur root-6.10.04.orig/sql/mysql/src/TMySQLServer.cxx root-6.10.04/sql/mysql/src/TMySQLServer.cxx
+--- root-6.10.04.orig/sql/mysql/src/TMySQLServer.cxx	2017-07-28 15:15:40.000000000 +0200
++++ root-6.10.04/sql/mysql/src/TMySQLServer.cxx	2017-08-07 07:48:59.759498319 +0200
+@@ -41,6 +41,8 @@
+ //                                                                      //
+ //////////////////////////////////////////////////////////////////////////
+ 
++#include <my_global.h>
++
+ #include "TMySQLServer.h"
+ #include "TMySQLResult.h"
+ #include "TMySQLStatement.h"
+@@ -52,8 +54,6 @@
+ #include "TObjString.h"
+ #include "TObjArray.h"
+ 
+-#include <my_global.h>
+-
+ 
+ ClassImp(TMySQLServer)
+ 

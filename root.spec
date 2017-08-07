@@ -23,9 +23,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.10.02
+Version:	6.10.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -59,9 +59,9 @@ Patch5:		%{name}-stressgraphics.patch
 #		Avoid build failures due to temporary file name clashes
 #		Backported from upstream git (master)
 Patch6:		%{name}-rootcling-tmpfile.patch
-#		Avoid test failures due to rounding errors
-#		Backported from upstream git (6.10 branch)
-Patch7:		%{name}-stressEntryList.patch
+#		Temporary workaround for broken mariadb headers in Fedora 27
+#		https://bugzilla.redhat.com/show_bug.cgi?id=1478739
+Patch7:		%{name}-mysql-workaround.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -1565,7 +1565,9 @@ ROOT as a Jupyter Notebook.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
+%if %{?fedora}%{!?fedora:0} >= 27
 %patch7 -p1
+%endif
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1978,9 +1980,12 @@ rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 # Remove references to deleted (or moved) files from cmake files
 for target in mathtext minicern JupyROOT coreconttestUnit corebasetestUnit \
 	      testTProfile2Poly treetreeplayertestUnit testTBufferMerger ; do
-    sed -e "s/ ROOT::${target} / /" -e "/ROOT::${target}/d" \
+    sed -e "s/ ROOT::${target} / /" \
+	-e "/Create imported target ROOT::${target}/,/^$/d" \
+	-e "/set_target_properties(ROOT::${target}/,/^$/d" \
 	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
-    sed -e "/Import target \"ROOT::${target}\"/,/FILES_FOR_ROOT::${target}/d" \
+    sed -e "/Import target \"ROOT::${target}\"/,/^$/d" \
+	-e "/APPEND _IMPORT_CHECK_TARGETS ROOT::${target}/,/^$/d" \
 	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 done
 sed -e 's/;ROOT::minicern//' \
@@ -3140,6 +3145,10 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat Aug 05 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.04-1
+- Update to 6.10.04
+- Add temporary workaround for broken mariadb headers in Fedora 27
+
 * Thu Aug 03 2017 Fedora Release Engineering <releng@fedoraproject.org> - 6.10.02-5
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Binutils_Mass_Rebuild
 
