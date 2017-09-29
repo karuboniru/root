@@ -1,21 +1,28 @@
-diff -ur root-6.10.04.orig/sql/mysql/src/TMySQLServer.cxx root-6.10.04/sql/mysql/src/TMySQLServer.cxx
---- root-6.10.04.orig/sql/mysql/src/TMySQLServer.cxx	2017-07-28 15:15:40.000000000 +0200
-+++ root-6.10.04/sql/mysql/src/TMySQLServer.cxx	2017-08-07 07:48:59.759498319 +0200
-@@ -41,6 +41,8 @@
- //                                                                      //
- //////////////////////////////////////////////////////////////////////////
- 
-+#include <my_global.h>
-+
- #include "TMySQLServer.h"
- #include "TMySQLResult.h"
- #include "TMySQLStatement.h"
-@@ -52,8 +54,6 @@
+From 511ae175e21c6b5fa32201de23b379f80ed37981 Mon Sep 17 00:00:00 2001
+From: Guilherme Amadio <amadio@cern.ch>
+Date: Tue, 5 Sep 2017 14:57:40 +0200
+Subject: [PATCH] Do not include internal MySQL header
+
+This breaks the build with -Dmysql=ON since the internal header will
+not be found.
+---
+ sql/mysql/src/TMySQLServer.cxx | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/sql/mysql/src/TMySQLServer.cxx b/sql/mysql/src/TMySQLServer.cxx
+index ee9d912e0f..40eebf55e9 100644
+--- a/sql/mysql/src/TMySQLServer.cxx
++++ b/sql/mysql/src/TMySQLServer.cxx
+@@ -52,9 +52,6 @@
  #include "TObjString.h"
  #include "TObjArray.h"
  
 -#include <my_global.h>
 -
- 
+-
  ClassImp(TMySQLServer)
  
+ ////////////////////////////////////////////////////////////////////////////////
+-- 
+2.13.5
+

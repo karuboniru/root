@@ -23,7 +23,7 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.10.04
+Version:	6.10.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -59,9 +59,12 @@ Patch5:		%{name}-stressgraphics.patch
 #		Avoid build failures due to temporary file name clashes
 #		Backported from upstream git (master)
 Patch6:		%{name}-rootcling-tmpfile.patch
-#		Temporary workaround for broken mariadb headers in Fedora 27
-#		https://bugzilla.redhat.com/show_bug.cgi?id=1478739
+#		Do not include internal MySQL header
+#		Backported from upstream git (master)
 Patch7:		%{name}-mysql-workaround.patch
+#		Adapt to new mysql_config version
+#		https://github.com/root-project/root/pull/1067
+Patch8:		%{name}-mysql-config.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -104,7 +107,11 @@ BuildRequires:	unuran-devel
 BuildRequires:	krb5-devel
 BuildRequires:	krb5-workstation
 BuildRequires:	openldap-devel
+%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+BuildRequires:	mariadb-connector-c-devel
+%else
 BuildRequires:	mysql-devel
+%endif
 BuildRequires:	sqlite-devel
 BuildRequires:	unixODBC-devel
 BuildRequires:	mesa-libGL-devel
@@ -175,7 +182,7 @@ BuildRequires:	redhat-lsb-core
 BuildRequires:	font(freesans)
 BuildRequires:	font(freeserif)
 BuildRequires:	font(freemono)
-#		Provides "symbol" and "dingbats"
+#		Provides "symbol", "dingbats" and "chancery"
 BuildRequires:	urw-fonts
 #		The root-fonts package provides Droid Sans Fallback for EPEL
 %if %{?fedora}%{!?fedora:0} >= 11
@@ -289,12 +296,13 @@ Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
 Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 #		Fonts
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(freesans)
 Requires:	font(freeserif)
 Requires:	font(freemono)
-#		Provides "symbol" and "dingbats"
+#		Provides "symbol", "dingbats" and "chancery"
 Requires:	urw-fonts
 #		The root-fonts package provides Droid Sans Fallback for EPEL
 %if %{?fedora}%{!?fedora:0} >= 11
@@ -1565,9 +1573,8 @@ ROOT as a Jupyter Notebook.
 %patch4 -p1
 %patch5 -p1
 %patch6 -p1
-%if %{?fedora}%{!?fedora:0} >= 27
 %patch7 -p1
-%endif
+%patch8 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3145,6 +3152,10 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Wed Sep 27 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.06-1
+- Update to 6.10.06
+- Fixes for new mysql_config
+
 * Sat Aug 05 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.04-1
 - Update to 6.10.04
 - Add temporary workaround for broken mariadb headers in Fedora 27
