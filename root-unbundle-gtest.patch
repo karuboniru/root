@@ -1,7 +1,7 @@
-diff -ur root-6.10.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.10.00/cmake/modules/SearchInstalledSoftware.cmake
---- root-6.10.00.orig/cmake/modules/SearchInstalledSoftware.cmake	2017-06-13 09:14:04.000000000 +0200
-+++ root-6.10.00/cmake/modules/SearchInstalledSoftware.cmake	2017-06-15 14:21:08.367446162 +0200
-@@ -1471,73 +1471,15 @@
+diff -ur root-6.10.08.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.10.08/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.10.08.orig/cmake/modules/SearchInstalledSoftware.cmake	2017-10-16 18:28:58.000000000 +0200
++++ root-6.10.08/cmake/modules/SearchInstalledSoftware.cmake	2017-10-19 21:18:23.053801458 +0200
+@@ -1511,74 +1511,19 @@
  
  #---Download googletest--------------------------------------------------------------
  if (testing)
@@ -62,6 +62,8 @@ diff -ur root-6.10.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.10
 -  add_library(gtest_main IMPORTED STATIC GLOBAL)
 -  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
 -  add_dependencies(gtest_main googletest)
++ # Workaround for missing libraries in Fedora's gmock packaging < 1.8.0
++ if(EXISTS ${CMAKE_SOURCE_DIR}/googlemock)
 +  set(_G_LIBRARY_PATH ${CMAKE_SOURCE_DIR}/googlemock)
  
    # gmock
@@ -74,5 +76,7 @@ diff -ur root-6.10.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.10
    set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
 -  add_dependencies(gmock_main googletest)
  
++ endif()
  endif()
  
+ #---Report non implemented options---------------------------------------------------

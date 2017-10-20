@@ -23,7 +23,7 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.10.06
+Version:	6.10.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -65,6 +65,9 @@ Patch7:		%{name}-mysql-workaround.patch
 #		Adapt to new mysql_config version
 #		https://github.com/root-project/root/pull/1067
 Patch8:		%{name}-mysql-config.patch
+#		Address some warnings during documentation generation
+#		https://github.com/root-project/root/pull/1212
+Patch9:		%{name}-dox-filter.patch
 
 #		s390 is not supported by cling: "error: unknown target
 #		triple 's390-ibm-linux', please use -triple or -arch"
@@ -96,6 +99,8 @@ BuildRequires:	gl2ps-devel
 BuildRequires:	pcre-devel
 BuildRequires:	zlib-devel
 BuildRequires:	xz-devel
+BuildRequires:	lz4-devel
+BuildRequires:	xxhash-devel
 BuildRequires:	libAfterImage-devel >= 1.20
 BuildRequires:	ncurses-devel
 BuildRequires:	avahi-compat-libdns_sd-devel
@@ -1575,6 +1580,7 @@ ROOT as a Jupyter Notebook.
 %patch6 -p1
 %patch7 -p1
 %patch8 -p1
+%patch9 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1621,7 +1627,8 @@ sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
 # Build PyROOT for python 3
 cp -pr bindings/pyroot bindings/python
 
-# Work around missing libraries in Fedora's gmock packaging
+# Work around missing libraries in Fedora's gmock packaging < 1.8.0
+if [ ! -r %{_libdir}/libgmock.so ] ; then
 mkdir googlemock
 pushd googlemock
 g++ %{optflags} -DGTEST_HAS_PTHREAD=1 -c -o gmock-all.o /usr/src/gmock/gmock-all.cc
@@ -1629,6 +1636,7 @@ ar rv libgmock.a gmock-all.o
 g++ %{optflags} -DGTEST_HAS_PTHREAD=1 -c -o gmock_main.o /usr/src/gmock/gmock_main.cc
 ar rv libgmock_main.a gmock_main.o
 popd
+fi
 
 %build
 unset QTDIR
@@ -1667,6 +1675,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_glew:BOOL=OFF \
        -Dbuiltin_gsl:BOOL=OFF \
        -Dbuiltin_llvm:BOOL=ON \
+       -Dbuiltin_lz4:BOOL=OFF \
        -Dbuiltin_lzma:BOOL=OFF \
        -Dbuiltin_openssl:BOOL=OFF \
        -Dbuiltin_pcre:BOOL=OFF \
@@ -3152,6 +3161,12 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri Oct 20 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.08-1
+- Update to 6.10.08
+- Add BuildRequires on lz4-devel and xxhash-devel
+- Workaround for missing gmock libraries only needed for gmock < 0.1.8
+- Address some warnings during documentation generation
+
 * Wed Sep 27 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.06-1
 - Update to 6.10.06
 - Fixes for new mysql_config
