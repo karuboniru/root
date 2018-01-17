@@ -1,0 +1,114 @@
+From 575c6e2851939afc6d80395c5e4cae9d2e10b433 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Tue, 16 Jan 2018 06:40:07 +0100
+Subject: [PATCH 1/3] Quote word default
+
+---
+ etc/notebook/JsMVA/js/DecisionTree.js     | 6 +++---
+ etc/notebook/JsMVA/js/DecisionTree.min.js | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/etc/notebook/JsMVA/js/DecisionTree.js b/etc/notebook/JsMVA/js/DecisionTree.js
+index 5311974202..18eb8eb200 100644
+--- a/etc/notebook/JsMVA/js/DecisionTree.js
++++ b/etc/notebook/JsMVA/js/DecisionTree.js
+@@ -54,7 +54,7 @@
+         },
+         link: {
+             colors:{
+-                default: "#ccc",
++                "default": "#CCC",
+                 focus: "#033A00"
+             },
+             width: "4px",
+@@ -235,7 +235,7 @@
+         linkSelector.transition().duration(style.aduration)
+             .attr("d", d3path)
+             .style("fill", "none")
+-            .style("stroke", style.link.colors.default)
++            .style("stroke", style.link.colors["default"])
+             .style("stroke-width", style.link.width)
+             .attr("id", function(d){return "link"+d.target.id;});
+ 
+@@ -251,7 +251,7 @@
+     var path = function(node, i, clear){
+         svg.selectAll("path.link").filter(function(d){return d.target.id==node.id;})
+             .style("stroke-width", (clear) ? style.link.width : style.link.focus_width)
+-            .style("stroke", (clear) ? style.link.colors.default : style.link.colors.focus);
++            .style("stroke", (clear) ? style.link.colors["default"] : style.link.colors.focus);
+ 
+         svg.selectAll("g.nodes rect").filter(function(d){return d.id==node.id;})
+             .style("stroke-width", style.node.swidth)
+-- 
+2.14.3
+
+From 21d4b8c311a07fa32dc29e76f2a116e7ed429ec0 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Tue, 16 Jan 2018 06:44:31 +0100
+Subject: [PATCH 2/3] Avoid new syntax for default arguments
+
+---
+ etc/notebook/JsMVA/js/NeuralNetwork.js     | 5 ++++-
+ etc/notebook/JsMVA/js/NeuralNetwork.min.js | 2 +-
+ 2 files changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/etc/notebook/JsMVA/js/NeuralNetwork.js b/etc/notebook/JsMVA/js/NeuralNetwork.js
+index 8e52252be3..25ba32c6ec 100644
+--- a/etc/notebook/JsMVA/js/NeuralNetwork.js
++++ b/etc/notebook/JsMVA/js/NeuralNetwork.js
+@@ -506,7 +506,10 @@
+     };
+ 
+ 
+-    NeuralNetwork.drawDeepNetwork = function (divid, netobj, oldStructure=false) {
++    NeuralNetwork.drawDeepNetwork = function (divid, netobj, oldStructure) {
++        if (oldStructure===undefined) {
++            oldStructure = false;
++        }
+         var div = d3.select("#"+divid);
+         canvas = {
+             width:  Number(div.property("style")["width"].replace("px","")),
+-- 
+2.14.3
+
+From 501e9d62367de6c1d4e487dd413277e4d74a5ce1 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Tue, 16 Jan 2018 06:48:16 +0100
+Subject: [PATCH 3/3] Adapt to filename change in jsroot
+
+---
+ etc/notebook/JsMVA/js/JsMVA.js               | 2 +-
+ etc/notebook/JsMVA/js/JsMVA.min.js           | 2 +-
+ etc/notebook/JsMVA/js/NetworkDesigner.js     | 2 +-
+ etc/notebook/JsMVA/js/NetworkDesigner.min.js | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/etc/notebook/JsMVA/js/JsMVA.js b/etc/notebook/JsMVA/js/JsMVA.js
+index c8e4522e27..9e474d080e 100644
+--- a/etc/notebook/JsMVA/js/JsMVA.js
++++ b/etc/notebook/JsMVA/js/JsMVA.js
+@@ -32,7 +32,7 @@
+ 
+     require.config({
+         paths: {
+-            'd3': JSROOT_source_dir+'d3.v3.min',
++            'd3': JSROOT_source_dir+'d3.min',
+             'JsRootCore': JSROOT_source_dir+'JSRootCore.min',
+             'nn': url+'NeuralNetwork.min',
+             'dtree': url+'DecisionTree.min',
+diff --git a/etc/notebook/JsMVA/js/NetworkDesigner.js b/etc/notebook/JsMVA/js/NetworkDesigner.js
+index ed771fbf81..a744b2371e 100644
+--- a/etc/notebook/JsMVA/js/NetworkDesigner.js
++++ b/etc/notebook/JsMVA/js/NetworkDesigner.js
+@@ -19,7 +19,7 @@
+         paths: {
+             "jquery-connections": baseURL + "jquery.connections.min",
+             "jquery-timing": baseURL + "jquery-timing.min",
+-            "d3": "https://root.cern.ch/js/notebook/scripts/d3.v3.min"
++            "d3": "https://root.cern.ch/js/notebook/scripts/d3.min"
+         },
+         shim: {
+             "jquery-ui": {
+-- 
+2.14.3
+

@@ -7,9 +7,9 @@ pushd files
 
 wget -N ${SITE}/aleph_ref_5.root
 wget -N ${SITE}/aleph.root
-wget -N ${SITE}/alice3_ref_5.root
+wget -N ${SITE}/alice3_ref_6.root
 wget -N ${SITE}/alice3.root
-wget -N ${SITE}/ams_ref_3.root
+wget -N ${SITE}/ams_ref_4.root
 wget -N ${SITE}/ams.root
 wget -N ${SITE}/atlas_ref_5.root
 wget -N ${SITE}/atlas.root
@@ -25,7 +25,7 @@ wget -N ${SITE}/brahms_ref_3.root
 wget -N ${SITE}/brahms.root
 wget -N ${SITE}/btev_ref_3.root
 wget -N ${SITE}/btev.root
-wget -N ${SITE}/cdf_ref_5.root
+wget -N ${SITE}/cdf_ref_6.root
 wget -N ${SITE}/cdf.root
 wget -N ${SITE}/chambers_ref_3.root
 wget -N ${SITE}/chambers.root
@@ -39,7 +39,7 @@ wget -N ${SITE}/felix_ref_3.root
 wget -N ${SITE}/felix.root
 wget -N ${SITE}/ganil_ref_3.root
 wget -N ${SITE}/ganil.root
-wget -N ${SITE}/gem_ref_4.root
+wget -N ${SITE}/gem_ref_5.root
 wget -N ${SITE}/gem.root
 wget -N ${SITE}/hades2_ref_4.root
 wget -N ${SITE}/hades2.root
@@ -80,6 +80,11 @@ wget -N ${SITE}/tmva_reg_example.root
 wget -N ${SITE}/usa.root
 
 for f in *.root ; do ln -s $f $f.ROOT.cachefile ; done
+
+mkdir tutorials
+pushd tutorials
+wget -N ${SITE}/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
+popd
 
 popd
 

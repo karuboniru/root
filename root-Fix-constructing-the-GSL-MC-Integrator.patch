@@ -1,0 +1,35 @@
+From 0bed472bc529c6fa515793984808a4f6c24fc715 Mon Sep 17 00:00:00 2001
+From: moneta <lorenzo.moneta@cern.ch>
+Date: Mon, 15 Jan 2018 15:00:44 +0100
+Subject: [PATCH] Fix constructing the GSL MC Integrator. This fix the failure
+ observed sometimes in  math core-testIntegration. (Fix ROOT-9178)
+
+---
+ math/mathmore/src/GSLMCIntegrator.cxx | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/math/mathmore/src/GSLMCIntegrator.cxx b/math/mathmore/src/GSLMCIntegrator.cxx
+index 25ad7b4eac..1c00146630 100644
+--- a/math/mathmore/src/GSLMCIntegrator.cxx
++++ b/math/mathmore/src/GSLMCIntegrator.cxx
+@@ -100,6 +100,7 @@ GSLMCIntegrator::GSLMCIntegrator(MCIntegration::Type type, double absTol, double
+ }
+ 
+ GSLMCIntegrator::GSLMCIntegrator(const char * type, double absTol, double relTol, unsigned int calls):
++   fType(MCIntegration::kDEFAULT),
+    fDim(0),
+    fCalls(calls),
+    fAbsTol(absTol),
+@@ -316,7 +317,8 @@ void GSLMCIntegrator::SetTypeName(const char * type)
+    }
+ 
+    // create the fWorkspace object
+-   if (integType != fType) SetType(integType);
++   // if it exists already with the same type it will not be re-created
++   SetType(integType);
+ }
+ 
+ 
+-- 
+2.14.3
+

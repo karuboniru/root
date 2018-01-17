@@ -1,0 +1,15 @@
+diff -ur root-6.12.04.orig/graf2d/graf/src/TTF.cxx root-6.12.04/graf2d/graf/src/TTF.cxx
+--- root-6.12.04.orig/graf2d/graf/src/TTF.cxx	2018-01-15 10:57:07.314073647 +0100
++++ root-6.12.04/graf2d/graf/src/TTF.cxx	2018-01-15 11:02:00.210880469 +0100
+@@ -126,6 +126,11 @@
+              (platform == 1 && encoding == 0 &&
+               (fgFontID[fgCurFontIdx] == 12 ||
+                fgFontID[fgCurFontIdx] == 14 ||
++               fgFontID[fgCurFontIdx] == 15)) ||
++             // Horrible hack for broken charmaps in StandardSymbolsPS.otf
++             // Hopefully temporary...
++             (platform == 0 && encoding == 3 &&
++              (fgFontID[fgCurFontIdx] == 12 ||
+                fgFontID[fgCurFontIdx] == 15)))
+          {
+             fgCharMap[fgCurFontIdx] = charmap;

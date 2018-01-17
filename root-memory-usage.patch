@@ -1,0 +1,59 @@
+From 3617dd1d911bb5e8fa17a6139dbb887c44dae0fe Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Tue, 16 Jan 2018 10:25:50 +0100
+Subject: [PATCH] Reduce the needed memory for compilation
+
+The linking of rootcling_stage1 and libCling requires a lot of memory.
+Since these are linked from mostly the same objects, the build is ready
+to link them at the same time. If you make a parallel build this means
+that the two targets that require the most amount of memory are being
+linked in parallel. This exhausts the available memory, and the
+computer starts swapping.
+
+This adds a dependency of one of the targets to the other. The dependency is
+not really there since it is not needed for building, but it prevents the
+two memory consuming targets to be built in parallel.
+
+A similar dependency existed before the code latest code changes
+(see commit 2638f6fc7f54b0995f2f9d60363daaf8aae2386e), then between
+rootcling and libCling.
+---
+ core/metacling/Module.mk          | 6 +++++-
+ core/metacling/src/CMakeLists.txt | 4 ++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/core/metacling/Module.mk b/core/metacling/Module.mk
+index 4788eca393..7f520e41b6 100644
+--- a/core/metacling/Module.mk
++++ b/core/metacling/Module.mk
+@@ -46,7 +46,11 @@ endif
+ CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
+ CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
+ 
+-$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO)
++# The dependency on $(ROOTCLING1EXE) was added to prevent $(CLINGLIB) and
++# $(ROOTCLING1EXE) from being linked in parallel.
++# This avoids doing two memory consuming operations in parallel.
++$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
++		$(ROOTCLING1EXE)
+ 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(LIBCLINGLDFLAGS)" \
+ 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
+ 		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
+diff --git a/core/metacling/src/CMakeLists.txt b/core/metacling/src/CMakeLists.txt
+index e820d144eb..3a1f1ca446 100644
+--- a/core/metacling/src/CMakeLists.txt
++++ b/core/metacling/src/CMakeLists.txt
+@@ -37,6 +37,10 @@ ROOT_LINKER_LIBRARY(Cling
+         $<TARGET_OBJECTS:Dictgen>
+         $<TARGET_OBJECTS:MetaCling>
+         LIBRARIES ${CLING_LIBRARIES})
++# The dependency on rootcling_stage1 was added to prevent Cling (libCling) and
++# rootcling_stage1 from being linked in parallel.
++# This avoids doing two memory consuming operations in parallel.
++add_dependencies(Cling rootcling_stage1)
+ 
+ if(MSVC)
+   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+-- 
+2.14.3
+

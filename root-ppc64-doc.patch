@@ -1,0 +1,24 @@
+diff -ur root-6.12.04.orig/tutorials/roostats/rs102_hypotestwithshapes.C root-6.12.04/tutorials/roostats/rs102_hypotestwithshapes.C
+--- root-6.12.04.orig/tutorials/roostats/rs102_hypotestwithshapes.C	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/tutorials/roostats/rs102_hypotestwithshapes.C	2018-01-15 21:30:10.608693441 +0100
+@@ -13,8 +13,6 @@
+ /// In this example, shape uncertainties are not taken into account, but
+ /// normalization uncertainties are.
+ ///
+-/// \macro_image
+-/// \macro_output
+ /// \macro_code
+ ///
+ /// \author Kyle Cranmer
+diff -ur root-6.12.04.orig/tutorials/roostats/rs701_BayesianCalculator.C root-6.12.04/tutorials/roostats/rs701_BayesianCalculator.C
+--- root-6.12.04.orig/tutorials/roostats/rs701_BayesianCalculator.C	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/tutorials/roostats/rs701_BayesianCalculator.C	2018-01-15 21:30:39.405371047 +0100
+@@ -5,8 +5,6 @@
+ ///
+ /// This tutorial shows an example of using the BayesianCalculator class
+ ///
+-/// \macro_image
+-/// \macro_output
+ /// \macro_code
+ ///
+ /// \author Gregory Schott

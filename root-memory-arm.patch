@@ -1,0 +1,15 @@
+--- root-6.12.04.orig/interpreter/CMakeLists.txt	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/interpreter/CMakeLists.txt	2018-01-11 16:33:13.034850962 +0100
+@@ -75,6 +75,12 @@
+   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
+ endif()
+ 
++# Reduce memory usage during linking on ARM by generating minimal debuginfo
++if(ROOT_CLING_TARGET STREQUAL "ARM")
++  string(REPLACE " -g " " -g1 " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")  
++  string(REPLACE " -g " " -g1 " CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")  
++endif()
++
+ set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
+ 
+ if(clingtest)

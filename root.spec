@@ -15,6 +15,14 @@
 %global hadoop 0
 %endif
 
+%if %{?fedora}%{!?fedora:0} >= 24 || %{?rhel}%{!?rhel:0} >= 8
+# Building the experimental ROOT 7 classes requires c++-14.
+# This is the default for gcc 6.1 and later.
+%global root7 1
+%else
+%global root7 0
+%endif
+
 # Do not create .orig files when patching source
 %global _default_patch_flags --no-backup-if-mismatch
 
@@ -23,7 +31,7 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.10.08
+Version:	6.12.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -53,33 +61,45 @@ Patch2:		%{name}-doc-no-notebooks.patch
 Patch3:		%{name}-avoid-gui-crash.patch
 #		Unbundle gtest
 Patch4:		%{name}-unbundle-gtest.patch
-#		Fix stressGraphics.ref
-#		https://github.com/root-project/root/pull/659
-Patch5:		%{name}-stressgraphics.patch
-#		Avoid build failures due to temporary file name clashes
-#		Backported from upstream git (master)
-Patch6:		%{name}-rootcling-tmpfile.patch
-#		Do not include internal MySQL header
-#		Backported from upstream git (master)
-Patch7:		%{name}-mysql-workaround.patch
-#		Adapt to new mysql_config version
-#		https://github.com/root-project/root/pull/1067
-Patch8:		%{name}-mysql-config.patch
-#		Address some warnings during documentation generation
-#		https://github.com/root-project/root/pull/1212
-Patch9:		%{name}-dox-filter.patch
+#		Horrible hack for broken charmaps in StandardSymbolsPS.otf
+#		Hopefully temporary...
+#		https://bugzilla.redhat.com/show_bug.cgi?id=1534206
+Patch5:		%{name}-urw-otf-hack.patch
+#		Use local static script and style files for JupyROOT
+Patch6:		%{name}-jupyroot-static.patch
+#		Fix some javascript syntax choking yuicompressor
+#		Adapt d3 path to updated jsroot
+#		https://github.com/root-project/root/pull/1520
+Patch7:		%{name}-js-syntax.patch
+#		Fix missing -f flag to rm in Makefile
+#		Backport from upstream git
+Patch8:		%{name}-doxygen-makefile.patch
+#		Always use ROOT_ADD_TEST_SUBDIRECTORY when adding test dirs
+#		https://github.com/root-project/root/pull/1515
+Patch9:		%{name}-test-subdirs.patch
+#		No need to use environment variables for system pythia
+Patch10:	%{name}-system-pythia.patch
+#		Reduce memory usage of build
+#		https://github.com/root-project/root/pull/1516
+Patch11:	%{name}-memory-usage.patch
+#		Fedora's llvm patch
+Patch12:	%{name}-PowerPC-Don-t-use-xscvdpspn-on-the-P7.patch
+#		Reduce memory usage during linking on ARM by generating
+#		smaller debuginfo for the llmv libraries.
+#		Fedora builders run out of memory with the default setting.
+Patch13:	%{name}-memory-arm.patch
+#		Don't run tutorials that crash on ppc64 during doc generation.
+#		Ensures content of doc package is the same on all architecture
+#		so that koji accepts it as a noarch package.
+Patch14:	%{name}-ppc64-doc.patch
+#		Fix constructing the GSL MC Integrator
+#		Backport from upstream git
+Patch15:	%{name}-Fix-constructing-the-GSL-MC-Integrator.patch
 
-#		s390 is not supported by cling: "error: unknown target
-#		triple 's390-ibm-linux', please use -triple or -arch"
-ExcludeArch:	s390
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
 #		https://sft.its.cern.ch/jira/browse/ROOT-8703
 ExcludeArch:	s390x
-#		ppc/ppc64/ppc64le does not yet work
-#		https://sft.its.cern.ch/jira/browse/ROOT-6434
-#		https://sft.its.cern.ch/jira/browse/ROOT-7314
-ExcludeArch:	ppc %{power64}
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	cmake >= 3.4.3
@@ -125,11 +145,9 @@ BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
 %if %{?fedora}%{!?fedora:0} >= 15
 BuildRequires:	python3-devel
-%global python3pkg python3
 %endif
 %if %{?rhel}%{!?rhel:0} == 7
 BuildRequires:	python34-devel
-%global python3pkg python34
 %endif
 BuildRequires:	qt4-devel
 %if %{ruby}
@@ -177,6 +195,7 @@ BuildRequires:	blas-devel
 BuildRequires:	numpy
 BuildRequires:	doxygen
 BuildRequires:	graphviz
+BuildRequires:	yuicompressor
 BuildRequires:	perl-generators
 BuildRequires:	systemd-units
 BuildRequires:	gtest-devel
@@ -197,6 +216,10 @@ BuildRequires:	font(droidsansfallback)
 BuildRequires:	gdb
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 Requires:	hicolor-icon-theme
 Requires:	emacs-filesystem >= %{_emacs_version}
 Provides:	emacs-%{name} = %{version}-%{release}
@@ -401,18 +424,18 @@ Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
-%package -n %{python3pkg}-%{name}
+%package -n python%{python3_pkgversion}-%{name}
 Summary:	Python extension for ROOT
 %{?py3_dist:
 Provides:	%{py3_dist %{name}} = %{version}
 }
-Provides:	root-%{python3pkg} = %{version}-%{release}
-Obsoletes:	root-%{python3pkg} < 6.08.00
+Provides:	root-python%{python3_pkgversion} = %{version}-%{release}
+Obsoletes:	root-python%{python3_pkgversion} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
-%description -n %{python3pkg}-%{name}
+%description -n python%{python3_pkgversion}-%{name}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
@@ -421,7 +444,10 @@ Summary:	ROOT Jupyter kernel
 %{?py2_dist:
 Provides:	%{py2_dist jupyroot} = %{version}
 }
-Requires:	python2-%{name} = %{version}-%{release}
+Requires:	python2-%{name}%{?_isa} = %{version}-%{release}
+Requires:	python2-jsmva = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-notebook = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
 Requires:	python2-ipython
 Requires:	python2-metakernel
@@ -435,25 +461,28 @@ Obsoletes:	%{name}-rootaas < 6.08.00
 %description -n python2-jupyroot
 The Jupyter kernel for the ROOT notebook.
 
-%package -n %{python3pkg}-jupyroot
+%package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
 %{?py3_dist:
 Provides:	%{py3_dist jupyroot} = %{version}
 }
-Requires:	%{python3pkg}-%{name} = %{version}-%{release}
+Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
+Requires:	python%{python3_pkgversion}-jsmva = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-notebook = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
-Requires:	%{python3pkg}-ipython
-Requires:	%{python3pkg}-metakernel
+Requires:	python%{python3_pkgversion}-ipython
+Requires:	python%{python3_pkgversion}-metakernel
 %else
 %if %{?fedora}%{!?fedora:0}
 #		ipython for python3 not available in RHEL/EPEL
-Requires:	%{python3pkg}-ipython-console
+Requires:	python%{python3_pkgversion}-ipython-console
 %endif
 #		python-metakernel for python3 not available in
 #		Fedora <= 25 or RHEL/EPEL - some functionality missing
 %endif
 
-%description -n %{python3pkg}-jupyroot
+%description -n python%{python3_pkgversion}-jupyroot
 The Jupyter kernel for the ROOT notebook.
 
 %package -n python2-jsmva
@@ -463,21 +492,19 @@ BuildArch:	noarch
 Provides:	%{py2_dist jsmva} = %{version}
 }
 Requires:	%{name}-tmva = %{version}-%{release}
-Requires:	python2-jupyroot = %{version}-%{release}
 
 %description -n python2-jsmva
 TMVA interface used by JupyROOT.
 
-%package -n %{python3pkg}-jsmva
+%package -n python%{python3_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
 %{?py3_dist:
 Provides:	%{py3_dist jsmva} = %{version}
 }
 Requires:	%{name}-tmva = %{version}-%{release}
-Requires:	%{python3pkg}-jupyroot = %{version}-%{release}
 
-%description -n %{python3pkg}-jsmva
+%description -n python%{python3_pkgversion}-jsmva
 TMVA interface used by JupyROOT.
 
 %if %{ruby}
@@ -604,6 +631,8 @@ Summary:	Canvas and pad library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 #		Dynamic dependency
 Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
 
@@ -742,6 +771,11 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+%if %{root7}
+Requires:	%{name}-hist-draw%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+%endif
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
@@ -800,6 +834,28 @@ Recorded events are:
 All the recorded events from one session are stored in one TFile
 and can be replayed again anytime.
 
+%if %{root7}
+%package gui-canvaspainter
+Summary:	Canvas painter (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+
+%description gui-canvaspainter
+This package contains a canvas painter extension for ROOT 7
+
+%package gui-webdisplay
+Summary:	Web display (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
+
+%description gui-webdisplay
+This package contains a web display extension for ROOT 7
+%endif
+
 %package hbook
 Summary:	Hbook library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -814,6 +870,7 @@ access legacy Hbook files (NTuples and Histograms from PAW).
 %package hist
 Summary:	Histogram library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 #		Dynamic dependency
@@ -822,12 +879,26 @@ Requires:	%{name}-hist-painter%{?_isa} = %{version}-%{release}
 %description hist
 This package contains a library for histogramming in ROOT.
 
+%if %{root7}
+%package hist-draw
+Summary:	Histogram drawing (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+
+%description hist-draw
+This package contains an histogram drawing extension for ROOT 7.
+%endif
+
 %package hist-painter
 Summary:	Histogram painter plugin for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+%if %{root7}
+Requires:	%{name}-hist-draw%{?_isa} = %{version}-%{release}
+%endif
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
@@ -1264,6 +1335,7 @@ Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	js-jsroot
 
 %description net-http
 This package contains the HTTP server extension for ROOT. It provides
@@ -1430,6 +1502,7 @@ ROOT environment.
 Summary:	Toolkit for multivariate data analysis
 License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
@@ -1437,6 +1510,8 @@ Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mlp%{?_isa} = %{version}-%{release}
+Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
@@ -1515,6 +1590,8 @@ Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description tree-player
@@ -1556,17 +1633,13 @@ The ROOT command line utilities is a set of scripts for common tasks
 written in python.
 
 %package notebook
-Summary:	ROOT as a Jupyter Notebook
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-%if %{?fedora}%{!?fedora:0} >= 23
-#		Jupyter is not available in RHEL/EPEL
-Requires:	/usr/bin/jupyter
-%endif
-Requires:	python2-jupyroot = %{version}-%{release}
-Requires:	python2-jsmva = %{version}-%{release}
+Summary:	Static files for the Jupyter ROOT Notebook
+BuildArch:	noarch
+Requires:	%{name}-core = %{version}-%{release}
+Requires:	js-jsroot
 
 %description notebook
-ROOT as a Jupyter Notebook.
+Javascript and style files for the Jupyter ROOT Notebook.
 
 %prep
 %setup -q -a 1
@@ -1581,6 +1654,12 @@ ROOT as a Jupyter Notebook.
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%patch10 -p1
+%patch11 -p1
+%patch12 -p1
+%patch13 -p1
+%patch14 -p1
+%patch15 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1610,11 +1689,13 @@ rm -rf documentation/doxygen/mathjax.tar.gz
 sed /mathjax.tar.gz/d -i documentation/doxygen/Makefile
 sed 's!\(MATHJAX_RELPATH\s*=\).*!\1 file:///usr/share/javascript/mathjax!' \
     -i documentation/doxygen/Doxyfile
-%if %{?fedora}%{!?fedora:0} >= 24
-#  * string_view
+%if %{root7}
+#  * string_view (<experimental/string_view> requires c++-14)
 rm core/foundation/inc/libcpp_string_view.h \
    core/foundation/inc/RWrap_libcpp_string_view.h
 %endif
+#  * jsroot
+rm -rf etc/http/*
 
 # Remove bundled fonts provided by the OS distributions
 %if %{?fedora}%{!?fedora:0} >= 11
@@ -1638,21 +1719,28 @@ ar rv libgmock_main.a gmock_main.o
 popd
 fi
 
+# Remove pre-minified script and style files
+rm etc/notebook/JsMVA/js/*.min.js
+rm etc/notebook/JsMVA/css/*.min.css
+
 %build
 unset QTDIR
 unset QTLIB
 unset QTINC
+
+# Minify script and style files
+for s in etc/notebook/JsMVA/js/*.js ; do
+    yuicompressor ${s} -o ${s%.js}.min.js
+done
+for s in etc/notebook/JsMVA/css/*.css ; do
+    yuicompressor ${s} -o ${s%.css}.min.css
+done
 
 mkdir builddir
 pushd builddir
 
 # Avoid overlinking (this used to be the default with the old configure script)
 LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
-
-%ifarch s390 s390x
-# llvm/clang does not support -march=z900, z990, z9-109, z9-ec
-%global optflags %(sed 's/-march=z9\\S* /-march=z10 /g' <<< '%{optflags}')
-%endif
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
 %cmake \
@@ -1698,13 +1786,14 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dcling:BOOL=ON \
        -Dcocoa:BOOL=OFF \
        -Dcuda:BOOL=OFF \
-%if %{?fedora}%{!?fedora:0} >= 24
+%if %{root7}
        -Dcxx14:BOOL=ON \
        -Droot7:BOOL=ON \
 %else
        -Dcxx14:BOOL=OFF \
        -Droot7:BOOL=OFF \
 %endif
+       -Dcxx17:BOOL=OFF \
        -Dcxxmodules:BOOL=OFF \
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
@@ -1741,6 +1830,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dldap:BOOL=ON \
        -Dlibcxx:BOOL=OFF \
        -Dmathmore:BOOL=ON \
+       -Dmemory_termination:BOOL=OFF \
        -Dmemstat:BOOL=ON \
        -Dminuit2:BOOL=ON \
        -Dmonalisa:BOOL=OFF \
@@ -1769,6 +1859,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 %else
        -Druby:BOOL=OFF \
 %endif
+       -Druntime_cxxmodules:BOOL=OFF \
        -Dsapdb:BOOL=OFF \
        -Dshadowpw:BOOL=ON \
        -Dshared:BOOL=ON \
@@ -1798,6 +1889,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dclingtest:BOOL=OFF \
        -Dcoverage:BOOL=OFF \
        -Droottest:BOOL=OFF \
+       -Drootbench:BOOL=OFF \
        ..
 
 # Build PyROOT for python 3 (prep)
@@ -1925,6 +2017,40 @@ ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_vendorarchdir}`/libRuby.so \
    %{buildroot}%{_libdir}/%{name}/libRuby.so.%{version}
 %endif
 
+# Put jupyter stuff in the right places
+mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
+
+cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
+   %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot
+sed -e 's/ROOT C++/& (Python 2)/' -e 's!python!/usr/bin/python2!' \
+    -i %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot/kernel.json
+
+cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
+   %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
+sed -e 's/ROOT C++/& (Python 3)/' -e 's!python!/usr/bin/python3!' \
+    -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
+
+rm -rf %{buildroot}%{_datadir}/%{name}/notebook/custom
+rm -rf %{buildroot}%{_datadir}/%{name}/notebook/html
+rm -rf %{buildroot}%{_datadir}/%{name}/notebook/kernels
+
+ln -s /usr/share/javascript/jsroot %{buildroot}%{_datadir}/%{name}/notebook
+
+# Replace the rootnb.exe wrapper with a simpler one
+cat > %{buildroot}%{_bindir}/rootnb.exe << EOF
+#! /bin/sh
+if [ -z "\$(type jupyter 2>/dev/null)" ] ; then
+   echo jupyter not found in path. Exiting.
+   exit 1
+fi
+if [ -z "\$(type jupyter-notebook 2>/dev/null)" ] ; then
+   echo jupyter-notebook not found in path. Exiting.
+   exit 1
+fi
+rm -rf ~/.rootnb
+jupyter notebook
+EOF
+
 # These should be in PATH
 mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
@@ -1971,14 +2097,9 @@ rm %{buildroot}%{_datadir}/%{name}/root.desktop
 rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
 rm %{buildroot}%{_libdir}/%{name}/libmathtext.a
 rm %{buildroot}%{_libdir}/%{name}/libminicern.a
-rm %{buildroot}%{_bindir}/corebasetestUnit
-rm %{buildroot}%{_bindir}/coreconttestUnit
 rm %{buildroot}%{_bindir}/setenvwrap.csh
 rm %{buildroot}%{_bindir}/setxrd*
 rm %{buildroot}%{_bindir}/thisroot*
-rm %{buildroot}%{_bindir}/testTBufferMerger
-rm %{buildroot}%{_bindir}/testTProfile2Poly
-rm %{buildroot}%{_bindir}/treetreeplayertestUnit
 rm %{buildroot}%{_mandir}/man1/g2rootold.1
 rm %{buildroot}%{_mandir}/man1/genmap.1
 rm %{buildroot}%{_mandir}/man1/proofserva.1
@@ -1994,8 +2115,7 @@ rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
 # Remove references to deleted (or moved) files from cmake files
-for target in mathtext minicern JupyROOT coreconttestUnit corebasetestUnit \
-	      testTProfile2Poly treetreeplayertestUnit testTBufferMerger ; do
+for target in mathtext minicern JupyROOT; do
     sed -e "s/ ROOT::${target} / /" \
 	-e "/Create imported target ROOT::${target}/,/^$/d" \
 	-e "/set_target_properties(ROOT::${target}/,/^$/d" \
@@ -2052,6 +2172,10 @@ rmdir TGrid
 rmdir TImagePlugin
 rmdir TVirtualGeoConverter
 popd
+
+# Replace bundled jsroot with symlink to system version
+rm -rf %{buildroot}%{_datadir}/%{name}/http
+ln -s /usr/share/javascript/jsroot %{buildroot}%{_datadir}/%{name}/http
 
 # Create ldconfig configuration
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d
@@ -2113,6 +2237,7 @@ ln -s ../../files files
 popd
 pushd runtutorials
 ln -s ../../files files
+ln -sf ../../files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
 popd
 # Exclude some tests that can not be run
 #
@@ -2130,19 +2255,49 @@ popd
 # - tutorial-multicore-imt101_parTreeProcessing
 #   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
 #
+# - tutorial-pythia-pythia8
+#   sometimes times out
+excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|tutorial-pythia-pythia8"
+
+%ifarch %{arm}
+# Tests failing on arm
+# https://sft.its.cern.ch/jira/browse/ROOT-8500
+# - mathcore-testMinim
+# - minuit2-testMinimizer
+# - test-minexam
+# - test-stressfit
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
+# - tutorial-multicore-mt303_AsyncSimple
+# - tutorial-multicore-mt304_AsyncNested
+# - tutorial-multicore-mt305_TFuture
 # - tutorial-r-*
-#   currently fails on 32 bit arm - reported upstream:
-#   https://sft.its.cern.ch/jira/browse/ROOT-8500
-
-excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing"
-%ifarch %{arm}
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
+excluded="${excluded}|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-multicore-mt303_AsyncSimple|tutorial-multicore-mt304_AsyncNested|tutorial-multicore-mt305_TFuture|tutorial-r-.*"
 %endif
+
+%ifarch ppc64
+# Tests failing on ppc64
+# https://sft.its.cern.ch/jira/browse/ROOT-6434
+# - test-stresshistogram[-interpreted]
+# - test-stressroostats[-interpreted]
+# - test-stresshistofit[-interpreted]
+# - tutorial-roofit-rf511_wsfactory_basic
+# - tutorial-roostats-rs102_hypotestwithshapes (work on EPEL 7)
+# - tutorial-roostats-rs701_BayesianCalculator
+# - tutorial-dataframe-tdf006_ranges-py
+excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-rs102_hypotestwithshapes|tutorial-roostats-rs701_BayesianCalculator|tutorial-dataframe-tdf006_ranges-py"
+%endif
+
+%ifarch ppc64le
+# Tests failing on ppc64le
+# - test-stresshistogram[-interpreted]
+excluded="${excluded}|test-stresshistogram"
+%endif
+
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
 
+%if %{?rhel}%{!?rhel:0} == 7
 %post
 touch --no-create %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 update-desktop-database >/dev/null 2>&1 || :
@@ -2158,6 +2313,7 @@ update-mime-database %{_datadir}/mime >/dev/null 2>&1 || :
 
 %posttrans
 gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
+%endif
 
 %pre rootd
 # Remove old init config when systemd is used
@@ -2218,7 +2374,7 @@ fi
     libPyROOT.so %{python2_sitearch}/libPyROOT.so 20
 /sbin/ldconfig
 
-%post -n %{python3pkg}-%{name}
+%post -n python%{python3_pkgversion}-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
 	/var/lib/alternatives/libPyROOT.so || \
@@ -2235,21 +2391,43 @@ fi
     libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
 /sbin/ldconfig
 
-%preun -n %{python3pkg}-%{name}
+%preun -n python%{python3_pkgversion}-%{name}
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
 	libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so
 fi
 
-%postun -n %{python3pkg}-%{name} -p /sbin/ldconfig
+%postun -n python%{python3_pkgversion}-%{name} -p /sbin/ldconfig
 
-%triggerpostun -n %{python3pkg}-%{name} -- %{name}-%{python3pkg}
-# Uninstalling the old %{name}-%{python3pkg} will remove the alternatives
-# for %{python3pkg}-%{name} - put them back in this triggerpostun script
+%triggerpostun -n python%{python3_pkgversion}-%{name} -- %{name}-python%{python3_pkgversion}
+# Uninstalling the old %{name}-python%{python3_pkgversion} will remove the alternatives
+# for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
 /sbin/ldconfig
+
+%post notebook
+mkdir -p /etc/jupyter
+if [ -e /etc/jupyter/jupyter_notebook_config.py ] ; then
+    sed '/Extra static path for JupyROOT - start/','/Extra static path for JupyROOT - end/'d -i /etc/jupyter/jupyter_notebook_config.py
+fi
+cat << EOF >> /etc/jupyter/jupyter_notebook_config.py
+# Extra static path for JupyROOT - start - do not remove this line
+c.NotebookApp.extra_static_paths.append('%{_datadir}/%{name}/notebook')
+# Extra static path for JupyROOT - end - do not remove this line
+EOF
+
+%postun notebook
+if [ $1 -eq 0 ] ; then
+    if [ -e /etc/jupyter/jupyter_notebook_config.py ] ; then
+	sed '/Extra static path for JupyROOT - start/','/Extra static path for JupyROOT - end/'d -i /etc/jupyter/jupyter_notebook_config.py
+	if [ ! -s /etc/jupyter/jupyter_notebook_config.py ] ; then
+	    rm /etc/jupyter/jupyter_notebook_config.py
+	    rmdir /etc/jupyter 2>/dev/null || :
+	fi
+    fi
+fi
 
 %post core -p /sbin/ldconfig
 %postun core -p /sbin/ldconfig
@@ -2313,10 +2491,20 @@ fi
 %postun gui-qt -p /sbin/ldconfig
 %post gui-recorder -p /sbin/ldconfig
 %postun gui-recorder -p /sbin/ldconfig
+%if %{root7}
+%post gui-canvaspainter -p /sbin/ldconfig
+%postun gui-canvaspainter -p /sbin/ldconfig
+%post gui-webdisplay -p /sbin/ldconfig
+%postun gui-webdisplay -p /sbin/ldconfig
+%endif
 %post hbook -p /sbin/ldconfig
 %postun hbook -p /sbin/ldconfig
 %post hist -p /sbin/ldconfig
 %postun hist -p /sbin/ldconfig
+%if %{root7}
+%post hist-draw -p /sbin/ldconfig
+%postun hist-draw -p /sbin/ldconfig
+%endif
 %post hist-painter -p /sbin/ldconfig
 %postun hist-painter -p /sbin/ldconfig
 %post spectrum -p /sbin/ldconfig
@@ -2403,6 +2591,14 @@ fi
 %postun net-ldap -p /sbin/ldconfig
 %post net-http -p /sbin/ldconfig
 %postun net-http -p /sbin/ldconfig
+
+%pretrans net-http -p <lua>
+path = "%{_datadir}/%{name}/http"
+st = posix.stat(path)
+if st and st.type == "directory" then
+  os.execute("rm -rf " .. path)
+end
+
 %if %{xrootd}
 %post netx -p /sbin/ldconfig
 %postun netx -p /sbin/ldconfig
@@ -2511,6 +2707,7 @@ fi
 %{_includedir}/%{name}/RConfigure.h
 %{_includedir}/%{name}/RGitCommit.h
 %{_includedir}/%{name}/compiledata.h
+%{_includedir}/%{name}/module.modulemap
 %dir %{_includedir}/%{name}/Math
 %dir %{_includedir}/%{name}/ROOT
 %{_datadir}/aclocal/root.m4
@@ -2575,7 +2772,7 @@ fi
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
 
-%files -n %{python3pkg}-%{name} -f includelist-bindings-pyroot
+%files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
@@ -2590,17 +2787,19 @@ fi
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
 %{python2_sitearch}/libJupyROOT.so
+%{_datadir}/jupyter/kernels/python2-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
-%files -n %{python3pkg}-jupyroot
+%files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
 %{python3_sitearch}/libJupyROOT.so
+%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python2-jsmva
 %{python2_sitelib}/JsMVA
 
-%files -n %{python3pkg}-jsmva
+%files -n python%{python3_pkgversion}-jsmva
 %{python3_sitelib}/JsMVA
 
 %if %{ruby}
@@ -2760,6 +2959,15 @@ fi
 %{_libdir}/%{name}/libRecorder.*
 %{_libdir}/%{name}/libRecorder_rdict.pcm
 
+%if %{root7}
+%files gui-canvaspainter
+%{_libdir}/%{name}/libROOTCanvasPainter.*
+
+%files gui-webdisplay -f includelist-gui-webdisplay
+%{_libdir}/%{name}/libROOTWebDisplay.*
+%{_libdir}/%{name}/libROOTWebDisplay_rdict.pcm
+%endif
+
 %files hbook -f includelist-hist-hbook
 %{_bindir}/g2root
 %{_bindir}/h2root
@@ -2772,6 +2980,12 @@ fi
 %{_libdir}/%{name}/libHist.*
 %{_libdir}/%{name}/libHist_rdict.pcm
 %dir %{_includedir}/%{name}/v5
+
+%if %{root7}
+%files hist-draw -f includelist-hist-histdraw
+%{_libdir}/%{name}/libROOTHistDraw.*
+%{_libdir}/%{name}/libROOTHistDraw_rdict.pcm
+%endif
 
 %files hist-painter -f includelist-hist-histpainter
 %{_libdir}/%{name}/libHistPainter.*
@@ -3161,6 +3375,24 @@ fi
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Tue Dec 19 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.04-1
+- Update to 6.12.04
+- Drop patches accepted upstream
+- Drop previously backported patches
+- Unbundle jsroot in root-net-http
+- Add hack to work around broken charmaps in StandardSymbolsPS.otf
+- Use local static script and style files for JupyROOT
+- Fix some javascript errors
+- Fix build rules for test binaries so that they are not installed
+- Address memory usage issue for ARM build
+- Drop pre-minified javascript and style files (Fedora packaging guidelines)
+- Enable builds on ppc/ppc64/ppc64le (do not pass all tests, but the list
+  of failing tests is much shorter with this release)
+- Add dependency on python[23]-jsmva to python[23]-jupyroot
+- New sub-packages: root-gui-canvaspainter, root-gui-webdisplay and
+  root-hist-draw (not for EPEL 7 since they are root7 specific and
+  require c++-14)
+
 * Fri Oct 20 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.10.08-1
 - Update to 6.10.08
 - Add BuildRequires on lz4-devel and xxhash-devel

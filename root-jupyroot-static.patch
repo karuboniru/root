@@ -1,0 +1,36 @@
+diff -ur root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.12.04/bindings/pyroot/JsMVA/JPyInterface.py
+--- root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/bindings/pyroot/JsMVA/JPyInterface.py	2018-01-08 13:07:08.088711528 +0100
+@@ -188,7 +188,7 @@
+ ## Class for creating the output scripts and inserting them to cell output
+ class JsDraw:
+     ## Base repository
+-    __jsMVARepo = "https://root.cern.ch/js/jsmva/latest"
++    __jsMVARepo = "/static/JsMVA"
+  
+     ## String containing the link to JavaScript files
+     __jsMVASourceDir = __jsMVARepo + "/js"
+diff -ur root-6.12.04.orig/bindings/pyroot/JupyROOT/utils.py root-6.12.04/bindings/pyroot/JupyROOT/utils.py
+--- root-6.12.04.orig/bindings/pyroot/JupyROOT/utils.py	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/bindings/pyroot/JupyROOT/utils.py	2018-01-08 13:13:40.857391851 +0100
+@@ -39,7 +39,7 @@
+ _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
+ 
+ 
+-_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
++_jsROOTSourceDir = "/static/jsroot/"
+ _jsCanvasWidth = 800
+ _jsCanvasHeight = 600
+ 
+diff -ur root-6.12.04.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.12.04/etc/notebook/JsMVA/js/JsMVA.js
+--- root-6.12.04.orig/etc/notebook/JsMVA/js/JsMVA.js	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/etc/notebook/JsMVA/js/JsMVA.js	2018-01-08 13:20:04.248138322 +0100
+@@ -16,7 +16,7 @@
+ 
+ (function(factory){
+ 
+-    var JSROOT_source_dir = "https://root.cern.ch/js/notebook/scripts/";
++    var JSROOT_source_dir = "/static/jsroot/scripts/";
+ 
+     var url = "";
+     if (requirejs.s.contexts.hasOwnProperty("_")) {
