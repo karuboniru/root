@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3375,6 +3375,9 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat Jan 20 2018 Björn Esser <besser82@fedoraproject.org> - 6.12.04-2
+- Rebuilt for switch to libxcrypt
+
 * Tue Dec 19 2017 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.04-1
 - Update to 6.12.04
 - Drop patches accepted upstream
