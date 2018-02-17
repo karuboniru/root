@@ -1,0 +1,36 @@
+From 533f64b053c9fa72b456a7e351e17e354b94dcdc Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 15 Feb 2018 18:30:44 +0100
+Subject: [PATCH] Fix doxygen ~ alignment
+
+---
+ core/meta/src/TStatusBitsChecker.cxx | 2 +-
+ tree/treeplayer/src/TTreeReader.cxx  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/core/meta/src/TStatusBitsChecker.cxx b/core/meta/src/TStatusBitsChecker.cxx
+index 360d85d0c74..1661bd3646b 100644
+--- a/core/meta/src/TStatusBitsChecker.cxx
++++ b/core/meta/src/TStatusBitsChecker.cxx
+@@ -42,7 +42,7 @@
+       // used in TStreamerElement
+       kHasRange = TStreamerElement::kHasRange
+    };
+-  ~~~ {.cpp}
++   ~~~ {.cpp}
+ 
+   Without the EStatusBitsDupExceptions enum you would see
+ 
+diff --git a/tree/treeplayer/src/TTreeReader.cxx b/tree/treeplayer/src/TTreeReader.cxx
+index d411fbdd967..e823797e523 100644
+--- a/tree/treeplayer/src/TTreeReader.cxx
++++ b/tree/treeplayer/src/TTreeReader.cxx
+@@ -235,7 +235,7 @@ void TTreeReader::Initialize()
+ /// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
+ /// Example:
+ ///
+-///  ~~~ {.cpp}
++/// ~~~ {.cpp}
+ /// reader.SetEntriesRange(3, 5);
+ /// while (reader.Next()) {
+ ///   // Will load entries 3 and 4.

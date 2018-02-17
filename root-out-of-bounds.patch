@@ -1,0 +1,25 @@
+From a770f03056e374fa7c1dbdc06aaff22107fc27a0 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 15 Feb 2018 18:29:00 +0100
+Subject: [PATCH] Protect against out-of-bounds access
+
+---
+ graf2d/gpad/src/TRatioPlot.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/graf2d/gpad/src/TRatioPlot.cxx b/graf2d/gpad/src/TRatioPlot.cxx
+index 107c0c90806..bf3415d7927 100644
+--- a/graf2d/gpad/src/TRatioPlot.cxx
++++ b/graf2d/gpad/src/TRatioPlot.cxx
+@@ -1074,9 +1074,9 @@ Int_t TRatioPlot::BuildLowerPlot()
+             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
+ 
+             fConfidenceInterval1->SetPoint(ipoint, x, 0);
+-            fConfidenceInterval1->SetPointError(ipoint, x, ci1[i] / error);
++            fConfidenceInterval1->SetPointError(ipoint, x, i < ci1.size() ? ci1[i] / error : 0);
+             fConfidenceInterval2->SetPoint(ipoint, x, 0);
+-            fConfidenceInterval2->SetPointError(ipoint, x, ci2[i] / error);
++            fConfidenceInterval2->SetPointError(ipoint, x, i < ci2.size() ? ci2[i] / error : 0);
+ 
+             ++ipoint;
+ 

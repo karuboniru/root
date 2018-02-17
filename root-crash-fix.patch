@@ -1,0 +1,26 @@
+From d055981def808c9c2175a8ca3f362b6ea006ebf3 Mon Sep 17 00:00:00 2001
+From: Bertrand Bellenot <bertrand.bellenot@cern.ch>
+Date: Thu, 8 Feb 2018 10:43:59 +0100
+Subject: [PATCH] Fix another potential crash on Windows
+
+On Windows, (as the standard says) calling front() on an empty std::vector causes an undefined behaviour. One must check that the container contains something using empty() before calling front()
+---
+ core/foundation/src/TClassEdit.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/core/foundation/src/TClassEdit.cxx b/core/foundation/src/TClassEdit.cxx
+index 38c8b1a5a2..954e40fcc5 100644
+--- a/core/foundation/src/TClassEdit.cxx
++++ b/core/foundation/src/TClassEdit.cxx
+@@ -1900,7 +1900,7 @@ public:
+       auto argsEnd = v.end();
+       auto argsBeginPlusOne = ++v.begin();
+       auto argPos = std::find_if(argsBeginPlusOne, argsEnd,
+-                              [](std::string& arg){return arg.front() == ':';});
++           [](std::string& arg){return (!arg.empty() && arg.front() == ':');});
+       if (argPos != argsEnd) {
+          const int lenght = clName.size();
+          int wedgeBalance = 0;
+-- 
+2.14.3
+

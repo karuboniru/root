@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -95,6 +95,24 @@ Patch14:	%{name}-ppc64-doc.patch
 #		Fix constructing the GSL MC Integrator
 #		Backport from upstream git
 Patch15:	%{name}-Fix-constructing-the-GSL-MC-Integrator.patch
+#		Check string is not empty before calling front()
+#		Backport from upstream git
+Patch16:	%{name}-crash-fix.patch
+#		Adjust expected file size for ix32
+#		Backport from upstream git
+Patch17:	%{name}-test-stress-32bit.patch
+#		Fixes for failing tests due to new compiler flags
+#		https://github.com/root-project/root/pull/1638
+Patch18:	%{name}-test-fixes.patch
+#		https://github.com/root-project/root/pull/1639
+Patch19:	%{name}-out-of-bounds.patch
+#		Fix ~ alignment in doxygen markup
+#		https://github.com/root-project/root/pull/1640
+Patch20:	%{name}-doxygen-tilde.patch
+#		Don't install intermediate static libs (mathtext and minicern)
+#		Don't add JupyROOT python extension to cmake exports
+#		https://github.com/root-project/root/pull/1643
+Patch21:	%{name}-noinst.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -1660,6 +1678,12 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %patch13 -p1
 %patch14 -p1
 %patch15 -p1
+%patch16 -p1
+%patch17 -p1
+%patch18 -p1
+%patch19 -p1
+%patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2095,8 +2119,6 @@ rm %{buildroot}%{_datadir}/%{name}/proof/*.sample
 rm -rf %{buildroot}%{_datadir}/%{name}/proof/utils
 rm %{buildroot}%{_datadir}/%{name}/root.desktop
 rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
-rm %{buildroot}%{_libdir}/%{name}/libmathtext.a
-rm %{buildroot}%{_libdir}/%{name}/libminicern.a
 rm %{buildroot}%{_bindir}/setenvwrap.csh
 rm %{buildroot}%{_bindir}/setxrd*
 rm %{buildroot}%{_bindir}/thisroot*
@@ -2113,19 +2135,6 @@ rm %{buildroot}%{_includedir}/%{name}/*.pri
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
-
-# Remove references to deleted (or moved) files from cmake files
-for target in mathtext minicern JupyROOT; do
-    sed -e "s/ ROOT::${target} / /" \
-	-e "/Create imported target ROOT::${target}/,/^$/d" \
-	-e "/set_target_properties(ROOT::${target}/,/^$/d" \
-	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
-    sed -e "/Import target \"ROOT::${target}\"/,/^$/d" \
-	-e "/APPEND _IMPORT_CHECK_TARGETS ROOT::${target}/,/^$/d" \
-	-i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
-done
-sed -e 's/;ROOT::minicern//' \
-    -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets-*.cmake
 
 # Only used on Windows
 rm %{buildroot}%{_datadir}/%{name}/macros/fileopen.C
@@ -2265,14 +2274,18 @@ excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-
 # - mathcore-testMinim
 # - minuit2-testMinimizer
 # - test-minexam
-# - test-stressfit
+# - test-stressfit (but -interpreted works)
+# Tests failing on arm on Fedora <= 27
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
 # - tutorial-multicore-mt303_AsyncSimple
 # - tutorial-multicore-mt304_AsyncNested
 # - tutorial-multicore-mt305_TFuture
 # - tutorial-r-*
-excluded="${excluded}|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-multicore-mt303_AsyncSimple|tutorial-multicore-mt304_AsyncNested|tutorial-multicore-mt305_TFuture|tutorial-r-.*"
+excluded="${excluded}|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit"
+%if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-multicore-mt303_AsyncSimple|tutorial-multicore-mt304_AsyncNested|tutorial-multicore-mt305_TFuture|tutorial-r-.*"
+%endif
 %endif
 
 %ifarch ppc64
@@ -3375,6 +3388,9 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri Feb 16 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.04-4
+- Fix test failures found with new default compiler flags in Fedora 28
+
 * Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 6.12.04-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
 
