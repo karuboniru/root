@@ -31,9 +31,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.12.04
+Version:	6.12.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -92,27 +92,24 @@ Patch13:	%{name}-memory-arm.patch
 #		Ensures content of doc package is the same on all architecture
 #		so that koji accepts it as a noarch package.
 Patch14:	%{name}-ppc64-doc.patch
-#		Fix constructing the GSL MC Integrator
-#		Backport from upstream git
-Patch15:	%{name}-Fix-constructing-the-GSL-MC-Integrator.patch
 #		Check string is not empty before calling front()
 #		Backport from upstream git
-Patch16:	%{name}-crash-fix.patch
+Patch15:	%{name}-crash-fix.patch
 #		Adjust expected file size for ix32
 #		Backport from upstream git
-Patch17:	%{name}-test-stress-32bit.patch
+Patch16:	%{name}-test-stress-32bit.patch
 #		Fixes for failing tests due to new compiler flags
 #		https://github.com/root-project/root/pull/1638
-Patch18:	%{name}-test-fixes.patch
+Patch17:	%{name}-test-fixes.patch
 #		https://github.com/root-project/root/pull/1639
-Patch19:	%{name}-out-of-bounds.patch
+Patch18:	%{name}-out-of-bounds.patch
 #		Fix ~ alignment in doxygen markup
 #		https://github.com/root-project/root/pull/1640
-Patch20:	%{name}-doxygen-tilde.patch
+Patch19:	%{name}-doxygen-tilde.patch
 #		Don't install intermediate static libs (mathtext and minicern)
 #		Don't add JupyROOT python extension to cmake exports
 #		https://github.com/root-project/root/pull/1643
-Patch21:	%{name}-noinst.patch
+Patch20:	%{name}-noinst.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -225,7 +222,11 @@ BuildRequires:	font(freesans)
 BuildRequires:	font(freeserif)
 BuildRequires:	font(freemono)
 #		Provides "symbol", "dingbats" and "chancery"
+%if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
+BuildRequires:	urw-base35-fonts
+%else
 BuildRequires:	urw-fonts
+%endif
 #		The root-fonts package provides Droid Sans Fallback for EPEL
 %if %{?fedora}%{!?fedora:0} >= 11
 BuildRequires:	font(droidsansfallback)
@@ -349,7 +350,11 @@ Requires:	font(freesans)
 Requires:	font(freeserif)
 Requires:	font(freemono)
 #		Provides "symbol", "dingbats" and "chancery"
+%if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
+Requires:	urw-base35-fonts
+%else
 Requires:	urw-fonts
+%endif
 #		The root-fonts package provides Droid Sans Fallback for EPEL
 %if %{?fedora}%{!?fedora:0} >= 11
 Requires:	font(droidsansfallback)
@@ -1683,7 +1688,6 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
-%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2305,6 +2309,16 @@ excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistof
 # Tests failing on ppc64le
 # - test-stresshistogram[-interpreted]
 excluded="${excluded}|test-stresshistogram"
+%endif
+
+# Test failing on 32 bit on Fedora <= 27
+# https://sft.its.cern.ch/jira/browse/ROOT-9236
+# https://sft.its.cern.ch/jira/browse/ROOT-9265
+# - gtest-tree-treeplayer-test-dataframe-snapshot
+%ifarch %{ix86} %{arm}
+%if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
+excluded="${excluded}|gtest-tree-treeplayer-test-dataframe-snapshot"
+%endif
 %endif
 
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
@@ -3388,6 +3402,11 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat Feb 17 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-1
+- Update to 6.12.06
+- Drop patch root-Fix-constructing-the-GSL-MC-Integrator.patch (previously
+  backported)
+
 * Fri Feb 16 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.04-4
 - Fix test failures found with new default compiler flags in Fedora 28
 

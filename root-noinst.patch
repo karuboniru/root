@@ -29,7 +29,7 @@ index 2758edb08e1..d98ac3b6331 100644
 +ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC NOINSTALL)
  target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
  
- # Disable optimization since it some cases was causing crashes
+ # Disable optimization since it some cases was causing crashes.
 
 From 9bd8d4e52fae5467867cbcf1810bc58a63b55a62 Mon Sep 17 00:00:00 2001
 From: Mattias Ellert <mattias.ellert@physics.uu.se>
