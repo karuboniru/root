@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3402,6 +3402,9 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Fri Feb 23 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-2
+- rebuilt for cfitsio 3.420 (so version bump)
+
 * Sat Feb 17 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-1
 - Update to 6.12.06
 - Drop patch root-Fix-constructing-the-GSL-MC-Integrator.patch (previously
