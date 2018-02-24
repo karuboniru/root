@@ -84,10 +84,10 @@ Patch10:	%{name}-system-pythia.patch
 Patch11:	%{name}-memory-usage.patch
 #		Fedora's llvm patch
 Patch12:	%{name}-PowerPC-Don-t-use-xscvdpspn-on-the-P7.patch
-#		Reduce memory usage during linking on ARM by generating
+#		Reduce memory usage during linking on ARM and x86 by generating
 #		smaller debuginfo for the llmv libraries.
 #		Fedora builders run out of memory with the default setting.
-Patch13:	%{name}-memory-arm.patch
+Patch13:	%{name}-memory-arm-x86.patch
 #		Don't run tutorials that crash on ppc64 during doc generation.
 #		Ensures content of doc package is the same on all architecture
 #		so that koji accepts it as a noarch package.
@@ -3404,6 +3404,7 @@ end
 %changelog
 * Fri Feb 23 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-2
 - rebuilt for cfitsio 3.420 (so version bump)
+- modified patch 13 to also produce smaller debuginfo on x86 (ld out of memory)
 
 * Sat Feb 17 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-1
 - Update to 6.12.06
