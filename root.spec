@@ -2275,6 +2275,7 @@ excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-
 %ifarch %{arm}
 # Tests failing on arm
 # https://sft.its.cern.ch/jira/browse/ROOT-8500
+# - gtest-tree-treeplayer-test-dataframe-snapshot
 # - mathcore-testMinim
 # - minuit2-testMinimizer
 # - test-minexam
@@ -2286,7 +2287,7 @@ excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-
 # - tutorial-multicore-mt304_AsyncNested
 # - tutorial-multicore-mt305_TFuture
 # - tutorial-r-*
-excluded="${excluded}|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit"
+excluded="${excluded}|gtest-tree-treeplayer-test-dataframe-snapshot|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit"
 %if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
 excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-multicore-mt303_AsyncSimple|tutorial-multicore-mt304_AsyncNested|tutorial-multicore-mt305_TFuture|tutorial-r-.*"
 %endif
@@ -3405,6 +3406,7 @@ end
 * Fri Feb 23 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-2
 - rebuilt for cfitsio 3.420 (so version bump)
 - modified patch 13 to also produce smaller debuginfo on x86 (ld out of memory)
+- disabled test gtest-tree-treeplayer-test-dataframe-snapshot on ARM
 
 * Sat Feb 17 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-1
 - Update to 6.12.06
