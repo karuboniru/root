@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3403,6 +3403,9 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat May 26 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-3
+- rebuilt for cfitsio 3.450
+
 * Fri Feb 23 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-2
 - rebuilt for cfitsio 3.420 (so version bump)
 - modified patch 13 to also produce smaller debuginfo on x86 (ld out of memory)
