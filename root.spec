@@ -110,6 +110,8 @@ Patch19:	%{name}-doxygen-tilde.patch
 #		Don't add JupyROOT python extension to cmake exports
 #		https://github.com/root-project/root/pull/1643
 Patch20:	%{name}-noinst.patch
+#		Adjust allowed deviation for PDF file sizes (aarch64)
+Patch21:	%{name}-stressgraphics-ref.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -1688,6 +1690,7 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3405,6 +3408,7 @@ end
 %changelog
 * Sat May 26 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-3
 - rebuilt for cfitsio 3.450
+- Adjust allowed deviation for PDF file sizes in stressGraphics test (aarch64)
 
 * Fri Feb 23 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-2
 - rebuilt for cfitsio 3.420 (so version bump)
