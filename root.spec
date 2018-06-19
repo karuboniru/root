@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3406,6 +3406,9 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 6.12.06-4
+- Rebuilt for Python 3.7
+
 * Sat May 26 2018 Christian Dersch <lupinix@mailbox.org> - 6.12.06-3
 - rebuilt for cfitsio 3.450
 - Adjust allowed deviation for PDF file sizes in stressGraphics test (aarch64)
