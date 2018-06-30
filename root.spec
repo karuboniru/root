@@ -33,7 +33,7 @@
 Name:		root
 Version:	6.12.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -111,7 +111,14 @@ Patch19:	%{name}-doxygen-tilde.patch
 #		https://github.com/root-project/root/pull/1643
 Patch20:	%{name}-noinst.patch
 #		Adjust allowed deviation for PDF file sizes (aarch64)
+#		https://github.com/root-project/root/pull/2120
 Patch21:	%{name}-stressgraphics-ref.patch
+#		Adjust Vavilov test for Fedora 29 ix86
+#		https://github.com/root-project/root/pull/2273
+Patch22:	%{name}-adjust-allowed-test-difference-for-32-bit-ix86.patch
+#		Adapt to python 3.7
+#		https://github.com/root-project/root/pull/2276
+Patch23:	%{name}-python-3.7.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -1691,6 +1698,8 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
+%patch23 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3406,6 +3415,10 @@ end
 %{_datadir}/%{name}/notebook
 
 %changelog
+* Sat Jun 30 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-5
+- Adjust Vavilov test for Fedora 29 ix86
+- Adapt to python 3.7
+
 * Tue Jun 19 2018 Miro Hrončok <mhroncok@redhat.com> - 6.12.06-4
 - Rebuilt for Python 3.7
 

@@ -1,0 +1,22 @@
+From e363a175b96bbd1d24f5b4030192b8fb4b525681 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 29 Jun 2018 09:43:01 +0200
+Subject: [PATCH] Adjust allowed test difference for 32-bit ix86
+
+---
+ math/mathmore/test/VavilovTest.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/math/mathmore/test/VavilovTest.cxx b/math/mathmore/test/VavilovTest.cxx
+index f99e8291046..d5020f8a386 100644
+--- a/math/mathmore/test/VavilovTest.cxx
++++ b/math/mathmore/test/VavilovTest.cxx
+@@ -886,7 +886,7 @@ void VavilovTest::GetCdfTestParams (const Vavilov& v, double& maxabsdiff, double
+    }
+    else {
+       maxabsdiff = 1E-5;
+-      maxcdfdiff = 5E-15;
++      maxcdfdiff = 7E-15;
+    }
+ }
+ 
