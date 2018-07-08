@@ -1,0 +1,24 @@
+diff -ur root-6.14.00.orig/interpreter/llvm/src/lib/Target/PowerPC/PPCISelLowering.cpp root-6.14.00/interpreter/llvm/src/lib/Target/PowerPC/PPCISelLowering.cpp
+--- root-6.14.00.orig/interpreter/llvm/src/lib/Target/PowerPC/PPCISelLowering.cpp	2018-06-13 12:10:40.000000000 +0200
++++ root-6.14.00/interpreter/llvm/src/lib/Target/PowerPC/PPCISelLowering.cpp	2018-06-27 17:06:55.739506085 +0200
+@@ -11861,6 +11861,11 @@
+          N->getOperand(1).getValueType() == MVT::i16 ||
+          (Subtarget.hasLDBRX() && Subtarget.isPPC64() &&
+           N->getOperand(1).getValueType() == MVT::i64))) {
++      // STBRX can only handle simple types.
++      EVT mVT = cast<StoreSDNode>(N)->getMemoryVT();
++      if (mVT.isExtended())
++        break;
++
+       SDValue BSwapOp = N->getOperand(1).getOperand(0);
+       // Do an any-extend to 32-bits if this is a half-word input.
+       if (BSwapOp.getValueType() == MVT::i16)
+@@ -11868,7 +11873,6 @@
+ 
+       // If the type of BSWAP operand is wider than stored memory width
+       // it need to be shifted to the right side before STBRX.
+-      EVT mVT = cast<StoreSDNode>(N)->getMemoryVT();
+       if (Op1VT.bitsGT(mVT)) {
+         int Shift = Op1VT.getSizeInBits() - mVT.getSizeInBits();
+         BSwapOp = DAG.getNode(ISD::SRL, dl, Op1VT, BSwapOp,
+Endast i root-6.14.00/interpreter/llvm/src: test

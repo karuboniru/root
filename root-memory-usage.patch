@@ -22,23 +22,6 @@ rootcling and libCling.
  core/metacling/src/CMakeLists.txt | 4 ++++
  2 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/core/metacling/Module.mk b/core/metacling/Module.mk
-index 4788eca393..7f520e41b6 100644
---- a/core/metacling/Module.mk
-+++ b/core/metacling/Module.mk
-@@ -46,7 +46,11 @@ endif
- CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
- CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
- 
--$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO)
-+# The dependency on $(ROOTCLING1EXE) was added to prevent $(CLINGLIB) and
-+# $(ROOTCLING1EXE) from being linked in parallel.
-+# This avoids doing two memory consuming operations in parallel.
-+$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
-+		$(ROOTCLING1EXE)
- 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(LIBCLINGLDFLAGS)" \
- 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
- 		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
 diff --git a/core/metacling/src/CMakeLists.txt b/core/metacling/src/CMakeLists.txt
 index e820d144eb..3a1f1ca446 100644
 --- a/core/metacling/src/CMakeLists.txt
@@ -46,7 +29,7 @@ index e820d144eb..3a1f1ca446 100644
 @@ -37,6 +37,10 @@ ROOT_LINKER_LIBRARY(Cling
          $<TARGET_OBJECTS:Dictgen>
          $<TARGET_OBJECTS:MetaCling>
-         LIBRARIES ${CLING_LIBRARIES})
+         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS})
 +# The dependency on rootcling_stage1 was added to prevent Cling (libCling) and
 +# rootcling_stage1 from being linked in parallel.
 +# This avoids doing two memory consuming operations in parallel.

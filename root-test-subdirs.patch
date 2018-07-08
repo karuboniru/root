@@ -1,244 +1,36 @@
-From eb7d389e582fd11cf00879a3daf161fa7e1b0f40 Mon Sep 17 00:00:00 2001
+From 41e33db9d17e4d295bf12958398fc3758d3e3a5b Mon Sep 17 00:00:00 2001
 From: Mattias Ellert <mattias.ellert@physics.uu.se>
-Date: Tue, 16 Jan 2018 06:11:30 +0100
-Subject: [PATCH] Always use ROOT_ADD_TEST_SUBDIRECTORY when adding test
- directories
+Date: Tue, 19 Jun 2018 09:20:21 +0200
+Subject: [PATCH] Include test directory using ROOT_ADD_TEST_SUBDIRECTORY
 
 ---
- cmake/modules/RootNewMacros.cmake | 1 -
- core/base/CMakeLists.txt          | 4 +---
- core/cont/CMakeLists.txt          | 4 +---
- core/foundation/CMakeLists.txt    | 5 +----
- core/imt/CMakeLists.txt           | 4 ++--
- core/meta/CMakeLists.txt          | 4 +---
- core/metacling/CMakeLists.txt     | 4 +---
- core/thread/CMakeLists.txt        | 4 +---
- graf2d/gpad/CMakeLists.txt        | 8 +++-----
- hist/hist/CMakeLists.txt          | 6 ++----
- hist/histdraw/CMakeLists.txt      | 4 +---
- io/io/CMakeLists.txt              | 4 +---
- tmva/CMakeLists.txt               | 3 ---
- tmva/tmva/test/CMakeLists.txt     | 9 ---------
- tree/tree/CMakeLists.txt          | 4 +---
- tree/treeplayer/CMakeLists.txt    | 4 +---
- 16 files changed, 17 insertions(+), 55 deletions(-)
- delete mode 100644 tmva/tmva/test/CMakeLists.txt
+ graf2d/gpadv7/CMakeLists.txt     | 5 +----
+ graf2d/primitives/CMakeLists.txt | 5 ++---
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/cmake/modules/RootNewMacros.cmake b/cmake/modules/RootNewMacros.cmake
-index 340d5c9951..77b784e4ea 100644
---- a/cmake/modules/RootNewMacros.cmake
-+++ b/cmake/modules/RootNewMacros.cmake
-@@ -1304,7 +1304,6 @@ function(ROOT_ADD_GTEST test_suite)
-   # against. For example, tests in Core should link only against libCore. This could be tricky
-   # to implement because some ROOT components create more than one library.
-   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
--  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+diff --git a/graf2d/gpadv7/CMakeLists.txt b/graf2d/gpadv7/CMakeLists.txt
+index 525ce415451..9d6870231f3 100644
+--- a/graf2d/gpadv7/CMakeLists.txt
++++ b/graf2d/gpadv7/CMakeLists.txt
+@@ -11,7 +11,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGpadv7
+                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                               DEPENDENCIES ROOTGraphicsPrimitives)
  
-   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
-diff --git a/core/base/CMakeLists.txt b/core/base/CMakeLists.txt
-index f3738e76a8..0fabc03e4e 100644
---- a/core/base/CMakeLists.txt
-+++ b/core/base/CMakeLists.txt
-@@ -2,9 +2,7 @@
- # CMakeLists.txt file for building ROOT core/base package
- ############################################################################
- 
--if(testing)
--    add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
- 
- include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
- 
-diff --git a/core/cont/CMakeLists.txt b/core/cont/CMakeLists.txt
-index 2d5363d3d8..bb5a82e133 100644
---- a/core/cont/CMakeLists.txt
-+++ b/core/cont/CMakeLists.txt
-@@ -2,9 +2,7 @@
- # CMakeLists.txt file for building ROOT core/cont package
- ############################################################################
- 
--if(testing)
--  add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
- 
- include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
- 
-diff --git a/core/foundation/CMakeLists.txt b/core/foundation/CMakeLists.txt
-index 9cc29d871e..af594ba98f 100644
---- a/core/foundation/CMakeLists.txt
-+++ b/core/foundation/CMakeLists.txt
-@@ -21,7 +21,4 @@ set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAG
- 
- ROOT_INSTALL_HEADERS()
- 
--if(testing)
--  add_subdirectory(test)
--endif()
 -
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
-diff --git a/core/imt/CMakeLists.txt b/core/imt/CMakeLists.txt
-index 6ef45c7fc2..4b86f58ee2 100644
---- a/core/imt/CMakeLists.txt
-+++ b/core/imt/CMakeLists.txt
-@@ -21,6 +21,6 @@ ROOT_LINKER_LIBRARY(Imt ${sources}
- 
- ROOT_INSTALL_HEADERS(${installoptions})
- 
--if(imt AND testing)
--    add_subdirectory(test)
-+if(imt)
-+    ROOT_ADD_TEST_SUBDIRECTORY(test)
- endif()
-diff --git a/core/meta/CMakeLists.txt b/core/meta/CMakeLists.txt
-index df84a83948..4843b06cf0 100644
---- a/core/meta/CMakeLists.txt
-+++ b/core/meta/CMakeLists.txt
-@@ -12,6 +12,4 @@ ROOT_OBJECT_LIBRARY(Meta ${sources})
- 
- ROOT_INSTALL_HEADERS()
- 
 -if(testing)
--  add_subdirectory(test)
+-   ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 -endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
-diff --git a/core/metacling/CMakeLists.txt b/core/metacling/CMakeLists.txt
-index 0fec8de3e8..5468064771 100644
---- a/core/metacling/CMakeLists.txt
-+++ b/core/metacling/CMakeLists.txt
-@@ -4,6 +4,4 @@
- 
- add_subdirectory(src)
- 
--if(testing)
--    add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
-diff --git a/core/thread/CMakeLists.txt b/core/thread/CMakeLists.txt
-index 0ec5857e50..2149ff5d47 100644
---- a/core/thread/CMakeLists.txt
-+++ b/core/thread/CMakeLists.txt
-@@ -36,6 +36,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
-                               LIBRARIES ${CMAKE_THREAD_LIBS_INIT}
-                               INSTALL_OPTIONS ${installoptions})
- 
--if(testing)
--    add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
-diff --git a/graf2d/gpad/CMakeLists.txt b/graf2d/gpad/CMakeLists.txt
-index 51da1c2320..06e508981f 100644
---- a/graf2d/gpad/CMakeLists.txt
-+++ b/graf2d/gpad/CMakeLists.txt
-@@ -14,8 +14,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
++ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
+diff --git a/graf2d/primitives/CMakeLists.txt b/graf2d/primitives/CMakeLists.txt
+index f491eb70a90..d33597805d8 100644
+--- a/graf2d/primitives/CMakeLists.txt
++++ b/graf2d/primitives/CMakeLists.txt
+@@ -11,6 +11,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGraphicsPrimitives
+                               SOURCES ${src}
                                DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                               DEPENDENCIES Graf Hist)
- 
+                               DEPENDENCIES RIO Core)
 -if(testing)
--    if(root7)
--        add_subdirectory(v7/test)
--    endif()
--endif()
-\ No newline at end of file
-+if(root7)
-+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
-+endif()
-diff --git a/hist/hist/CMakeLists.txt b/hist/hist/CMakeLists.txt
-index 88396c4924..3ac1898ccd 100644
---- a/hist/hist/CMakeLists.txt
-+++ b/hist/hist/CMakeLists.txt
-@@ -15,10 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
-                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                               DEPENDENCIES Matrix MathCore RIO)
- 
--if(testing)
--  add_subdirectory(test)
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
- 
- if(root7)
 -    add_subdirectory(v7/test)
--  endif()
-+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
- endif()
-diff --git a/hist/histdraw/CMakeLists.txt b/hist/histdraw/CMakeLists.txt
-index 51721f2d0e..9f3232ae5f 100644
---- a/hist/histdraw/CMakeLists.txt
-+++ b/hist/histdraw/CMakeLists.txt
-@@ -12,7 +12,5 @@ if(root7)
-          DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-          DEPENDENCIES Gpad Hist)
- 
--    if(testing)
--        add_subdirectory(v7/test)
--    endif()
-+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
- endif()
-diff --git a/io/io/CMakeLists.txt b/io/io/CMakeLists.txt
-index 7ca1104287..78e94786da 100644
---- a/io/io/CMakeLists.txt
-+++ b/io/io/CMakeLists.txt
-@@ -18,8 +18,6 @@ ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs> $<TARGET_OBJECTS:RootPc
-                                DEPENDENCIES Core Thread)
- ROOT_INSTALL_HEADERS()
- 
--if(testing)
--  add_subdirectory(test)
 -endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
- 
- #--- Extra rules ----------------------------------------------------------
-diff --git a/tmva/CMakeLists.txt b/tmva/CMakeLists.txt
-index 5648511bfe..d29bfb5061 100644
---- a/tmva/CMakeLists.txt
-+++ b/tmva/CMakeLists.txt
-@@ -8,6 +8,3 @@ endif()
- if(r)
- add_subdirectory(rmva)
- endif()
--#if(testing)
--# add_subdirectory(test)
--#endif()
-diff --git a/tmva/tmva/test/CMakeLists.txt b/tmva/tmva/test/CMakeLists.txt
-deleted file mode 100644
-index fc2a3e633d..0000000000
---- a/tmva/tmva/test/CMakeLists.txt
-+++ /dev/null
-@@ -1,9 +0,0 @@
--############################################################################
--# CMakeLists.txt file for building ROOT TMVA tests.
--# @author Simon Pfreundschuh
--############################################################################
--
--project(tmva-tests)
--find_package(ROOT REQUIRED)
--
--ROOT_ADD_TEST_SUBDIRECTORY(DNN)
-diff --git a/tree/tree/CMakeLists.txt b/tree/tree/CMakeLists.txt
-index e60675553f..82626b1c04 100644
---- a/tree/tree/CMakeLists.txt
-+++ b/tree/tree/CMakeLists.txt
-@@ -8,6 +8,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Tree
-                               LIBRARIES ${TBB_LIBRARIES}
-                               DEPENDENCIES Net RIO Thread Imt)
- 
--if(testing)
--   add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
-diff --git a/tree/treeplayer/CMakeLists.txt b/tree/treeplayer/CMakeLists.txt
-index 688a08fd03..a72a02e18a 100644
---- a/tree/treeplayer/CMakeLists.txt
-+++ b/tree/treeplayer/CMakeLists.txt
-@@ -45,6 +45,4 @@ if(APPLE)
-   endif()
- endif()
- 
--if(testing)
--  add_subdirectory(test)
--endif()
-+ROOT_ADD_TEST_SUBDIRECTORY(test)
--- 
-2.14.3
-
++
++ROOT_ADD_TEST_SUBDIRECTORY(v7/test)

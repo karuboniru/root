@@ -1,0 +1,14 @@
+diff --git a/geom/geom/CMakeLists.txt b/geom/geom/CMakeLists.txt
+index 520be8b5d5..d197cc3db3 100644
+--- a/geom/geom/CMakeLists.txt
++++ b/geom/geom/CMakeLists.txt
+@@ -24,7 +24,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Geom
+                               HEADERS ${headers1} ${headers2}
+                               DEPENDENCIES Thread RIO MathCore)
+ 
+-# GCC 4.x has bugs with -O3 or -Ofast that break Geom
+-if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5)
++# 32 bit ix86 has bugs with -O3 or -Ofast that break Geom
++if(CMAKE_COMPILER_IS_GNUCXX AND ROOT_ARCHITECTURE STREQUAL "linux")
+   target_compile_options(Geom PRIVATE -O2)
+ endif()

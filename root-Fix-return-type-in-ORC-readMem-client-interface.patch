@@ -1,0 +1,14 @@
+diff -ur root-6.14.00.orig/interpreter/llvm/src/include/llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h root-6.14.00/interpreter/llvm/src/include/llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h
+--- root-6.14.00.orig/interpreter/llvm/src/include/llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h	2018-06-13 12:10:40.000000000 +0200
++++ root-6.14.00/interpreter/llvm/src/include/llvm/ExecutionEngine/Orc/OrcRemoteTargetClient.h	2018-06-27 17:05:07.750663216 +0200
+@@ -713,8 +713,8 @@
+ 
+   uint32_t getTrampolineSize() const { return RemoteTrampolineSize; }
+ 
+-  Expected<std::vector<char>> readMem(char *Dst, JITTargetAddress Src,
+-                                      uint64_t Size) {
++  Expected<std::vector<uint8_t>> readMem(char *Dst, JITTargetAddress Src,
++                                         uint64_t Size) {
+     // Check for an 'out-of-band' error, e.g. from an MM destructor.
+     if (ExistingError)
+       return std::move(ExistingError);

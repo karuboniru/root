@@ -1,6 +1,6 @@
 #! /bin/sh
 
-SITE="http://root.cern.ch/files"
+SITE="https://root.cern/files"
 
 mkdir files
 pushd files
@@ -72,6 +72,7 @@ wget -N ${SITE}/tesla.root
 wget -N ${SITE}/wa91_ref_3.root
 wget -N ${SITE}/wa91.root
 
+wget -N ${SITE}/AtlasGraphs.root
 wget -N ${SITE}/europe.root
 wget -N ${SITE}/linearIO.root
 wget -N ${SITE}/stressHistogram.5.18.00.root
@@ -83,7 +84,7 @@ for f in *.root ; do ln -s $f $f.ROOT.cachefile ; done
 
 mkdir tutorials
 pushd tutorials
-wget -N ${SITE}/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
+wget -N ${SITE}/tutorials/df014_CsvDataSource_MuRun2010B.csv
 popd
 
 popd

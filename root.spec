@@ -1,11 +1,4 @@
-%global py3soabi %(%{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))" | sed -e 's/None//' -e 's/^..*$/\.&/')
-
-# Ruby support not yet ported to root version 6
-%global ruby 0
-
-%global oce 1
-%global pythia8 1
-%global xrootd 1
+%global py3soabi %(%{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 
 %if %{?fedora}%{!?fedora:0} >= 24
 # libhdfs is available for all architectures for Fedora 24 and later.
@@ -23,6 +16,13 @@
 %global root7 0
 %endif
 
+%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
+# Multi-threading support requires TBB version >= 4.3.
+%global tbb 1
+%else
+%global tbb 0
+%endif
+
 # Do not create .orig files when patching source
 %global _default_patch_flags --no-backup-if-mismatch
 
@@ -31,18 +31,18 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.12.06
+Version:	6.14.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
-URL:		https://root.cern.ch/
+URL:		https://root.cern/
 #		The upstream source is modified to exclude proprietary fonts:
-#		wget -N https://root.cern.ch/download/root_v%{version}.source.tar.gz
-#		tar -z -x -f root_v%{version}.source.tar.gz
-#		find root-%{version}/fonts -type f -a '!' '(' -name 'STIX*' -o -name DroidSansFallback.ttf ')' -exec rm {} ';'
-#		tar -J -c --group root --owner root -f root-%{version}.tar.xz root-%{version}
+#		wget -N https://root.cern/download/root_v%%{version}.source.tar.gz
+#		tar -z -x -f root_v%%{version}.source.tar.gz
+#		find root-%%{version}/fonts -type f -a '!' -name 'STIX*' -exec rm {} ';'
+#		tar -J -c --group root --owner root -f root-%%{version}.tar.xz root-%%{version}
 Source0:	%{name}-%{version}.tar.xz
 #		Input data for the tests
 Source1:	%{name}-testfiles.tar.xz
@@ -53,72 +53,56 @@ Source3:	rootd.service
 Source4:	proofd.service
 #		Use system fonts
 Patch0:		%{name}-fontconfig.patch
-#		Don't link to libjvm (handled properly inside libhdfs)
-Patch1:		%{name}-dont-link-jvm.patch
 #		Don't create documentation notebooks
-Patch2:		%{name}-doc-no-notebooks.patch
+Patch1:		%{name}-doc-no-notebooks.patch
 #		Don't run gui macros
-Patch3:		%{name}-avoid-gui-crash.patch
+Patch2:		%{name}-avoid-gui-crash.patch
 #		Unbundle gtest
-Patch4:		%{name}-unbundle-gtest.patch
-#		Horrible hack for broken charmaps in StandardSymbolsPS.otf
-#		Hopefully temporary...
-#		https://bugzilla.redhat.com/show_bug.cgi?id=1534206
-Patch5:		%{name}-urw-otf-hack.patch
+Patch3:		%{name}-unbundle-gtest.patch
 #		Use local static script and style files for JupyROOT
-Patch6:		%{name}-jupyroot-static.patch
+Patch4:		%{name}-jupyroot-static.patch
+#		Fedora's llvm patches
+Patch5:		%{name}-PowerPC-Don-t-use-xscvdpspn-on-the-P7.patch
+Patch6:		%{name}-Fix-return-type-in-ORC-readMem-client-interface.patch
+Patch7:		%{name}-PPC-Avoid-non-simple-MVT-in-STBRX-optimization.patch
 #		Fix some javascript syntax choking yuicompressor
 #		Adapt d3 path to updated jsroot
 #		https://github.com/root-project/root/pull/1520
-Patch7:		%{name}-js-syntax.patch
-#		Fix missing -f flag to rm in Makefile
-#		Backport from upstream git
-Patch8:		%{name}-doxygen-makefile.patch
+Patch8:		%{name}-js-syntax.patch
 #		Always use ROOT_ADD_TEST_SUBDIRECTORY when adding test dirs
-#		https://github.com/root-project/root/pull/1515
+#		https://github.com/root-project/root/pull/2247
 Patch9:		%{name}-test-subdirs.patch
-#		No need to use environment variables for system pythia
-Patch10:	%{name}-system-pythia.patch
 #		Reduce memory usage of build
 #		https://github.com/root-project/root/pull/1516
-Patch11:	%{name}-memory-usage.patch
-#		Fedora's llvm patch
-Patch12:	%{name}-PowerPC-Don-t-use-xscvdpspn-on-the-P7.patch
+Patch10:	%{name}-memory-usage.patch
 #		Reduce memory usage during linking on ARM and x86 by generating
 #		smaller debuginfo for the llmv libraries.
 #		Fedora builders run out of memory with the default setting.
-Patch13:	%{name}-memory-arm-x86.patch
+Patch11:	%{name}-memory-arm-x86.patch
 #		Don't run tutorials that crash on ppc64 during doc generation.
 #		Ensures content of doc package is the same on all architecture
 #		so that koji accepts it as a noarch package.
-Patch14:	%{name}-ppc64-doc.patch
-#		Check string is not empty before calling front()
-#		Backport from upstream git
-Patch15:	%{name}-crash-fix.patch
-#		Adjust expected file size for ix32
-#		Backport from upstream git
-Patch16:	%{name}-test-stress-32bit.patch
-#		Fixes for failing tests due to new compiler flags
-#		https://github.com/root-project/root/pull/1638
-Patch17:	%{name}-test-fixes.patch
-#		https://github.com/root-project/root/pull/1639
-Patch18:	%{name}-out-of-bounds.patch
-#		Fix ~ alignment in doxygen markup
-#		https://github.com/root-project/root/pull/1640
-Patch19:	%{name}-doxygen-tilde.patch
-#		Don't install intermediate static libs (mathtext and minicern)
-#		Don't add JupyROOT python extension to cmake exports
-#		https://github.com/root-project/root/pull/1643
-Patch20:	%{name}-noinst.patch
+Patch12:	%{name}-ppc64-doc.patch
 #		Adjust allowed deviation for PDF file sizes (aarch64)
 #		https://github.com/root-project/root/pull/2120
-Patch21:	%{name}-stressgraphics-ref.patch
+Patch13:	%{name}-stressgraphics-ref.patch
 #		Adjust Vavilov test for Fedora 29 ix86
 #		https://github.com/root-project/root/pull/2273
-Patch22:	%{name}-adjust-allowed-test-difference-for-32-bit-ix86.patch
+Patch14:	%{name}-adjust-allowed-test-difference-for-32-bit-ix86.patch
 #		Adapt to python 3.7
 #		https://github.com/root-project/root/pull/2276
-Patch23:	%{name}-python-3.7.patch
+Patch15:	%{name}-python-3.7.patch
+#		Set Cache File Dir
+#		https://github.com/root-project/root/pull/2246
+Patch16:	%{name}-set-cache-file-dir.patch
+#		Fix test compilation on EPEL 7
+#		https://github.com/root-project/root/pull/2263
+Patch17:	%{name}-test-compilatiom-epel7.patch
+#		Missing include for std::shuffle
+#		https://github.com/root-project/root/pull/2267
+Patch18:	%{name}-missing-header.patch
+#		Optimization issue in Geom library
+Patch19:	%{name}-ix32-geom-opt.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -167,16 +151,18 @@ BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
 BuildRequires:	python-devel
-%if %{?fedora}%{!?fedora:0} >= 15
+%if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	python3-devel
 %endif
 %if %{?rhel}%{!?rhel:0} == 7
 BuildRequires:	python34-devel
 %endif
 BuildRequires:	qt4-devel
-%if %{ruby}
-BuildRequires:	ruby
-BuildRequires:	ruby-devel
+%if %{root7}
+%ifarch %{qt5_qtwebengine_arches}
+BuildRequires:	qt5-devel
+BuildRequires:	qt5-qtwebengine-devel
+%endif
 %endif
 BuildRequires:	openssl-devel
 BuildRequires:	globus-gss-assist-devel
@@ -186,10 +172,8 @@ BuildRequires:	libtool-ltdl-devel
 BuildRequires:	desktop-file-utils
 BuildRequires:	dcap-devel
 BuildRequires:	dpm-devel
-%if %{xrootd}
 BuildRequires:	xrootd-client-devel >= 1:3.3.5
 BuildRequires:	xrootd-private-devel >= 1:3.3.5
-%endif
 BuildRequires:	cfitsio-devel
 BuildRequires:	davix-devel >= 0.2.8
 BuildRequires:	gfal2-devel
@@ -197,13 +181,11 @@ BuildRequires:	srm-ifce-devel
 %if %{hadoop}
 BuildRequires:	hadoop-devel
 %endif
-%if %{oce}
 BuildRequires:	OCE-devel
-%endif
 BuildRequires:	R-Rcpp-devel
 BuildRequires:	R-RInside-devel
 BuildRequires:	readline-devel
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
+%if %{tbb}
 BuildRequires:	tbb-devel >= 4.3
 %endif
 BuildRequires:	emacs
@@ -212,9 +194,7 @@ BuildRequires:	gcc-c++
 BuildRequires:	gcc-gfortran
 BuildRequires:	graphviz-devel
 BuildRequires:	expat-devel
-%if %{pythia8}
 BuildRequires:	pythia8-devel >= 8.1.80
-%endif
 BuildRequires:	blas-devel
 BuildRequires:	numpy
 BuildRequires:	doxygen
@@ -230,16 +210,14 @@ BuildRequires:	redhat-lsb-core
 BuildRequires:	font(freesans)
 BuildRequires:	font(freeserif)
 BuildRequires:	font(freemono)
-#		Provides "symbol", "dingbats" and "chancery"
 %if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
-BuildRequires:	urw-base35-fonts
+BuildRequires:	font(standardsymbolsps)
+BuildRequires:	font(d050000l)
+BuildRequires:	font(z003)
 %else
 BuildRequires:	urw-fonts
 %endif
-#		The root-fonts package provides Droid Sans Fallback for EPEL
-%if %{?fedora}%{!?fedora:0} >= 11
 BuildRequires:	font(droidsansfallback)
-%endif
 #		With gdb installed test failures will show backtraces
 BuildRequires:	gdb
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -306,9 +284,6 @@ Requires:	%{name}-core = %{version}-%{release}
 %description fonts
 This package contains fonts used by ROOT that are not available in Fedora.
 In particular it contains STIX version 0.9 that is used by TMathText.
-%if %{?rhel}%{!?rhel:0}
-For EPEL it also provides the Google Droid Sans Fallback font.
-%endif
 
 %package doc
 Summary:	Documentation for the ROOT system
@@ -358,19 +333,15 @@ Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(freesans)
 Requires:	font(freeserif)
 Requires:	font(freemono)
-#		Provides "symbol", "dingbats" and "chancery"
 %if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
-Requires:	urw-base35-fonts
+Requires:	font(standardsymbolsps)
+Requires:	font(d050000l)
+Requires:	font(z003)
 %else
 Requires:	urw-fonts
 %endif
-#		The root-fonts package provides Droid Sans Fallback for EPEL
-%if %{?fedora}%{!?fedora:0} >= 11
 Requires:	font(droidsansfallback)
-%endif
-%if %{ruby} == 0
 Obsoletes:	%{name}-ruby < 6.00.00
-%endif
 Obsoletes:	%{name}-vdt < 6.10.00
 
 %description core
@@ -443,9 +414,6 @@ transparent interface.
 
 %package -n python2-%{name}
 Summary:	Python extension for ROOT
-%{?py2_dist:
-Provides:	%{py2_dist %{name}} = %{version}
-}
 Provides:	root-python = %{version}-%{release}
 Obsoletes:	root-python < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -458,9 +426,6 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package -n python%{python3_pkgversion}-%{name}
 Summary:	Python extension for ROOT
-%{?py3_dist:
-Provides:	%{py3_dist %{name}} = %{version}
-}
 Provides:	root-python%{python3_pkgversion} = %{version}-%{release}
 Obsoletes:	root-python%{python3_pkgversion} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -473,20 +438,18 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package -n python2-jupyroot
 Summary:	ROOT Jupyter kernel
-%{?py2_dist:
-Provides:	%{py2_dist jupyroot} = %{version}
-}
 Requires:	python2-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python2-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-notebook = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
-Requires:	python2-ipython
-Requires:	python2-metakernel
-%else
-Requires:	python-ipython-console
 #		python-metakernel for python2 not available in
 #		Fedora <= 25 or RHEL/EPEL - some functionality missing
+Requires:	python2-ipython
+Requires:	python2-metakernel
+%endif
+%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+Requires:	python-jupyter-filesystem
 %endif
 Obsoletes:	%{name}-rootaas < 6.08.00
 
@@ -495,23 +458,18 @@ The Jupyter kernel for the ROOT notebook.
 
 %package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
-%{?py3_dist:
-Provides:	%{py3_dist jupyroot} = %{version}
-}
 Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python%{python3_pkgversion}-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-notebook = %{version}-%{release}
 %if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
-Requires:	python%{python3_pkgversion}-ipython
-Requires:	python%{python3_pkgversion}-metakernel
-%else
-%if %{?fedora}%{!?fedora:0}
-#		ipython for python3 not available in RHEL/EPEL
-Requires:	python%{python3_pkgversion}-ipython-console
-%endif
 #		python-metakernel for python3 not available in
 #		Fedora <= 25 or RHEL/EPEL - some functionality missing
+Requires:	python%{python3_pkgversion}-ipython
+Requires:	python%{python3_pkgversion}-metakernel
+%endif
+%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+Requires:	python-jupyter-filesystem
 %endif
 
 %description -n python%{python3_pkgversion}-jupyroot
@@ -520,9 +478,6 @@ The Jupyter kernel for the ROOT notebook.
 %package -n python2-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
-%{?py2_dist:
-Provides:	%{py2_dist jsmva} = %{version}
-}
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python2-jsmva
@@ -531,27 +486,10 @@ TMVA interface used by JupyROOT.
 %package -n python%{python3_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
-%{?py3_dist:
-Provides:	%{py3_dist jsmva} = %{version}
-}
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_pkgversion}-jsmva
 TMVA interface used by JupyROOT.
-
-%if %{ruby}
-%package ruby
-Summary:	Ruby extension for ROOT
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
-Provides:	ruby(libRuby) = %{version}
-
-%description ruby
-This package contains the Ruby extension for ROOT. The interface
-goes both ways - that is, you can call ROOT functions from Ruby, and
-invoke the Ruby interpreter from ROOT.
-%endif
 
 %package r
 Summary:	R interface for ROOT
@@ -612,7 +550,6 @@ Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
 %description gdml
 This package contains an import/export module for ROOT geometries.
 
-%if %{oce}
 %package geocad
 Summary:	OpenCascade import/export for ROOT geometries
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -620,7 +557,6 @@ Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
 
 %description geocad
 This package contains an import/export module for ROOT geometries.
-%endif
 
 %package graf
 Summary:	2D graphics library for ROOT
@@ -663,7 +599,6 @@ Summary:	Canvas and pad library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 #		Dynamic dependency
 Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
@@ -789,13 +724,26 @@ Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
-Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 #		Dynamic dependencies
 Requires:	%{name}-graf-x11%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui-ged%{?_isa} = %{version}-%{release}
+#		Package split (gui-html from gui)
+Obsoletes:	%{name}-gui < 6.14.00
 
 %description gui
 This package contains a library for defining graphical user interfaces.
+
+%package gui-html
+Summary:	HTML GUI library for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+#		Package split (gui-html from gui)
+Obsoletes:	%{name}-gui < 6.14.00
+
+%description gui-html
+This package contains a library for defining HTML graphical user interfaces.
 
 %package gui-fitpanel
 Summary:	GUI element for fits in ROOT
@@ -803,11 +751,6 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-%if %{root7}
-Requires:	%{name}-hist-draw%{?_isa} = %{version}-%{release}
-Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
-%endif
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
@@ -830,26 +773,42 @@ Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 This package contains a library to show a pop-up window for editing
 various ROOT objects.
 
-%package guibuilder
+%package gui-builder
 Summary:	GUI editor library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+#		Package renamed
+Provides:	%{name}-guibuilder = %{version}-%{release}
+Provides:	%{name}-guibuilder%{?_isa} = %{version}-%{release}
+Obsoletes:	%{name}-guibuilder < 6.14.00
 
-%description guibuilder
+%description gui-builder
 This package contains a library for editing graphical user interfaces
 in ROOT.
 
 %package gui-qt
-Summary:	Qt GUI for ROOT
+Summary:	Qt GUI for ROOT (BNL)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-qt%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+#		Package split (gui-qtgsi from gui-qt)
+Obsoletes:	%{name}-qt < 6.14.00
 
 %description gui-qt
-This package contains the Qt GUI for ROOT.
+This package contains the BNL Qt GUI for ROOT.
+
+%package gui-qtgsi
+Summary:	Qt GUI for ROOT (GSI)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+#		Package split (gui-qtgsi from gui-qt)
+Obsoletes:	%{name}-qt < 6.14.00
+
+%description gui-qtgsi
+This package contains the GSI Qt GUI for ROOT.
 
 %package gui-recorder
 Summary:	Interface for recording and replaying events in ROOT
@@ -865,28 +824,6 @@ Recorded events are:
  - GUI events (mouse movement, button clicks, ...)
 All the recorded events from one session are stored in one TFile
 and can be replayed again anytime.
-
-%if %{root7}
-%package gui-canvaspainter
-Summary:	Canvas painter (ROOT 7)
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
-
-%description gui-canvaspainter
-This package contains a canvas painter extension for ROOT 7
-
-%package gui-webdisplay
-Summary:	Web display (ROOT 7)
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
-Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
-
-%description gui-webdisplay
-This package contains a web display extension for ROOT 7
-%endif
 
 %package hbook
 Summary:	Hbook library for ROOT
@@ -910,17 +847,6 @@ Requires:	%{name}-hist-painter%{?_isa} = %{version}-%{release}
 
 %description hist
 This package contains a library for histogramming in ROOT.
-
-%if %{root7}
-%package hist-draw
-Summary:	Histogram drawing (ROOT 7)
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-
-%description hist-draw
-This package contains an histogram drawing extension for ROOT 7.
-%endif
 
 %package hist-painter
 Summary:	Histogram painter plugin for ROOT
@@ -961,7 +887,7 @@ Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xmlparser%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 Requires:	%{name}-roofit%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
@@ -1035,9 +961,20 @@ TFile interface.
 Summary:	XML reader library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+#		Package split (io-xmlparser from io-xml)
+Obsoletes:	%{name}-io-xml < 6.14.00
 
 %description io-xml
 This package contains the XML reader library for ROOT.
+
+%package io-xmlparser
+Summary:	XML parser library for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+#		Package split (io-xmlparser from io-xml)
+Obsoletes:	%{name}-io-xml < 6.14.00
+
+%description io-xmlparser
+This package contains the XML parser library for ROOT.
 
 %package foam
 Summary:	A Compact Version of the Cellular Event Generator
@@ -1229,6 +1166,15 @@ init-program computes all tables and constants necessary for the
 random variate generation. The sample program can then generate
 variates from the desired distribution.
 
+%package vecops
+Summary:	Vector operation extension for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+#		Library split (tree-dataframe and vecops from tree-player)
+Obsoletes:	%{name}-tree-player < 6.14.00
+
+%description vecops
+This package contains a vector operation extension for ROOT.
+
 %package memstat
 Summary:	Memory statistics tool for use with ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1264,7 +1210,6 @@ Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 %description montecarlo-eg
 This package contains an event generator library for ROOT.
 
-%if %{pythia8}
 %package montecarlo-pythia8
 Summary:	Pythia version 8 plugin for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1275,7 +1220,6 @@ This package contains the Pythia version 8 plug-in for ROOT. This
 package provide the ROOT user with transparent interface to the Pythia
 (version 8) event generators for hadronic interactions. If the term
 "hadronic" does not ring any bells, this package is not for you.
-%endif
 
 %package montecarlo-vmc
 Summary:	Virtual Monte-Carlo (simulation) library for ROOT
@@ -1361,19 +1305,31 @@ access to LDAP directories via ROOT.
 %package net-http
 Summary:	HTTP server extension for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
-Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 Requires:	js-jsroot
+#		Library split (net-httpsniff from net-http)
+Obsoletes:	%{name}-net-http < 6.14.00
 
 %description net-http
 This package contains the HTTP server extension for ROOT. It provides
 an http interface to arbitrary ROOT applications.
 
-%if %{xrootd}
+%package net-httpsniff
+Summary:	HTTP sniffer extension for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Library split (net-httpsniff from net-http)
+Obsoletes:	%{name}-net-http < 6.14.00
+
+%description net-httpsniff
+This package contains the HTTP sniffer extension for ROOT.
+
 %package netx
 Summary:	NetX extension for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1384,21 +1340,18 @@ Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 This package contains the NetX extension for ROOT, i.e. a client for
 the xrootd server. Both the old (NetX) and the new (NetXNG) version are
 provided.
-%endif
 
 %package proof
 Summary:	PROOF extension for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
-Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 Obsoletes:	%{name}-clarens < 5.34.01
 Obsoletes:	%{name}-peac < 5.34.01
+#		Package split (proof-player from proof)
+Obsoletes:	%{name}-proof < 6.14.00
 
 %description proof
 This package contains the proof extension for ROOT. This provides a
@@ -1412,10 +1365,28 @@ Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof-player%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description proof-bench
 This package contains the steering class for PROOF benchmarks.
+
+%package proof-player
+Summary:	PROOF player extension for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
+Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
+#		Package split (proof-player from proof)
+Obsoletes:	%{name}-proof < 6.14.00
+
+%description proof-player
+This package contains the proof player extension for ROOT.
 
 %package proof-pq2
 Summary:	PROOF Quick Query (pq2)
@@ -1443,7 +1414,6 @@ Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 This package contains a library for browsing an interactive PROOF
 session in ROOT.
 
-%if %{xrootd}
 %package xproof
 Summary:	XPROOF extension for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1457,7 +1427,6 @@ Requires:	xrootd-server%{?_isa}
 %description xproof
 This package contains the xproof extension for ROOT. This provides a
 client to be used in a PROOF environment.
-%endif
 
 %package roofit
 Summary:	ROOT extension for modeling expected distributions
@@ -1613,6 +1582,18 @@ Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 %description tree
 This package contains the Tree library for ROOT.
 
+%package tree-dataframe
+Summary:	A high level interfae to ROOT trees
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
+#		Library split (tree-dataframe and vecops from tree-player)
+Obsoletes:	%{name}-tree-player < 6.14.00
+
+%description tree-dataframe
+This package contains a high level interfae to ROOT trees.
+
 %package tree-player
 Summary:	Library to loop over a ROOT tree
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1625,6 +1606,8 @@ Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
 Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Library split (tree-dataframe and vecops from tree-player)
+Obsoletes:	%{name}-tree-player < 6.14.00
 
 %description tree-player
 This package contains a plugin to loop over a ROOT tree.
@@ -1649,7 +1632,7 @@ This package contains a plugin for browsing a ROOT tree in ROOT.
 Summary:	Distribution unfolding
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io-xml%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io-xmlparser%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
 %description unfold
@@ -1672,6 +1655,74 @@ Requires:	js-jsroot
 
 %description notebook
 Javascript and style files for the Jupyter ROOT Notebook.
+
+%if %{root7}
+%package graf-gpadv7
+Summary:	Canvas and pad library for ROOT (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-primitives%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+
+%description graf-gpadv7
+This package contains a library for canvas and pad manipulations.
+
+%package graf-primitives
+Summary:	Graphics primitives (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+
+%description graf-primitives
+This package contains graphics primitives for ROOT 7
+
+%package gui-canvaspainter
+Summary:	Canvas painter (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpadv7%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+
+%description gui-canvaspainter
+This package contains a canvas painter extension for ROOT 7
+
+%package gui-fitpanelv7
+Summary:	GUI element for fits in ROOT (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpadv7%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-primitives%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist-draw%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+
+%description gui-fitpanelv7
+This package contains a library to show a pop-up dialog when fitting
+various kinds of data.
+
+%ifarch %{qt5_qtwebengine_arches}
+%package gui-qt5webdisplay
+Summary:	Qt5 Web display (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
+
+%description gui-qt5webdisplay
+This package contains a Qt5 web display extension for ROOT 7
+%endif
+
+%package gui-webdisplay
+Summary:	Web display (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
+
+%description gui-webdisplay
+This package contains a web display extension for ROOT 7
+
+%package hist-draw
+Summary:	Histogram drawing (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-primitives%{?_isa} = %{version}-%{release}
+
+%description hist-draw
+This package contains an histogram drawing extension for ROOT 7.
+%endif
 
 %prep
 %setup -q -a 1
@@ -1696,10 +1747,6 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
-%patch23 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1709,11 +1756,11 @@ rm -rf graf3d/ftgl/src graf3d/ftgl/inc
 #  * freetype
 rm -rf graf2d/freetype/src
 #  * glew
-rm -rf graf3d/glew/src graf3d/glew/inc
+rm -rf graf3d/glew/src graf3d/glew/inc graf3d/glew/isystem
 #  * pcre
 rm -rf core/pcre/src
-#  * zlib
-rm -rf core/zip/src/[a-z]* core/zip/inc/[a-z]*
+#  * zlib, lz4, xxhash
+rm -rf builtins
 #  * lzma
 rm -rf core/lzma/src/*.tar.gz
 #  * gl2ps
@@ -1731,16 +1778,14 @@ sed 's!\(MATHJAX_RELPATH\s*=\).*!\1 file:///usr/share/javascript/mathjax!' \
     -i documentation/doxygen/Doxyfile
 %if %{root7}
 #  * string_view (<experimental/string_view> requires c++-14)
-rm core/foundation/inc/libcpp_string_view.h \
-   core/foundation/inc/RWrap_libcpp_string_view.h
+rm core/foundation/inc/ROOT/libcpp_string_view.h \
+   core/foundation/inc/ROOT/RWrap_libcpp_string_view.h
 %endif
 #  * jsroot
 rm -rf etc/http/*
 
-# Remove bundled fonts provided by the OS distributions
-%if %{?fedora}%{!?fedora:0} >= 11
-rm fonts/DroidSansFallback.ttf
-%endif
+# Fix file permissions
+chmod -x interpreter/llvm/src/lib/Target/X86/X86EvexToVex.cpp
 
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
@@ -1795,6 +1840,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dgnuinstall:BOOL=ON \
        -Dbuiltin_afterimage:BOOL=OFF \
        -Dbuiltin_cfitsio:BOOL=OFF \
+       -Dbuiltin_clang:BOOL=ON \
        -Dbuiltin_davix:BOOL=OFF \
        -Dbuiltin_fftw3:BOOL=OFF \
        -Dbuiltin_freetype:BOOL=OFF \
@@ -1813,15 +1859,18 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_vdt:BOOL=OFF \
        -Dbuiltin_veccore:BOOL=OFF \
        -Dbuiltin_xrootd:BOOL=OFF \
+       -Dbuiltin_xxhash:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
        -Dafdsmgrd:BOOL=OFF \
        -Dafs:BOOL=OFF \
        -Dalien:BOOL=OFF \
+       -Darrow:BOOL=OFF \
        -Dasimage:BOOL=ON \
        -Dastiff:BOOL=ON \
        -Dbonjour:BOOL=ON \
        -Dcastor:BOOL=OFF \
        -Dccache:BOOL=OFF \
+       -Dcefweb:BOOL=OFF \
        -Dchirp:BOOL=OFF \
        -Dcling:BOOL=ON \
        -Dcocoa:BOOL=OFF \
@@ -1844,11 +1893,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dfortran:BOOL=ON \
        -Dgdml:BOOL=ON \
        -Dgenvector:BOOL=ON \
-%if %{oce}
        -Dgeocad:BOOL=ON \
-%else
-       -Dgeocad:BOOL=OFF \
-%endif
        -Dgfal:BOOL=ON \
        -Dglite:BOOL=OFF \
        -Dglobus:BOOL=ON \
@@ -1860,7 +1905,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dhdfs:BOOL=OFF \
 %endif
        -Dhttp:BOOL=ON \
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
+%if %{tbb}
        -Dimt:BOOL=ON \
 %else
        -Dimt:BOOL=OFF \
@@ -1881,24 +1926,21 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dpch:BOOL=ON \
        -Dpgsql:BOOL=ON \
        -Dpythia6:BOOL=OFF \
-%if %{pythia8}
        -Dpythia8:BOOL=ON \
-%else
-       -Dpythia8:BOOL=OFF \
-%endif
        -Dpython:BOOL=ON \
-       -Dpython3:BOOL=OFF \
+       -DPYTHON_EXECUTABLE:PATH=%{__python2} \
        -Dqt:BOOL=ON \
        -Dqtgsi:BOOL=ON \
+%ifarch %{qt5_qtwebengine_arches}
+       -Dqt5web:BOOL=ON \
+%else
+       -Dqt5web:BOOL=OFF \
+%endif
        -Dr:BOOL=ON \
        -Drfio:BOOL=ON \
        -Droofit:BOOL=ON \
        -Drpath:BOOL=OFF \
-%if %{ruby}
-       -Druby:BOOL=ON \
-%else
        -Druby:BOOL=OFF \
-%endif
        -Druntime_cxxmodules:BOOL=OFF \
        -Dsapdb:BOOL=OFF \
        -Dshadowpw:BOOL=ON \
@@ -1911,6 +1953,12 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dtcmalloc:BOOL=OFF \
        -Dthread:BOOL=ON \
        -Dtmva:BOOL=ON \
+%if %{tbb}
+       -Dtmva-cpu:BOOL=ON \
+%else
+       -Dtmva-cpu:BOOL=OFF \
+%endif
+       -Dtmva-gpu:BOOL=OFF \
        -Dunuran:BOOL=ON \
        -Dvc:BOOL=OFF \
        -Dvdt:BOOL=OFF \
@@ -1919,11 +1967,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dx11:BOOL=ON \
        -Dxft:BOOL=ON \
        -Dxml:BOOL=ON \
-%if %{xrootd}
        -Dxrootd:BOOL=ON \
-%else
-       -Dxrootd:BOOL=OFF \
-%endif
        -Dfail-on-missing:BOOL=ON \
        -Dtesting:BOOL=ON \
        -Dclingtest:BOOL=OFF \
@@ -1947,7 +1991,7 @@ py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
 py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
 py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python},%{__python3},g' \
+    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3},g' \
     -e 's,lib/libPyROOT,python/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python!g' -i `find bindings/python -type f`
@@ -2032,7 +2076,7 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python/cmake_install.cmake
 
 mkdir -p %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libPyROOT%{py3soabi}.so
+   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3soabi}.so
 mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
@@ -2048,26 +2092,26 @@ mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
 
 rm -rf $tmpdir
 
-%if %{ruby}
-# The Ruby interface library must be in two places
-mkdir -p %{buildroot}%{ruby_vendorarchdir}
-mv %{buildroot}%{_libdir}/%{name}/libRuby.so.%{version} \
-   %{buildroot}%{ruby_vendorarchdir}/libRuby.so
-ln -s ..`sed 's!%{_libdir}!!' <<< %{ruby_vendorarchdir}`/libRuby.so \
-   %{buildroot}%{_libdir}/%{name}/libRuby.so.%{version}
-%endif
+# Create empty .dist-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
+
+touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
 
 # Put jupyter stuff in the right places
 mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
 
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot
-sed -e 's/ROOT C++/& (Python 2)/' -e 's!python!/usr/bin/python2!' \
+sed -e 's/ROOT C++/& (Python 2)/' -e 's!python!%{__python2}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot/kernel.json
 
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
-sed -e 's/ROOT C++/& (Python 3)/' -e 's!python!/usr/bin/python3!' \
+sed -e 's/ROOT C++/& (Python 3)/' -e 's!python!%{__python3}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
 
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/custom
@@ -2087,7 +2131,6 @@ if [ -z "\$(type jupyter-notebook 2>/dev/null)" ] ; then
    echo jupyter-notebook not found in path. Exiting.
    exit 1
 fi
-rm -rf ~/.rootnb
 jupyter notebook
 EOF
 
@@ -2096,7 +2139,7 @@ mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
-sed -e 's!/usr/bin/env python!/usr/bin/python!' \
+sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2109,13 +2152,14 @@ sed -e 's!/usr/bin/env python!/usr/bin/python!' \
        %{buildroot}%{_bindir}/rootprint \
        %{buildroot}%{_bindir}/rootrm \
        %{buildroot}%{_bindir}/rootslimtree
+sed -e 's!/usr/bin/env python2!%{__python2}!' \
+    -i %{buildroot}%{_bindir}/rootdrawtree
 sed -e '/^\#!/d' \
     -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py \
        %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py \
        %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
-sed -e 's!/usr/bin/env python!/usr/bin/python!' \
-    -i %{buildroot}%{_bindir}/rootdrawtree \
-       %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
+sed -e 's!/usr/bin/env python!%{__python2}!' \
+    -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
        %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/ApplicationClassificationKeras.py \
@@ -2143,9 +2187,6 @@ rm %{buildroot}%{_mandir}/man1/genmap.1
 rm %{buildroot}%{_mandir}/man1/proofserva.1
 rm %{buildroot}%{_mandir}/man1/roota.1
 rm %{buildroot}%{_mandir}/man1/setup-pq2.1
-%if %{xrootd} == 0
-rm %{buildroot}%{_mandir}/man1/xproofd.1
-%endif
 rm %{buildroot}%{_includedir}/%{name}/*.cw
 rm %{buildroot}%{_includedir}/%{name}/*.pri
 rm %{buildroot}%{_pkgdocdir}/INSTALL
@@ -2183,14 +2224,6 @@ rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
 rm TVirtualX/P050_TGQuartz.C
-%if %{xrootd} == 0
-rm TFile/P100_TXNetFile.C
-rm TFileStager/P010_TXNetFileStager.C
-rm TProofMgr/P010_TXProofMgr.C
-rm TProofServ/P010_TXProofServ.C
-rm TSlave/P010_TXSlave.C
-rm TSystem/P040_TXNetSystem.C
-%endif
 rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
@@ -2220,7 +2253,7 @@ ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
     LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
     PYTHONPATH=${PWD}/../../builddir/lib \
-    python ../../tutorials/pyroot/hsimple.py
+    %{__python2} ../../tutorials/pyroot/hsimple.py
 ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
     LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
@@ -2248,11 +2281,7 @@ done
 cat includelist-core-{[^mw],m[^au]}* > includelist-core
 cat includelist-geom-geom* > includelist-geom
 cat includelist-roofit-roo* > includelist-roofit
-cat includelist-gui-qt* > includelist-gui-qt
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
-cat includelist-gui-guihtml >> includelist-gui-gui
-cat includelist-io-xmlparser >> includelist-io-xml
-cat includelist-proof-proofplayer >> includelist-proof-proof
 cat includelist-net-netx* > includelist-netx
 
 %check
@@ -2262,14 +2291,20 @@ ln -s ../../files files
 popd
 pushd runtutorials
 ln -s ../../files files
-ln -sf ../../files/tutorials/tdf014_CsvDataSource_MuRun2010B.csv
+ln -sf ../../files/tutorials/df014_CsvDataSource_MuRun2010B.csv
+popd
+pushd tmva/tmva/test/DNN/CNN
+ln -s ../../../../../../files files
+popd
+pushd tmva/tmva/test/envelope
+ln -s ../../../../../files files
 popd
 # Exclude some tests that can not be run
 #
 # - test-stressIOPlugins-*
 #   requires network access (by design since they test the remote file IO)
 #
-# - tutorial-dataframe-tdf101_h1Analysis
+# - tutorial-dataframe-df101_h1Analysis
 # - tutorial-tree-run_h1analysis
 # - tutorial-multicore-imt001_parBranchProcessing
 # - tutorial-multicore-mp103_processSelector
@@ -2282,26 +2317,16 @@ popd
 #
 # - tutorial-pythia-pythia8
 #   sometimes times out
-excluded="test-stressIOPlugins-.*|tutorial-dataframe-tdf101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|tutorial-pythia-pythia8"
+excluded="test-stressIOPlugins-.*|tutorial-dataframe-df101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|tutorial-pythia-pythia8"
 
 %ifarch %{arm}
-# Tests failing on arm
-# https://sft.its.cern.ch/jira/browse/ROOT-8500
-# - gtest-tree-treeplayer-test-dataframe-snapshot
-# - mathcore-testMinim
-# - minuit2-testMinimizer
-# - test-minexam
-# - test-stressfit (but -interpreted works)
 # Tests failing on arm on Fedora <= 27
+# https://sft.its.cern.ch/jira/browse/ROOT-8500
 # - test-stressiterators-interpreted
 # - tutorial-hist-sparsehist
-# - tutorial-multicore-mt303_AsyncSimple
-# - tutorial-multicore-mt304_AsyncNested
-# - tutorial-multicore-mt305_TFuture
 # - tutorial-r-*
-excluded="${excluded}|gtest-tree-treeplayer-test-dataframe-snapshot|mathcore-testMinim|minuit2-testMinimizer|test-minexam|test-stressfit"
 %if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-multicore-mt303_AsyncSimple|tutorial-multicore-mt304_AsyncNested|tutorial-multicore-mt305_TFuture|tutorial-r-.*"
+excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
 %endif
 %endif
 
@@ -2314,24 +2339,8 @@ excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|
 # - tutorial-roofit-rf511_wsfactory_basic
 # - tutorial-roostats-rs102_hypotestwithshapes (work on EPEL 7)
 # - tutorial-roostats-rs701_BayesianCalculator
-# - tutorial-dataframe-tdf006_ranges-py
-excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-rs102_hypotestwithshapes|tutorial-roostats-rs701_BayesianCalculator|tutorial-dataframe-tdf006_ranges-py"
-%endif
-
-%ifarch ppc64le
-# Tests failing on ppc64le
-# - test-stresshistogram[-interpreted]
-excluded="${excluded}|test-stresshistogram"
-%endif
-
-# Test failing on 32 bit on Fedora <= 27
-# https://sft.its.cern.ch/jira/browse/ROOT-9236
-# https://sft.its.cern.ch/jira/browse/ROOT-9265
-# - gtest-tree-treeplayer-test-dataframe-snapshot
-%ifarch %{ix86} %{arm}
-%if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
-excluded="${excluded}|gtest-tree-treeplayer-test-dataframe-snapshot"
-%endif
+# - tutorial-dataframe-df006_ranges-py
+excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-rs102_hypotestwithshapes|tutorial-roostats-rs701_BayesianCalculator|tutorial-dataframe-df006_ranges-py"
 %endif
 
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
@@ -2421,20 +2430,20 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
 	-i /var/lib/alternatives/libPyROOT.so
     for alt in `grep python3 /var/lib/alternatives/libPyROOT.so` ; do
-	if [ "$alt" != "%{python3_sitearch}/libPyROOT%{py3soabi}.so" ] ; then
+	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3soabi}.so" ] ; then
 	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
 	fi
     done
 fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so 10
 /sbin/ldconfig
 
 %preun -n python%{python3_pkgversion}-%{name}
 if [ $1 = 0 ]; then
     %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so
+	libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so
 fi
 
 %postun -n python%{python3_pkgversion}-%{name} -p /sbin/ldconfig
@@ -2444,7 +2453,7 @@ fi
 # for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT%{py3soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so 10
 /sbin/ldconfig
 
 %post notebook
@@ -2475,10 +2484,6 @@ fi
 %postun multiproc -p /sbin/ldconfig
 %post cling -p /sbin/ldconfig
 %postun cling -p /sbin/ldconfig
-%if %{ruby}
-%post ruby -p /sbin/ldconfig
-%postun ruby -p /sbin/ldconfig
-%endif
 %post r -p /sbin/ldconfig
 %postun r -p /sbin/ldconfig
 %post r-tools -p /sbin/ldconfig
@@ -2489,10 +2494,8 @@ fi
 %postun geom -p /sbin/ldconfig
 %post gdml -p /sbin/ldconfig
 %postun gdml -p /sbin/ldconfig
-%if %{oce}
 %post geocad -p /sbin/ldconfig
 %postun geocad -p /sbin/ldconfig
-%endif
 %post graf -p /sbin/ldconfig
 %postun graf -p /sbin/ldconfig
 %post graf-asimage -p /sbin/ldconfig
@@ -2521,30 +2524,24 @@ fi
 %postun graf3d-x3d -p /sbin/ldconfig
 %post gui -p /sbin/ldconfig
 %postun gui -p /sbin/ldconfig
+%post gui-html -p /sbin/ldconfig
+%postun gui-html -p /sbin/ldconfig
 %post gui-fitpanel -p /sbin/ldconfig
 %postun gui-fitpanel -p /sbin/ldconfig
 %post gui-ged -p /sbin/ldconfig
 %postun gui-ged -p /sbin/ldconfig
-%post guibuilder -p /sbin/ldconfig
-%postun guibuilder -p /sbin/ldconfig
+%post gui-builder -p /sbin/ldconfig
+%postun gui-builder -p /sbin/ldconfig
 %post gui-qt -p /sbin/ldconfig
 %postun gui-qt -p /sbin/ldconfig
+%post gui-qtgsi -p /sbin/ldconfig
+%postun gui-qtgsi -p /sbin/ldconfig
 %post gui-recorder -p /sbin/ldconfig
 %postun gui-recorder -p /sbin/ldconfig
-%if %{root7}
-%post gui-canvaspainter -p /sbin/ldconfig
-%postun gui-canvaspainter -p /sbin/ldconfig
-%post gui-webdisplay -p /sbin/ldconfig
-%postun gui-webdisplay -p /sbin/ldconfig
-%endif
 %post hbook -p /sbin/ldconfig
 %postun hbook -p /sbin/ldconfig
 %post hist -p /sbin/ldconfig
 %postun hist -p /sbin/ldconfig
-%if %{root7}
-%post hist-draw -p /sbin/ldconfig
-%postun hist-draw -p /sbin/ldconfig
-%endif
 %post hist-painter -p /sbin/ldconfig
 %postun hist-painter -p /sbin/ldconfig
 %post spectrum -p /sbin/ldconfig
@@ -2571,6 +2568,8 @@ fi
 %postun io-sql -p /sbin/ldconfig
 %post io-xml -p /sbin/ldconfig
 %postun io-xml -p /sbin/ldconfig
+%post io-xmlparser -p /sbin/ldconfig
+%postun io-xmlparser -p /sbin/ldconfig
 %post foam -p /sbin/ldconfig
 %postun foam -p /sbin/ldconfig
 %post fftw -p /sbin/ldconfig
@@ -2601,16 +2600,16 @@ fi
 %postun splot -p /sbin/ldconfig
 %post unuran -p /sbin/ldconfig
 %postun unuran -p /sbin/ldconfig
+%post vecops -p /sbin/ldconfig
+%postun vecops -p /sbin/ldconfig
 %post memstat -p /sbin/ldconfig
 %postun memstat -p /sbin/ldconfig
 %post table -p /sbin/ldconfig
 %postun table -p /sbin/ldconfig
 %post montecarlo-eg -p /sbin/ldconfig
 %postun montecarlo-eg -p /sbin/ldconfig
-%if %{pythia8}
 %post montecarlo-pythia8 -p /sbin/ldconfig
 %postun montecarlo-pythia8 -p /sbin/ldconfig
-%endif
 %post montecarlo-vmc -p /sbin/ldconfig
 %postun montecarlo-vmc -p /sbin/ldconfig
 %post net -p /sbin/ldconfig
@@ -2639,18 +2638,20 @@ if st and st.type == "directory" then
   os.execute("rm -rf " .. path)
 end
 
-%if %{xrootd}
+%post net-httpsniff -p /sbin/ldconfig
+%postun net-httpsniff -p /sbin/ldconfig
 %post netx -p /sbin/ldconfig
 %postun netx -p /sbin/ldconfig
-%endif
 %post proof -p /sbin/ldconfig
 %postun proof -p /sbin/ldconfig
+%post proof-bench -p /sbin/ldconfig
+%postun proof-bench -p /sbin/ldconfig
+%post proof-player -p /sbin/ldconfig
+%postun proof-player -p /sbin/ldconfig
 %post proof-sessionviewer -p /sbin/ldconfig
 %postun proof-sessionviewer -p /sbin/ldconfig
-%if %{xrootd}
 %post xproof -p /sbin/ldconfig
 %postun xproof -p /sbin/ldconfig
-%endif
 %post roofit -p /sbin/ldconfig
 %postun roofit -p /sbin/ldconfig
 %post sql-mysql -p /sbin/ldconfig
@@ -2671,12 +2672,32 @@ end
 %postun tmva-gui -p /sbin/ldconfig
 %post tree -p /sbin/ldconfig
 %postun tree -p /sbin/ldconfig
+%post tree-dataframe -p /sbin/ldconfig
+%postun tree-dataframe -p /sbin/ldconfig
 %post tree-player -p /sbin/ldconfig
 %postun tree-player -p /sbin/ldconfig
 %post tree-viewer -p /sbin/ldconfig
 %postun tree-viewer -p /sbin/ldconfig
 %post unfold -p /sbin/ldconfig
 %postun unfold -p /sbin/ldconfig
+%if %{root7}
+%post graf-gpadv7 -p /sbin/ldconfig
+%postun graf-gpadv7 -p /sbin/ldconfig
+%post graf-primitives -p /sbin/ldconfig
+%postun graf-primitives -p /sbin/ldconfig
+%post gui-canvaspainter -p /sbin/ldconfig
+%postun gui-canvaspainter -p /sbin/ldconfig
+%post gui-fitpanelv7 -p /sbin/ldconfig
+%postun gui-fitpanelv7 -p /sbin/ldconfig
+%ifarch %{qt5_qtwebengine_arches}
+%post gui-qt5webdisplay -p /sbin/ldconfig
+%postun gui-qt5webdisplay -p /sbin/ldconfig
+%endif
+%post gui-webdisplay -p /sbin/ldconfig
+%postun gui-webdisplay -p /sbin/ldconfig
+%post hist-draw -p /sbin/ldconfig
+%postun hist-draw -p /sbin/ldconfig
+%endif
 
 %files
 %{_bindir}/hadd
@@ -2747,7 +2768,10 @@ end
 %{_includedir}/%{name}/RConfigure.h
 %{_includedir}/%{name}/RGitCommit.h
 %{_includedir}/%{name}/compiledata.h
+%{_includedir}/%{name}/libc.modulemap
 %{_includedir}/%{name}/module.modulemap
+%{_includedir}/%{name}/stl.modulemap
+%{_includedir}/%{name}/modulemap.overlay.yaml
 %dir %{_includedir}/%{name}/Math
 %dir %{_includedir}/%{name}/ROOT
 %{_datadir}/aclocal/root.m4
@@ -2809,6 +2833,7 @@ end
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
 %{python2_sitearch}/libPyROOT.so
 %{python2_sitearch}/ROOT.py*
+%{python2_sitearch}/ROOT-*.dist-info
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
 
@@ -2818,36 +2843,34 @@ end
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python3_sitearch}/libPyROOT%{py3soabi}.so
+%{python3_sitearch}/libPyROOT.%{py3soabi}.so
 %{python3_sitearch}/ROOT.py
+%{python3_sitearch}/ROOT-*.dist-info
 %{python3_sitearch}/cppyy.py
 %{python3_sitearch}/_pythonization.py
 %{python3_sitearch}/__pycache__
 
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
+%{python2_sitearch}/JupyROOT-*.dist-info
 %{python2_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python2-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
+%{python3_sitearch}/JupyROOT-*.dist-info
 %{python3_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python2-jsmva
 %{python2_sitelib}/JsMVA
+%{python2_sitelib}/JsMVA-*.dist-info
 
 %files -n python%{python3_pkgversion}-jsmva
 %{python3_sitelib}/JsMVA
-
-%if %{ruby}
-%files ruby -f includelist-bindings-ruby
-%{_libdir}/%{name}/libRuby.*
-%{_libdir}/%{name}/libRuby_rdict.pcm
-%{ruby_vendorarchdir}/libRuby.*
-%endif
+%{python3_sitelib}/JsMVA-*.dist-info
 
 %files r -f includelist-bindings-r
 %{_libdir}/%{name}/libRInterface.*
@@ -2879,11 +2902,9 @@ end
 %{_libdir}/%{name}/libGdml.*
 %{_libdir}/%{name}/libGdml_rdict.pcm
 
-%if %{oce}
 %files geocad -f includelist-geom-geocad
 %{_libdir}/%{name}/libGeoCad.*
 %{_libdir}/%{name}/libGeoCad_rdict.pcm
-%endif
 
 %files graf -f includelist-graf2d-graf
 %{_libdir}/%{name}/libGraf.*
@@ -2965,12 +2986,14 @@ end
 %files gui -f includelist-gui-gui
 %{_libdir}/%{name}/libGui.*
 %{_libdir}/%{name}/libGui_rdict.pcm
-%{_libdir}/%{name}/libGuiHtml.*
-%{_libdir}/%{name}/libGuiHtml_rdict.pcm
 %{_datadir}/%{name}/plugins/TBrowserImp/P010_TRootBrowser.C
 %{_datadir}/%{name}/plugins/TBrowserImp/P020_TRootBrowserLite.C
 %{_datadir}/%{name}/plugins/TGPasswdDialog/P010_TGPasswdDialog.C
 %{_datadir}/%{name}/plugins/TGuiFactory/P010_TRootGuiFactory.C
+
+%files gui-html -f includelist-gui-guihtml
+%{_libdir}/%{name}/libGuiHtml.*
+%{_libdir}/%{name}/libGuiHtml_rdict.pcm
 
 %files gui-fitpanel -f includelist-gui-fitpanel
 %{_libdir}/%{name}/libFitPanel.*
@@ -2982,31 +3005,24 @@ end
 %{_libdir}/%{name}/libGed_rdict.pcm
 %{_datadir}/%{name}/plugins/TVirtualPadEditor/P010_TGedEditor.C
 
-%files guibuilder -f includelist-gui-guibuilder
+%files gui-builder -f includelist-gui-guibuilder
 %{_libdir}/%{name}/libGuiBld.*
 %{_libdir}/%{name}/libGuiBld_rdict.pcm
 %{_datadir}/%{name}/plugins/TGuiBuilder/P010_TRootGuiBuilder.C
 %{_datadir}/%{name}/plugins/TVirtualDragManager/P010_TGuiBldDragManager.C
 
-%files gui-qt -f includelist-gui-qt
+%files gui-qt -f includelist-gui-qtroot
 %{_libdir}/%{name}/libQtRoot.*
 %{_libdir}/%{name}/libQtRoot_rdict.pcm
+%{_datadir}/%{name}/plugins/TGuiFactory/P020_TQtRootGuiFactory.C
+
+%files gui-qtgsi -f includelist-gui-qtgsi
 %{_libdir}/%{name}/libQtGSI.*
 %{_libdir}/%{name}/libQtGSI_rdict.pcm
-%{_datadir}/%{name}/plugins/TGuiFactory/P020_TQtRootGuiFactory.C
 
 %files gui-recorder -f includelist-gui-recorder
 %{_libdir}/%{name}/libRecorder.*
 %{_libdir}/%{name}/libRecorder_rdict.pcm
-
-%if %{root7}
-%files gui-canvaspainter
-%{_libdir}/%{name}/libROOTCanvasPainter.*
-
-%files gui-webdisplay -f includelist-gui-webdisplay
-%{_libdir}/%{name}/libROOTWebDisplay.*
-%{_libdir}/%{name}/libROOTWebDisplay_rdict.pcm
-%endif
 
 %files hbook -f includelist-hist-hbook
 %{_bindir}/g2root
@@ -3020,12 +3036,6 @@ end
 %{_libdir}/%{name}/libHist.*
 %{_libdir}/%{name}/libHist_rdict.pcm
 %dir %{_includedir}/%{name}/v5
-
-%if %{root7}
-%files hist-draw -f includelist-hist-histdraw
-%{_libdir}/%{name}/libROOTHistDraw.*
-%{_libdir}/%{name}/libROOTHistDraw_rdict.pcm
-%endif
 
 %files hist-painter -f includelist-hist-histpainter
 %{_libdir}/%{name}/libHistPainter.*
@@ -3095,9 +3105,11 @@ end
 %files io-xml -f includelist-io-xml
 %{_libdir}/%{name}/libXMLIO.*
 %{_libdir}/%{name}/libXMLIO_rdict.pcm
+%{_datadir}/%{name}/plugins/TFile/P080_TXMLFile.C
+
+%files io-xmlparser -f includelist-io-xmlparser
 %{_libdir}/%{name}/libXMLParser.*
 %{_libdir}/%{name}/libXMLParser_rdict.pcm
-%{_datadir}/%{name}/plugins/TFile/P080_TXMLFile.C
 
 %files foam -f includelist-math-foam
 %{_libdir}/%{name}/libFoam.*
@@ -3191,6 +3203,10 @@ end
 %{_libdir}/%{name}/libUnuran_rdict.pcm
 %{_datadir}/%{name}/plugins/ROOT@@Math@@DistSampler/P010_TUnuranSampler.C
 
+%files vecops -f includelist-math-vecops
+%{_libdir}/%{name}/libROOTVecOps.*
+%{_libdir}/%{name}/libROOTVecOps_rdict.pcm
+
 %files memstat -f includelist-misc-memstat
 %{_libdir}/%{name}/libMemStat.*
 %{_libdir}/%{name}/libMemStat_rdict.pcm
@@ -3205,11 +3221,9 @@ end
 %{_datadir}/%{name}/pdg_table.txt
 %doc %{_pkgdocdir}/cfortran.doc
 
-%if %{pythia8}
 %files montecarlo-pythia8 -f includelist-montecarlo-pythia8
 %{_libdir}/%{name}/libEGPythia8.*
 %{_libdir}/%{name}/libEGPythia8_rdict.pcm
-%endif
 
 %files montecarlo-vmc -f includelist-montecarlo-vmc
 %{_libdir}/%{name}/libVMC.*
@@ -3266,7 +3280,10 @@ end
 %{_datadir}/%{name}/http
 %doc net/http/README.txt net/http/civetweb/*.md
 
-%if %{xrootd}
+%files net-httpsniff -f includelist-net-httpsniff
+%{_libdir}/%{name}/libRHTTPSniff.*
+%{_libdir}/%{name}/libRHTTPSniff_rdict.pcm
+
 %files netx -f includelist-netx
 %{_libdir}/%{name}/libNetx.*
 %{_libdir}/%{name}/libNetx_rdict.pcm
@@ -3275,21 +3292,24 @@ end
 %{_datadir}/%{name}/plugins/TFile/P100_TXNetFile.C
 %{_datadir}/%{name}/plugins/TFileStager/P010_TXNetFileStager.C
 %{_datadir}/%{name}/plugins/TSystem/P040_TXNetSystem.C
-%endif
 
 %files proof -f includelist-proof-proof
 %{_libdir}/%{name}/libProof.*
 %{_libdir}/%{name}/libProof_rdict.pcm
-%{_libdir}/%{name}/libProofDraw.*
-%{_libdir}/%{name}/libProofDraw_rdict.pcm
-%{_libdir}/%{name}/libProofPlayer.*
-%{_libdir}/%{name}/libProofPlayer_rdict.pcm
 %{_datadir}/%{name}/plugins/TChain/P010_TProofChain.C
 %{_datadir}/%{name}/plugins/TDataSetManager/P010_TDataSetManagerFile.C
 %{_datadir}/%{name}/plugins/TProof/P010_TProofCondor.C
 %{_datadir}/%{name}/plugins/TProof/P020_TProofSuperMaster.C
 %{_datadir}/%{name}/plugins/TProof/P030_TProofLite.C
 %{_datadir}/%{name}/plugins/TProof/P040_TProof.C
+%{_datadir}/%{name}/valgrind-root.supp
+%doc %{_pkgdocdir}/README.PROOF
+
+%files proof-player -f includelist-proof-proofplayer
+%{_libdir}/%{name}/libProofDraw.*
+%{_libdir}/%{name}/libProofDraw_rdict.pcm
+%{_libdir}/%{name}/libProofPlayer.*
+%{_libdir}/%{name}/libProofPlayer_rdict.pcm
 %{_datadir}/%{name}/plugins/TProofMonSender/P010_TProofMonSenderML.C
 %{_datadir}/%{name}/plugins/TProofMonSender/P020_TProofMonSenderSQL.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P010_TProofPlayer.C
@@ -3298,8 +3318,6 @@ end
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P040_TProofPlayerSlave.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P050_TProofPlayerSuperMaster.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P060_TProofPlayerLite.C
-%{_datadir}/%{name}/valgrind-root.supp
-%doc %{_pkgdocdir}/README.PROOF
 
 %files proof-bench -f includelist-proof-proofbench
 %{_libdir}/%{name}/libProofBench.*
@@ -3317,7 +3335,6 @@ end
 %{_datadir}/%{name}/plugins/TProofProgressLog/P010_TProofProgressLog.C
 %{_datadir}/%{name}/plugins/TSessionViewer/P010_TSessionViewer.C
 
-%if %{xrootd}
 %files xproof -f includelist-proof-proofx
 %{_bindir}/proofexecv
 %{_bindir}/xproofd
@@ -3328,7 +3345,6 @@ end
 %{_datadir}/%{name}/plugins/TProofMgr/P010_TXProofMgr.C
 %{_datadir}/%{name}/plugins/TProofServ/P010_TXProofServ.C
 %{_datadir}/%{name}/plugins/TSlave/P010_TXSlave.C
-%endif
 
 %files roofit -f includelist-roofit
 %{_libdir}/%{name}/libRooFit.*
@@ -3363,6 +3379,12 @@ end
 %{_libdir}/%{name}/libTMVA.*
 %{_libdir}/%{name}/libTMVA_rdict.pcm
 %dir %{_includedir}/%{name}/TMVA
+%dir %{_includedir}/%{name}/TMVA/DNN
+%dir %{_includedir}/%{name}/TMVA/DNN/Architectures
+%if %{tbb}
+%dir %{_includedir}/%{name}/TMVA/DNN/Architectures/Cpu
+%endif
+%dir %{_includedir}/%{name}/TMVA/DNN/Architectures/Reference
 %license tmva/doc/LICENSE
 
 %files tmva-python -f includelist-tmva-pymva
@@ -3381,6 +3403,10 @@ end
 %{_libdir}/%{name}/libTree.*
 %{_libdir}/%{name}/libTree_rdict.pcm
 %doc %{_pkgdocdir}/README.SELECTOR
+
+%files tree-dataframe -f includelist-tree-dataframe
+%{_libdir}/%{name}/libROOTDataFrame.*
+%{_libdir}/%{name}/libROOTDataFrame_rdict.pcm
 
 %files tree-player -f includelist-tree-treeplayer
 %{_libdir}/%{name}/libTreePlayer.*
@@ -3414,7 +3440,76 @@ end
 %{_bindir}/rootnb.exe
 %{_datadir}/%{name}/notebook
 
+%if %{root7}
+%files graf-gpadv7 -f includelist-graf2d-gpadv7
+%{_libdir}/%{name}/libROOTGpadv7.*
+%{_libdir}/%{name}/libROOTGpadv7_rdict.pcm
+
+%files graf-primitives -f includelist-graf2d-primitives
+%{_libdir}/%{name}/libROOTGraphicsPrimitives.*
+%{_libdir}/%{name}/libROOTGraphicsPrimitives_rdict.pcm
+
+%files gui-canvaspainter
+%{_libdir}/%{name}/libROOTCanvasPainter.*
+
+%files gui-fitpanelv7 -f includelist-gui-fitpanelv7
+%{_libdir}/%{name}/libROOTFitPanelv7.*
+%{_libdir}/%{name}/libROOTFitPanelv7_rdict.pcm
+
+%ifarch %{qt5_qtwebengine_arches}
+%files gui-qt5webdisplay
+%{_libdir}/%{name}/libROOTQt5WebDisplay.*
+%endif
+
+%files gui-webdisplay -f includelist-gui-webdisplay
+%{_libdir}/%{name}/libROOTWebDisplay.*
+%{_libdir}/%{name}/libROOTWebDisplay_rdict.pcm
+
+%files hist-draw -f includelist-hist-histdraw
+%{_libdir}/%{name}/libROOTHistDraw.*
+%{_libdir}/%{name}/libROOTHistDraw_rdict.pcm
+%endif
+
 %changelog
+* Sun Jul 01 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.00-1
+- Update to 6.14.00
+- Drop patches previously backported:
+  - root-doxygen-makefile.patch
+  - root-crash-fix.patch
+  - root-test-stress-32bit.patch
+- Drop patches accepted upstream:
+  - root-test-subdirs.patch
+  - root-test-fixes.patch
+  - root-out-of-bounds.patch
+  - root-doxygen-tilde.patch
+  - root-noinst.patch
+- Drop patches for issues fixed upstream:
+  - root-dont-link-jvm.patch
+  - root-system-pythia.patch
+- Drop patch root-urw-otf-hack.patch - broken font file no longer present
+- Drop Google Droid Sans Fallback font from EPEL 7 root-fonts package
+  (the font is now available in EPEL 7)
+- Use two more patches from Fedora's llvm5.0 package
+- New root-test-subdirs.patch patch for more instances of the same issue
+- Fix a test not setting cache file directory so that it works offline
+- Fix a compatibility issue with the EPEL 7 gtest version
+- Fix a missing include
+- Workaround optimization problems in the Geom library
+- New subpackages due to library splits
+  - root-tree-dataframe and root-vecops from root-tree-player
+  - root-net-httpsniff from root-net-http
+- New subpackages due to package splits
+  - root-gui-html from root-gui
+  - root-gui-qtgsi from root-gui-qt
+  - root-io-xmlparser from root-io-xml
+  - root-proof-player from root-proof
+- New ROOT 7 subpackages
+  - graf-gpadv7
+  - graf-primitives
+  - gui-fitpanelv7
+  - gui-qt5webdisplay
+- Rename root-guibuilder package to root-gui-builder
+
 * Sat Jun 30 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-5
 - Adjust Vavilov test for Fedora 29 ix86
 - Adapt to python 3.7

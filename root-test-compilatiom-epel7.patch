@@ -1,0 +1,27 @@
+From cefdf878609deb650b1e548d84efab2ab5c775ce Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 28 Jun 2018 07:38:07 +0200
+Subject: [PATCH] Fix test compilation on RHEL 7
+
+---
+ tree/dataframe/test/dataframe_resptr.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tree/dataframe/test/dataframe_resptr.cxx b/tree/dataframe/test/dataframe_resptr.cxx
+index 9fef6e54fcf..7c45f016d0c 100644
+--- a/tree/dataframe/test/dataframe_resptr.cxx
++++ b/tree/dataframe/test/dataframe_resptr.cxx
+@@ -45,11 +45,11 @@ TEST(RResultPtr, ImplConv)
+                 return (int)1;
+              }).Histo1D<int>("i");
+ 
+-   EXPECT_TRUE(m);
++   EXPECT_TRUE(m != nullptr);
+    EXPECT_FALSE(hasRun);
+ 
+    *m;
+ 
+-   EXPECT_TRUE(m);
++   EXPECT_TRUE(m != nullptr);
+    EXPECT_TRUE(hasRun);
+ }
