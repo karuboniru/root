@@ -1,4 +1,5 @@
-%global py3soabi %(%{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
+%global py3_soabi %([ -x %{__python3} ] && %{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
+%global py3_other_soabi %([ -x %{__python3_other} ] && %{__python3_other} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 
 %if %{?fedora}%{!?fedora:0} >= 24
 # libhdfs is available for all architectures for Fedora 24 and later.
@@ -28,12 +29,12 @@
 
 # Do not generate autoprovides for libJupyROOT.so
 # Note: the ones from libPyROOT.so we do want though
-%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch})/libJupyROOT\\.so$
+%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}|%{python3_other_sitearch})/libJupyROOT\\.so$
 
 Name:		root
 Version:	6.14.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -150,12 +151,13 @@ BuildRequires:	unixODBC-devel
 BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
 BuildRequires:	postgresql-devel
-BuildRequires:	python-devel
+BuildRequires:	python2-devel
 %if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	python3-devel
 %endif
 %if %{?rhel}%{!?rhel:0} == 7
 BuildRequires:	python34-devel
+BuildRequires:	python36-devel
 %endif
 BuildRequires:	qt4-devel
 %if %{root7}
@@ -321,13 +323,15 @@ Requires:	%{name}-graf-postscript%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 Requires:	%{name}-multiproc%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-dataframe%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
+Requires:	%{name}-vecops%{?_isa} = %{version}-%{release}
 #		Fonts
 Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(freesans)
@@ -414,25 +418,13 @@ transparent interface.
 
 %package -n python2-%{name}
 Summary:	Python extension for ROOT
-Provides:	root-python = %{version}-%{release}
-Obsoletes:	root-python < 6.08.00
+Provides:	%{name}-python = %{version}-%{release}
+Obsoletes:	%{name}-python < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description -n python2-%{name}
-This package contains the Python extension for ROOT. This package
-provide a Python interface to ROOT, and a ROOT interface to Python.
-
-%package -n python%{python3_pkgversion}-%{name}
-Summary:	Python extension for ROOT
-Provides:	root-python%{python3_pkgversion} = %{version}-%{release}
-Obsoletes:	root-python%{python3_pkgversion} < 6.08.00
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
-
-%description -n python%{python3_pkgversion}-%{name}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
@@ -456,6 +448,26 @@ Obsoletes:	%{name}-rootaas < 6.08.00
 %description -n python2-jupyroot
 The Jupyter kernel for the ROOT notebook.
 
+%package -n python2-jsmva
+Summary:	TMVA interface used by JupyROOT
+BuildArch:	noarch
+Requires:	%{name}-tmva = %{version}-%{release}
+
+%description -n python2-jsmva
+TMVA interface used by JupyROOT.
+
+%package -n python%{python3_pkgversion}-%{name}
+Summary:	Python extension for ROOT
+Provides:	%{name}-python%{python3_pkgversion} = %{version}-%{release}
+Obsoletes:	%{name}-python%{python3_pkgversion} < 6.08.00
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+
+%description -n python%{python3_pkgversion}-%{name}
+This package contains the Python extension for ROOT. This package
+provide a Python interface to ROOT, and a ROOT interface to Python.
+
 %package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
 Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
@@ -475,14 +487,6 @@ Requires:	python-jupyter-filesystem
 %description -n python%{python3_pkgversion}-jupyroot
 The Jupyter kernel for the ROOT notebook.
 
-%package -n python2-jsmva
-Summary:	TMVA interface used by JupyROOT
-BuildArch:	noarch
-Requires:	%{name}-tmva = %{version}-%{release}
-
-%description -n python2-jsmva
-TMVA interface used by JupyROOT.
-
 %package -n python%{python3_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
@@ -490,6 +494,37 @@ Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_pkgversion}-jsmva
 TMVA interface used by JupyROOT.
+
+%if %{?rhel}%{!?rhel:0} == 7
+%package -n python%{python3_other_pkgversion}-%{name}
+Summary:	Python extension for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+
+%description -n python%{python3_other_pkgversion}-%{name}
+This package contains the Python extension for ROOT. This package
+provide a Python interface to ROOT, and a ROOT interface to Python.
+
+%package -n python%{python3_other_pkgversion}-jupyroot
+Summary:	ROOT Jupyter kernel
+Requires:	python%{python3_other_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
+Requires:	python%{python3_other_pkgversion}-jsmva = %{version}-%{release}
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-notebook = %{version}-%{release}
+#		python-metakernel not available - some functionality missing
+
+%description -n python%{python3_other_pkgversion}-jupyroot
+The Jupyter kernel for the ROOT notebook.
+
+%package -n python%{python3_other_pkgversion}-jsmva
+Summary:	TMVA interface used by JupyROOT
+BuildArch:	noarch
+Requires:	%{name}-tmva = %{version}-%{release}
+
+%description -n python%{python3_other_pkgversion}-jsmva
+TMVA interface used by JupyROOT.
+%endif
 
 %package r
 Summary:	R interface for ROOT
@@ -1792,6 +1827,9 @@ sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
 
 # Build PyROOT for python 3
 cp -pr bindings/pyroot bindings/python
+%if %{?rhel}%{!?rhel:0} == 7
+cp -pr bindings/pyroot bindings/python3oth
+%endif
 
 # Work around missing libraries in Fedora's gmock packaging < 1.8.0
 if [ ! -r %{_libdir}/libgmock.so ] ; then
@@ -1978,6 +2016,9 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 
 # Build PyROOT for python 3 (prep)
 cp -pr bindings/pyroot bindings/python
+%if %{?rhel}%{!?rhel:0} == 7
+cp -pr bindings/pyroot bindings/python3oth
+%endif
 
 make %{?_smp_mflags}
 
@@ -1997,6 +2038,24 @@ sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
     -e 's!bindings/pyroot!bindings/python!g' -i `find bindings/python -type f`
 make %{?_smp_mflags} -f bindings/python/Makefile PyROOT JupyROOT
 mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
+
+%if %{?rhel}%{!?rhel:0} == 7
+mkdir python3oth
+mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
+sed 's!bindings/pyroot!bindings/python3oth!g' CMakeFiles/Makefile2.save \
+    > CMakeFiles/Makefile2
+py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
+py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
+py3i=`pkg-config --cflags-only-I python-%{python3_other_version} | sed -e 's/-I//' -e 's/\s*$//'`
+py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
+sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
+    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3_other},g' \
+    -e 's,lib/libPyROOT,python3oth/libPyROOT,g' \
+    -e 's,lib/libJupyROOT,python3oth/libJupyROOT,g' \
+    -e 's!bindings/pyroot!bindings/python3oth!g' -i `find bindings/python3oth -type f`
+make %{?_smp_mflags} -f bindings/python3oth/Makefile PyROOT JupyROOT
+mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
+%endif
 
 popd
 
@@ -2066,6 +2125,11 @@ rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
 mkdir -p %{buildroot}%{python2_sitelib}
 mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
 
+# Create empty .dist-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
+
 tmpdir=`mktemp -d`
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
@@ -2076,7 +2140,7 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python/cmake_install.cmake
 
 mkdir -p %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3soabi}.so
+   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
 mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
@@ -2093,13 +2157,38 @@ mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
 rm -rf $tmpdir
 
 # Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
-
 touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
 touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
 touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
+
+%if %{?rhel}%{!?rhel:0} == 7
+tmpdir=`mktemp -d`
+
+DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3oth/cmake_install.cmake
+
+mkdir -p %{buildroot}%{python3_other_sitearch}
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
+   %{buildroot}%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
+mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
+   %{buildroot}%{python3_other_sitearch}/libJupyROOT.so
+mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_other_sitearch}
+mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_other_sitearch}
+rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
+rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
+mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_other_sitearch}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
+
+mkdir -p %{buildroot}%{python3_other_sitelib}
+mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_other_sitelib}
+
+rm -rf $tmpdir
+
+# Create empty .dist-info files so that rpm auto-generates provides
+touch %{buildroot}%{python3_other_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python3_other_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.dist-info
+%endif
 
 # Put jupyter stuff in the right places
 mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
@@ -2113,6 +2202,13 @@ cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 sed -e 's/ROOT C++/& (Python 3)/' -e 's!python!%{__python3}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
+
+%if %{?rhel}%{!?rhel:0} == 7
+cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
+   %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
+sed -e 's/ROOT C++/& (Python %{python3_other_version})/' -e 's!python!%{__python3_other}!' \
+    -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot/kernel.json
+%endif
 
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/custom
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/html
@@ -2408,7 +2504,7 @@ fi
 /sbin/ldconfig
 
 %preun -n python2-%{name}
-if [ $1 = 0 ]; then
+if [ $1 = 0 ] ; then
     %{_sbindir}/update-alternatives --remove \
 	libPyROOT.so %{python2_sitearch}/libPyROOT.so
 fi
@@ -2430,20 +2526,25 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
     sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
 	-i /var/lib/alternatives/libPyROOT.so
     for alt in `grep python3 /var/lib/alternatives/libPyROOT.so` ; do
-	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3soabi}.so" ] ; then
+%if %{?rhel}%{!?rhel:0} == 7
+	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] && \
+	   [ "$alt" != "%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so" ] ; then
+%else
+	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] ; then
+%endif
 	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
 	fi
     done
 fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so 10
 /sbin/ldconfig
 
 %preun -n python%{python3_pkgversion}-%{name}
-if [ $1 = 0 ]; then
+if [ $1 = 0 ] ; then
     %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so
+	libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so
 fi
 
 %postun -n python%{python3_pkgversion}-%{name} -p /sbin/ldconfig
@@ -2453,8 +2554,36 @@ fi
 # for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so 10
 /sbin/ldconfig
+
+%if %{?rhel}%{!?rhel:0} == 7
+%post -n python%{python3_other_pkgversion}-%{name}
+if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
+    grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
+	/var/lib/alternatives/libPyROOT.so || \
+    sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
+	-i /var/lib/alternatives/libPyROOT.so
+    for alt in `grep python3 /var/lib/alternatives/libPyROOT.so` ; do
+	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] && \
+	   [ "$alt" != "%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so" ] ; then
+	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
+	fi
+    done
+fi
+%{_sbindir}/update-alternatives --install \
+    %{_libdir}/%{name}/libPyROOT.so.%{version} \
+    libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so 5
+/sbin/ldconfig
+
+%preun -n python%{python3_other_pkgversion}-%{name}
+if [ $1 = 0 ] ; then
+    %{_sbindir}/update-alternatives --remove \
+	libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
+fi
+
+%postun -n python%{python3_other_pkgversion}-%{name} -p /sbin/ldconfig
+%endif
 
 %post notebook
 mkdir -p /etc/jupyter
@@ -2837,25 +2966,29 @@ end
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
 
-%files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
-%{_libdir}/%{name}/libPyROOT.rootmap
-%{_libdir}/%{name}/libPyROOT.so
-%{_libdir}/%{name}/libPyROOT.so.%{libversion}
-%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python3_sitearch}/libPyROOT.%{py3soabi}.so
-%{python3_sitearch}/ROOT.py
-%{python3_sitearch}/ROOT-*.dist-info
-%{python3_sitearch}/cppyy.py
-%{python3_sitearch}/_pythonization.py
-%{python3_sitearch}/__pycache__
-
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
 %{python2_sitearch}/JupyROOT-*.dist-info
 %{python2_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python2-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
+
+%files -n python2-jsmva
+%{python2_sitelib}/JsMVA
+%{python2_sitelib}/JsMVA-*.dist-info
+
+%files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
+%{_libdir}/%{name}/libPyROOT.rootmap
+%{_libdir}/%{name}/libPyROOT.so
+%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
+%{_libdir}/%{name}/libPyROOT_rdict.pcm
+%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
+%{python3_sitearch}/ROOT.py
+%{python3_sitearch}/ROOT-*.dist-info
+%{python3_sitearch}/cppyy.py
+%{python3_sitearch}/_pythonization.py
+%{python3_sitearch}/__pycache__
 
 %files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
@@ -2864,13 +2997,35 @@ end
 %{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
-%files -n python2-jsmva
-%{python2_sitelib}/JsMVA
-%{python2_sitelib}/JsMVA-*.dist-info
-
 %files -n python%{python3_pkgversion}-jsmva
 %{python3_sitelib}/JsMVA
 %{python3_sitelib}/JsMVA-*.dist-info
+
+%if %{?rhel}%{!?rhel:0} == 7
+%files -n python%{python3_other_pkgversion}-%{name} -f includelist-bindings-pyroot
+%{_libdir}/%{name}/libPyROOT.rootmap
+%{_libdir}/%{name}/libPyROOT.so
+%{_libdir}/%{name}/libPyROOT.so.%{libversion}
+%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
+%{_libdir}/%{name}/libPyROOT_rdict.pcm
+%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
+%{python3_other_sitearch}/ROOT.py
+%{python3_other_sitearch}/ROOT-*.dist-info
+%{python3_other_sitearch}/cppyy.py
+%{python3_other_sitearch}/_pythonization.py
+%{python3_other_sitearch}/__pycache__
+
+%files -n python%{python3_other_pkgversion}-jupyroot
+%{python3_other_sitearch}/JupyROOT
+%{python3_other_sitearch}/JupyROOT-*.dist-info
+%{python3_other_sitearch}/libJupyROOT.so
+%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
+%doc bindings/pyroot/JupyROOT/README.md
+
+%files -n python%{python3_other_pkgversion}-jsmva
+%{python3_other_sitelib}/JsMVA
+%{python3_other_sitelib}/JsMVA-*.dist-info
+%endif
 
 %files r -f includelist-bindings-r
 %{_libdir}/%{name}/libRInterface.*
@@ -3305,6 +3460,11 @@ end
 %{_datadir}/%{name}/valgrind-root.supp
 %doc %{_pkgdocdir}/README.PROOF
 
+%files proof-bench -f includelist-proof-proofbench
+%{_libdir}/%{name}/libProofBench.*
+%{_libdir}/%{name}/libProofBench_rdict.pcm
+%{_datadir}/%{name}/proof
+
 %files proof-player -f includelist-proof-proofplayer
 %{_libdir}/%{name}/libProofDraw.*
 %{_libdir}/%{name}/libProofDraw_rdict.pcm
@@ -3318,11 +3478,6 @@ end
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P040_TProofPlayerSlave.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P050_TProofPlayerSuperMaster.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P060_TProofPlayerLite.C
-
-%files proof-bench -f includelist-proof-proofbench
-%{_libdir}/%{name}/libProofBench.*
-%{_libdir}/%{name}/libProofBench_rdict.pcm
-%{_datadir}/%{name}/proof
 
 %files proof-pq2
 %{_bindir}/pq2*
@@ -3471,6 +3626,9 @@ end
 %endif
 
 %changelog
+* Thu Jul 12 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.00-2
+- Add Python 3.6 packages for EPEL 7
+
 * Sun Jul 01 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.00-1
 - Update to 6.14.00
 - Drop patches previously backported:
