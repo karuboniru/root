@@ -34,7 +34,7 @@
 Name:		root
 Version:	6.14.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3626,6 +3626,9 @@ end
 %endif
 
 %changelog
+* Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 6.14.00-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
+
 * Thu Jul 12 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.00-2
 - Add Python 3.6 packages for EPEL 7
 
