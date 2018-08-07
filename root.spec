@@ -1,3 +1,15 @@
+%if %{?fedora}%{!?fedora:0} >= 29 || %{?rhel}%{!?rhel:0} >= 8
+%global py3default 1
+%global py2prio 10
+%global py3prio 20
+%global __pythondef %{__python3}
+%else
+%global py3default 0
+%global py2prio 20
+%global py3prio 10
+%global __pythondef %{__python2}
+%endif
+
 %global py3_soabi %([ -x %{__python3} ] && %{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 %global py3_other_soabi %([ -x %{__python3_other} ] && %{__python3_other} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 
@@ -29,12 +41,12 @@
 
 # Do not generate autoprovides for libJupyROOT.so
 # Note: the ones from libPyROOT.so we do want though
-%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}|%{python3_other_sitearch})/libJupyROOT\\.so$
+%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.14.00
+Version:	6.14.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -104,6 +116,9 @@ Patch17:	%{name}-test-compilatiom-epel7.patch
 Patch18:	%{name}-missing-header.patch
 #		Optimization issue in Geom library
 Patch19:	%{name}-ix32-geom-opt.patch
+#		Missing libcrypto dependency for libSrvAuth
+#		https://github.com/root-project/root/pull/2436
+Patch20:	%{name}-crypto.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -198,7 +213,11 @@ BuildRequires:	graphviz-devel
 BuildRequires:	expat-devel
 BuildRequires:	pythia8-devel >= 8.1.80
 BuildRequires:	blas-devel
-BuildRequires:	numpy
+%if %{py3default}
+BuildRequires:	python3-numpy
+%else
+BuildRequires:	python2-numpy
+%endif
 BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	yuicompressor
@@ -1576,6 +1595,11 @@ Summary:	Toolkit for multivariate data analysis (Python)
 License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tmva%{?_isa} = %{version}-%{release}
+%if %{py3default}
+Requires:	python3-numpy
+%else
+Requires:	python2-numpy
+%endif
 
 %description tmva-python
 Python integration with TMVA.
@@ -1676,7 +1700,11 @@ An algorithm to unfold distributions from detector to truth level.
 %package cli
 Summary:	ROOT command line utilities
 BuildArch:	noarch
+%if %{py3default}
+Requires:	python3-%{name} = %{version}-%{release}
+%else
 Requires:	python2-%{name} = %{version}-%{release}
+%endif
 
 %description cli
 The ROOT command line utilities is a set of scripts for common tasks
@@ -1782,6 +1810,7 @@ This package contains an histogram drawing extension for ROOT 7.
 %patch17 -p1
 %patch18 -p1
 %patch19 -p1
+%patch20 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1825,9 +1854,15 @@ chmod -x interpreter/llvm/src/lib/Target/X86/X86EvexToVex.cpp
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
 
+%if %{py3default}
+# Build PyROOT for python 2
+cp -pr bindings/pyroot bindings/python2
+%else
 # Build PyROOT for python 3
-cp -pr bindings/pyroot bindings/python
+cp -pr bindings/pyroot bindings/python3
+%endif
 %if %{?rhel}%{!?rhel:0} == 7
+# Build PyROOT for python 3.6
 cp -pr bindings/pyroot bindings/python3oth
 %endif
 
@@ -1966,7 +2001,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dpythia6:BOOL=OFF \
        -Dpythia8:BOOL=ON \
        -Dpython:BOOL=ON \
-       -DPYTHON_EXECUTABLE:PATH=%{__python2} \
+       -DPYTHON_EXECUTABLE:PATH=%{__pythondef} \
        -Dqt:BOOL=ON \
        -Dqtgsi:BOOL=ON \
 %ifarch %{qt5_qtwebengine_arches}
@@ -2014,18 +2049,46 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Drootbench:BOOL=OFF \
        ..
 
+%if %{py3default}
+# Build PyROOT for python 2 (prep)
+cp -pr bindings/pyroot bindings/python2
+%else
 # Build PyROOT for python 3 (prep)
-cp -pr bindings/pyroot bindings/python
+cp -pr bindings/pyroot bindings/python3
+%endif
 %if %{?rhel}%{!?rhel:0} == 7
+# Build PyROOT for python 3.6 (prep)
 cp -pr bindings/pyroot bindings/python3oth
 %endif
 
 make %{?_smp_mflags}
 
-# Build PyROOT for python 3
-mkdir python
+%if %{py3default}
+
+# Build PyROOT for python 2
+mkdir python2
 mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
-sed 's!bindings/pyroot!bindings/python!g' CMakeFiles/Makefile2.save \
+sed 's!bindings/pyroot!bindings/python2!g' CMakeFiles/Makefile2.save \
+    > CMakeFiles/Makefile2
+py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
+py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
+py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
+py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
+sed -e "s,${py3i},${py2i},g" -e "s,-l${py3l},-l${py2l},g" \
+    -e "s,lib${py3l},lib${py2l},g" -e 's,%{__python3},%{__python2},g' \
+    -e 's,lib/libPyROOT,python2/libPyROOT,g' \
+    -e 's,lib/libJupyROOT,python2/libJupyROOT,g' \
+    -e 's!bindings/pyroot!bindings/python2!g' \
+    -i `find bindings/python2 -type f`
+make %{?_smp_mflags} -f bindings/python2/Makefile PyROOT JupyROOT
+mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
+
+%else
+
+# Build PyROOT for python 3
+mkdir python3
+mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
+sed 's!bindings/pyroot!bindings/python3!g' CMakeFiles/Makefile2.save \
     > CMakeFiles/Makefile2
 py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
 py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
@@ -2033,13 +2096,18 @@ py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
 py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
     -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3},g' \
-    -e 's,lib/libPyROOT,python/libPyROOT,g' \
-    -e 's,lib/libJupyROOT,python/libJupyROOT,g' \
-    -e 's!bindings/pyroot!bindings/python!g' -i `find bindings/python -type f`
-make %{?_smp_mflags} -f bindings/python/Makefile PyROOT JupyROOT
+    -e 's,lib/libPyROOT,python3/libPyROOT,g' \
+    -e 's,lib/libJupyROOT,python3/libJupyROOT,g' \
+    -e 's!bindings/pyroot!bindings/python3!g' \
+    -i `find bindings/python3 -type f`
+make %{?_smp_mflags} -f bindings/python3/Makefile PyROOT JupyROOT
 mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
 
+%endif
+
 %if %{?rhel}%{!?rhel:0} == 7
+
+# Build PyROOT for python 3.6
 mkdir python3oth
 mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
 sed 's!bindings/pyroot!bindings/python3oth!g' CMakeFiles/Makefile2.save \
@@ -2052,9 +2120,11 @@ sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
     -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3_other},g' \
     -e 's,lib/libPyROOT,python3oth/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python3oth/libJupyROOT,g' \
-    -e 's!bindings/pyroot!bindings/python3oth!g' -i `find bindings/python3oth -type f`
+    -e 's!bindings/pyroot!bindings/python3oth!g' \
+    -i `find bindings/python3oth -type f`
 make %{?_smp_mflags} -f bindings/python3oth/Makefile PyROOT JupyROOT
 mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
+
 %endif
 
 popd
@@ -2109,6 +2179,66 @@ mkdir -p %{buildroot}%{_datadir}/%{name}/cli
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
    %{buildroot}%{_datadir}/%{name}/cli
 
+%if %{py3default}
+%py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/cli
+%endif
+
+%if %{py3default}
+
+# Move the python modules to sitearch/sitelib
+mkdir -p %{buildroot}%{python3_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
+mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libJupyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
+rm %{buildroot}%{_libdir}/%{name}/JupyROOT/README.md
+rm -rf %{buildroot}%{_libdir}/%{name}/JupyROOT/src
+mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_sitearch}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
+
+mkdir -p %{buildroot}%{python3_sitelib}
+mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
+
+# Create empty .dist-info files so that rpm auto-generates provides
+touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
+
+tmpdir=`mktemp -d`
+
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
+DESTDIR=$tmpdir cmake -P builddir/bindings/python2/cmake_install.cmake
+%else
+DESTDIR=$tmpdir cmake3 -P builddir/bindings/python2/cmake_install.cmake
+%endif
+
+mkdir -p %{buildroot}%{python2_sitearch}
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libPyROOT.so
+mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libJupyROOT.so
+mv $tmpdir%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
+rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
+rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
+mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python2_sitearch}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
+rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
+
+mkdir -p %{buildroot}%{python2_sitelib}
+mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
+
+rm -rf $tmpdir
+
+# Create empty .dist-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
+
+%else
+
 # Move the python modules to sitearch/sitelib
 mkdir -p %{buildroot}%{python2_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
@@ -2133,9 +2263,9 @@ touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
 tmpdir=`mktemp -d`
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
-DESTDIR=$tmpdir cmake -P builddir/bindings/python/cmake_install.cmake
+DESTDIR=$tmpdir cmake -P builddir/bindings/python3/cmake_install.cmake
 %else
-DESTDIR=$tmpdir cmake3 -P builddir/bindings/python/cmake_install.cmake
+DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3/cmake_install.cmake
 %endif
 
 mkdir -p %{buildroot}%{python3_sitearch}
@@ -2161,7 +2291,10 @@ touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
 touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
 touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
 
+%endif
+
 %if %{?rhel}%{!?rhel:0} == 7
+
 tmpdir=`mktemp -d`
 
 DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3oth/cmake_install.cmake
@@ -2188,6 +2321,7 @@ rm -rf $tmpdir
 touch %{buildroot}%{python3_other_sitearch}/ROOT-%{version}.dist-info
 touch %{buildroot}%{python3_other_sitearch}/JupyROOT-%{version}.dist-info
 touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.dist-info
+
 %endif
 
 # Put jupyter stuff in the right places
@@ -2236,6 +2370,7 @@ mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
+    -e 's!/usr/bin/env python3!%{__python3}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2249,12 +2384,13 @@ sed -e 's!/usr/bin/env python2!%{__python2}!' \
        %{buildroot}%{_bindir}/rootrm \
        %{buildroot}%{_bindir}/rootslimtree
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
+    -e 's!/usr/bin/env python3!%{__python3}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
 sed -e '/^\#!/d' \
     -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py \
        %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py \
        %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
-sed -e 's!/usr/bin/env python!%{__python2}!' \
+sed -e 's!/usr/bin/env python!%{__pythondef}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
@@ -2336,6 +2472,21 @@ mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d
 echo %{_libdir}/%{name} > \
      %{buildroot}%{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
 
+# Make ROOTConfig-targets.cmake not error on missing files to work better with
+# subpackages
+%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
+%global pkgmgr dnf
+%else
+%global pkgmgr yum
+%endif
+sed -e '/FATAL.*import/i\      message(WARNING "The imported target \\"\${target}\\" references the file\
+   \\"\${file}\\"\
+but this file does not exist.  If this target is used you need to install the package that provides this file\
+   %{pkgmgr} install \${file}\
+If this target is not used this warning can be ignored.")' \
+    -e '/FATAL.*import/,/)/d' \
+    -i %{buildroot}%{_datadir}/%{name}/cmake/ROOTConfig-targets.cmake
+
 # Rename to avoid name clashes
 cp -p interpreter/llvm/src/CREDITS.TXT interpreter/llvm/src/llvm-CREDITS.TXT
 cp -p interpreter/llvm/src/LICENSE.TXT interpreter/llvm/src/llvm-LICENSE.TXT
@@ -2349,7 +2500,7 @@ ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
     LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
     PYTHONPATH=${PWD}/../../builddir/lib \
-    %{__python2} ../../tutorials/pyroot/hsimple.py
+    %{__pythondef} ../../tutorials/pyroot/hsimple.py
 ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
     LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
@@ -2500,7 +2651,7 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
 fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python2_sitearch}/libPyROOT.so 20
+    libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
 /sbin/ldconfig
 
 %preun -n python2-%{name}
@@ -2516,7 +2667,7 @@ fi
 # for python2-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python2_sitearch}/libPyROOT.so 20
+    libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
 /sbin/ldconfig
 
 %post -n python%{python3_pkgversion}-%{name}
@@ -2538,7 +2689,7 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
 fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
 /sbin/ldconfig
 
 %preun -n python%{python3_pkgversion}-%{name}
@@ -2554,7 +2705,7 @@ fi
 # for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so 10
+    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
 /sbin/ldconfig
 
 %if %{?rhel}%{!?rhel:0} == 7
@@ -2988,7 +3139,7 @@ end
 %{python3_sitearch}/ROOT-*.dist-info
 %{python3_sitearch}/cppyy.py
 %{python3_sitearch}/_pythonization.py
-%{python3_sitearch}/__pycache__
+%{python3_sitearch}/__pycache__/*
 
 %files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
@@ -3013,7 +3164,7 @@ end
 %{python3_other_sitearch}/ROOT-*.dist-info
 %{python3_other_sitearch}/cppyy.py
 %{python3_other_sitearch}/_pythonization.py
-%{python3_other_sitearch}/__pycache__
+%{python3_other_sitearch}/__pycache__/*
 
 %files -n python%{python3_other_pkgversion}-jupyroot
 %{python3_other_sitearch}/JupyROOT
@@ -3626,6 +3777,16 @@ end
 %endif
 
 %changelog
+* Mon Aug 06 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.02-1
+- Update to 6.14.02
+- Make python3 the preferred python for Fedora 29+:
+  - Give python3 libPyROOT higher priority than python2 libPyROOT
+  - The python scripts in root-cli use python3-root
+  - Let root-tmva-python use python3-numpy
+- Fix build issue with undefined symbols in libSrvAuth
+- Make ROOTConfig-targets.cmake not error on missing files to work better with
+  subpackages
+
 * Sat Jul 14 2018 Fedora Release Engineering <releng@fedoraproject.org> - 6.14.00-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_29_Mass_Rebuild
 

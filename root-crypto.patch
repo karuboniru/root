@@ -1,0 +1,36 @@
+From 40ffee7443df59a9702be993839fe6d7c3a6c1f1 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 3 Aug 2018 11:05:24 +0200
+Subject: [PATCH] Add missing libcrypto for undefined references
+
+---
+ net/rootd/CMakeLists.txt    | 3 ++-
+ net/rpdutils/CMakeLists.txt | 5 +++--
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/net/rootd/CMakeLists.txt b/net/rootd/CMakeLists.txt
+index 67d1cd05f1b..bc49e5611f7 100644
+--- a/net/rootd/CMakeLists.txt
++++ b/net/rootd/CMakeLists.txt
+@@ -4,6 +4,7 @@
+ ############################################################################
+ 
+ ROOT_EXECUTABLE(rootd *.cxx ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c
+-  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES})
++  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
++  BUILTINS OPENSSL)
+ 
+ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../rpdutils/res)
+diff --git a/net/rpdutils/CMakeLists.txt b/net/rpdutils/CMakeLists.txt
+index 6a66e4aee7f..ac427424193 100644
+--- a/net/rpdutils/CMakeLists.txt
++++ b/net/rpdutils/CMakeLists.txt
+@@ -40,5 +40,6 @@ set_property(TARGET rpdutil PROPERTY POSITION_INDEPENDENT_CODE ON)
+ add_dependencies(rpdutil move_headers)
+ 
+ ROOT_LINKER_LIBRARY(SrvAuth rpdutils.cxx ssh.cxx
+-                    LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} DEPENDENCIES Net)
+-
++  LIBRARIES rpdutil rsa ${GLOBUS_LIBRARIES} ${OPENSSL_LIBRARIES}
++  DEPENDENCIES Net
++  BUILTINS OPENSSL)
