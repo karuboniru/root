@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.14.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3777,6 +3777,9 @@ end
 %endif
 
 %changelog
+* Thu Aug 23 2018 Nicolas Chauvet <kwizart@gmail.com> - 6.14.02-2
+- Rebuilt for glew 2.1.0
+
 * Mon Aug 06 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.02-1
 - Update to 6.14.02
 - Make python3 the preferred python for Fedora 29+:
