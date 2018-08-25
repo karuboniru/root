@@ -44,9 +44,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.14.02
+Version:	6.14.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -102,15 +102,14 @@ Patch13:	%{name}-stressgraphics-ref.patch
 #		Adjust Vavilov test for Fedora 29 ix86
 #		https://github.com/root-project/root/pull/2273
 Patch14:	%{name}-adjust-allowed-test-difference-for-32-bit-ix86.patch
-#		Adapt to python 3.7
-#		https://github.com/root-project/root/pull/2276
-Patch15:	%{name}-python-3.7.patch
+#		Don't install minicern static library
+Patch15:	%{name}-dont-install-minicern.patch
 #		Set Cache File Dir
 #		https://github.com/root-project/root/pull/2246
 Patch16:	%{name}-set-cache-file-dir.patch
 #		Fix test compilation on EPEL 7
 #		https://github.com/root-project/root/pull/2263
-Patch17:	%{name}-test-compilatiom-epel7.patch
+Patch17:	%{name}-test-compilation-epel7.patch
 #		Missing include for std::shuffle
 #		https://github.com/root-project/root/pull/2267
 Patch18:	%{name}-missing-header.patch
@@ -3777,6 +3776,10 @@ end
 %endif
 
 %changelog
+* Fri Aug 24 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.04-1
+- Update to 6.14.04
+- Drop patch accepted upstream: root-python-3.7.patch
+
 * Thu Aug 23 2018 Nicolas Chauvet <kwizart@gmail.com> - 6.14.02-2
 - Rebuilt for glew 2.1.0
 

@@ -1,0 +1,13 @@
+diff --git a/misc/minicern/CMakeLists.txt b/misc/minicern/CMakeLists.txt
+index bae895f701..8d721f97ab 100644
+--- a/misc/minicern/CMakeLists.txt
++++ b/misc/minicern/CMakeLists.txt
+@@ -2,7 +2,7 @@
+ # CMakeLists.txt file for building ROOT misc/minicern package
+ ############################################################################
+ 
+-ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC)
++ROOT_LINKER_LIBRARY(minicern *.c *.f TYPE STATIC NOINSTALL)
+ set_property(TARGET minicern PROPERTY POSITION_INDEPENDENT_CODE ON)
+ target_link_libraries(minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
+ 
