@@ -164,7 +164,7 @@ BuildRequires:	sqlite-devel
 BuildRequires:	unixODBC-devel
 BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
-BuildRequires:	postgresql-devel
+BuildRequires:	libpq-devel
 BuildRequires:	python2-devel
 %if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	python3-devel
