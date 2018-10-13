@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.14.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3776,6 +3776,9 @@ end
 %endif
 
 %changelog
+* Sat Oct 13 2018 Jerry James <loganjerry@gmail.com> - 6.14.04-2
+- Rebuild for tbb 2019_U1
+
 * Fri Aug 24 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.04-1
 - Update to 6.14.04
 - Drop patch accepted upstream: root-python-3.7.patch
