@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.14.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -118,6 +118,10 @@ Patch19:	%{name}-ix32-geom-opt.patch
 #		Missing libcrypto dependency for libSrvAuth
 #		https://github.com/root-project/root/pull/2436
 Patch20:	%{name}-crypto.patch
+#		Fix crash in TBrowser when root-gui-html is not installed
+#		https://sft.its.cern.ch/jira/browse/ROOT-9640
+#		Backported from git master
+Patch21:	%{name}-TGHtmlBrowser-crash.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -164,7 +168,11 @@ BuildRequires:	sqlite-devel
 BuildRequires:	unixODBC-devel
 BuildRequires:	mesa-libGL-devel
 BuildRequires:	mesa-libGLU-devel
+%if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	libpq-devel
+%else
+BuildRequires:	postgresql-devel
+%endif
 BuildRequires:	python2-devel
 %if %{?fedora}%{!?fedora:0} >= 15 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	python3-devel
@@ -1072,7 +1080,8 @@ a generalized vector library.
 %package mathcore
 Summary:	Core mathematics library for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-#		Dynamic dependency
+#		Dynamic dependencies
+Requires:	%{name}-mathmore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
 
 %description mathcore
@@ -1810,6 +1819,7 @@ This package contains an histogram drawing extension for ROOT 7.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2201,10 +2211,10 @@ rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
 mkdir -p %{buildroot}%{python3_sitelib}
 mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
 
-# Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.egg-info
 
 tmpdir=`mktemp -d`
 
@@ -2231,10 +2241,10 @@ mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
 
 rm -rf $tmpdir
 
-# Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.egg-info
 
 %else
 
@@ -2254,10 +2264,10 @@ rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
 mkdir -p %{buildroot}%{python2_sitelib}
 mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
 
-# Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.dist-info
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.egg-info
 
 tmpdir=`mktemp -d`
 
@@ -2285,10 +2295,10 @@ mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
 
 rm -rf $tmpdir
 
-# Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.dist-info
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.egg-info
 
 %endif
 
@@ -2316,10 +2326,10 @@ mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_other_sitelib}
 
 rm -rf $tmpdir
 
-# Create empty .dist-info files so that rpm auto-generates provides
-touch %{buildroot}%{python3_other_sitearch}/ROOT-%{version}.dist-info
-touch %{buildroot}%{python3_other_sitearch}/JupyROOT-%{version}.dist-info
-touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.dist-info
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python3_other_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python3_other_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.egg-info
 
 %endif
 
@@ -3112,20 +3122,20 @@ end
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
 %{python2_sitearch}/libPyROOT.so
 %{python2_sitearch}/ROOT.py*
-%{python2_sitearch}/ROOT-*.dist-info
+%{python2_sitearch}/ROOT-*.egg-info
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
 
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
-%{python2_sitearch}/JupyROOT-*.dist-info
+%{python2_sitearch}/JupyROOT-*.egg-info
 %{python2_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python2-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python2-jsmva
 %{python2_sitelib}/JsMVA
-%{python2_sitelib}/JsMVA-*.dist-info
+%{python2_sitelib}/JsMVA-*.egg-info
 
 %files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
@@ -3135,21 +3145,21 @@ end
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
 %{python3_sitearch}/libPyROOT.%{py3_soabi}.so
 %{python3_sitearch}/ROOT.py
-%{python3_sitearch}/ROOT-*.dist-info
+%{python3_sitearch}/ROOT-*.egg-info
 %{python3_sitearch}/cppyy.py
 %{python3_sitearch}/_pythonization.py
 %{python3_sitearch}/__pycache__/*
 
 %files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
-%{python3_sitearch}/JupyROOT-*.dist-info
+%{python3_sitearch}/JupyROOT-*.egg-info
 %{python3_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python%{python3_pkgversion}-jsmva
 %{python3_sitelib}/JsMVA
-%{python3_sitelib}/JsMVA-*.dist-info
+%{python3_sitelib}/JsMVA-*.egg-info
 
 %if %{?rhel}%{!?rhel:0} == 7
 %files -n python%{python3_other_pkgversion}-%{name} -f includelist-bindings-pyroot
@@ -3160,21 +3170,21 @@ end
 %{_libdir}/%{name}/libPyROOT_rdict.pcm
 %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
 %{python3_other_sitearch}/ROOT.py
-%{python3_other_sitearch}/ROOT-*.dist-info
+%{python3_other_sitearch}/ROOT-*.egg-info
 %{python3_other_sitearch}/cppyy.py
 %{python3_other_sitearch}/_pythonization.py
 %{python3_other_sitearch}/__pycache__/*
 
 %files -n python%{python3_other_pkgversion}-jupyroot
 %{python3_other_sitearch}/JupyROOT
-%{python3_other_sitearch}/JupyROOT-*.dist-info
+%{python3_other_sitearch}/JupyROOT-*.egg-info
 %{python3_other_sitearch}/libJupyROOT.so
 %{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
 %doc bindings/pyroot/JupyROOT/README.md
 
 %files -n python%{python3_other_pkgversion}-jsmva
 %{python3_other_sitelib}/JsMVA
-%{python3_other_sitelib}/JsMVA-*.dist-info
+%{python3_other_sitelib}/JsMVA-*.egg-info
 %endif
 
 %files r -f includelist-bindings-r
@@ -3776,6 +3786,12 @@ end
 %endif
 
 %changelog
+* Thu Oct 25 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.04-3
+- Fix crash in TBrowser when root-gui-html is not installed
+- Use empty .egg-info files instead of empty .dist-info files to make
+  virtualenv happy
+- Add Requires on root-mathmore to root-mathcore (for default integrator)
+
 * Sat Oct 13 2018 Jerry James <loganjerry@gmail.com> - 6.14.04-2
 - Rebuild for tbb 2019_U1
 
@@ -3840,6 +3856,7 @@ end
   - gui-fitpanelv7
   - gui-qt5webdisplay
 - Rename root-guibuilder package to root-gui-builder
+- Create empty .dist-info files so that rpm auto-generates provides
 
 * Sat Jun 30 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.12.06-5
 - Adjust Vavilov test for Fedora 29 ix86
