@@ -44,9 +44,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.14.04
+Version:	6.14.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -118,10 +118,9 @@ Patch19:	%{name}-ix32-geom-opt.patch
 #		Missing libcrypto dependency for libSrvAuth
 #		https://github.com/root-project/root/pull/2436
 Patch20:	%{name}-crypto.patch
-#		Fix crash in TBrowser when root-gui-html is not installed
-#		https://sft.its.cern.ch/jira/browse/ROOT-9640
-#		Backported from git master
-Patch21:	%{name}-TGHtmlBrowser-crash.patch
+#		Let clang ignore some gcc options it hasn't implemented
+#		https://github.com/root-project/root/pull/2933
+Patch21:	%{name}-clang-ignore-gcc-options.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -373,6 +372,12 @@ Requires:	urw-fonts
 Requires:	font(droidsansfallback)
 Obsoletes:	%{name}-ruby < 6.00.00
 Obsoletes:	%{name}-vdt < 6.10.00
+%if %{py3default}
+#		Don't build python2-jupyroot/jsmva packages for Fedora >= 29
+Obsoletes:	python2-jupyroot < %{version}-%{release}
+Obsoletes:	python2-jsmva < %{version}-%{release}
+Obsoletes:	%{name}-rootaas < 6.08.00
+%endif
 
 %description core
 This package contains the core libraries used by ROOT: libCore, libNew,
@@ -454,6 +459,7 @@ Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 This package contains the Python extension for ROOT. This package
 provide a Python interface to ROOT, and a ROOT interface to Python.
 
+%if ! %{py3default}
 %package -n python2-jupyroot
 Summary:	ROOT Jupyter kernel
 Requires:	python2-%{name}%{?_isa} = %{version}-%{release}
@@ -481,6 +487,7 @@ Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python2-jsmva
 TMVA interface used by JupyROOT.
+%endif
 
 %package -n python%{python3_pkgversion}-%{name}
 Summary:	Python extension for ROOT
@@ -1650,7 +1657,7 @@ Requires:	%{name}-net%{?_isa} = %{version}-%{release}
 This package contains the Tree library for ROOT.
 
 %package tree-dataframe
-Summary:	A high level interfae to ROOT trees
+Summary:	A high level interface to ROOT trees
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
@@ -1659,7 +1666,7 @@ Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 Obsoletes:	%{name}-tree-player < 6.14.00
 
 %description tree-dataframe
-This package contains a high level interfae to ROOT trees.
+This package contains a high level interface to ROOT trees.
 
 %package tree-player
 Summary:	Library to loop over a ROOT tree
@@ -2187,6 +2194,7 @@ install -p -m 644 %SOURCE4 %{buildroot}%{_unitdir}
 mkdir -p %{buildroot}%{_datadir}/%{name}/cli
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
    %{buildroot}%{_datadir}/%{name}/cli
+sed -e '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
 
 %if %{py3default}
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/cli
@@ -2227,24 +2235,12 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python2/cmake_install.cmake
 mkdir -p %{buildroot}%{python2_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python2_sitearch}/libPyROOT.so
-mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python2_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
-rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
-rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
-mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python2_sitearch}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
-
-mkdir -p %{buildroot}%{python2_sitelib}
-mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
 
 rm -rf $tmpdir
 
 # Create empty .egg-info files so that rpm auto-generates provides
 touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
-touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.egg-info
-touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.egg-info
 
 %else
 
@@ -2336,21 +2332,32 @@ touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.egg-info
 # Put jupyter stuff in the right places
 mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
 
+%if ! %{py3default}
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot
-sed -e 's/ROOT C++/& (Python 2)/' -e 's!python!%{__python2}!' \
+sed -e 's/ROOT C++/& (Python 2)/' \
+    -e 's!python!%{__python2}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot/kernel.json
+sed -e '/^\#!/d' \
+    -i %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py
+%endif
 
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
-sed -e 's/ROOT C++/& (Python 3)/' -e 's!python!%{__python3}!' \
+sed -e 's/ROOT C++/& (Python 3)/' \
+    -e 's!python!%{__python3}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
+sed -e '/^\#!/d' \
+    -i %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
 
 %if %{?rhel}%{!?rhel:0} == 7
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
-sed -e 's/ROOT C++/& (Python %{python3_other_version})/' -e 's!python!%{__python3_other}!' \
+sed -e 's/ROOT C++/& (Python %{python3_other_version})/' \
+    -e 's!python!%{__python3_other}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot/kernel.json
+sed -e '/^\#!/d' \
+    -i %{buildroot}%{python3_other_sitearch}/JupyROOT/kernel/rootkernel.py
 %endif
 
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/custom
@@ -2395,10 +2402,6 @@ sed -e 's!/usr/bin/env python2!%{__python2}!' \
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e 's!/usr/bin/env python3!%{__python3}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
-sed -e '/^\#!/d' \
-    -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py \
-       %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py \
-       %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
 sed -e 's!/usr/bin/env python!%{__pythondef}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
@@ -3126,6 +3129,7 @@ end
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
 
+%if ! %{py3default}
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
 %{python2_sitearch}/JupyROOT-*.egg-info
@@ -3136,6 +3140,7 @@ end
 %files -n python2-jsmva
 %{python2_sitelib}/JsMVA
 %{python2_sitelib}/JsMVA-*.egg-info
+%endif
 
 %files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
@@ -3786,6 +3791,12 @@ end
 %endif
 
 %changelog
+* Tue Nov 06 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.06-1
+- Update to 6.14.06
+- Let clang ignore some gcc options it hasn't implemented
+- Don't build python2-jupyroot/jsmva packages for Fedora >= 29
+- Drop previously backported patch root-TGHtmlBrowser-crash.patch
+
 * Thu Oct 25 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.04-3
 - Fix crash in TBrowser when root-gui-html is not installed
 - Use empty .egg-info files instead of empty .dist-info files to make

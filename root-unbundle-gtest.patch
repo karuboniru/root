@@ -1,7 +1,7 @@
-diff -ur root-6.12.04.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.12.04/cmake/modules/SearchInstalledSoftware.cmake
---- root-6.12.04.orig/cmake/modules/SearchInstalledSoftware.cmake	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/cmake/modules/SearchInstalledSoftware.cmake	2018-01-07 22:45:45.537658993 +0100
-@@ -1580,71 +1580,18 @@
+diff -ur root-6.14.06.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.14.06/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.14.06.orig/cmake/modules/SearchInstalledSoftware.cmake	2018-11-05 10:30:03.000000000 +0100
++++ root-6.14.06/cmake/modules/SearchInstalledSoftware.cmake	2018-11-06 10:06:56.399528378 +0100
+@@ -1556,75 +1556,18 @@
  
  #---Download googletest--------------------------------------------------------------
  if (testing)
@@ -25,6 +25,10 @@ diff -ur root-6.12.04.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.12
 -    set(EXTRA_GTEST_OPTS
 -      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
 -      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+-  endif()
+-  if(APPLE)
+-    set(EXTRA_GTEST_OPTS
+-      -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT})
 -  endif()
 -
 -  ExternalProject_Add(
