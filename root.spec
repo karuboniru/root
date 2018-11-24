@@ -29,8 +29,8 @@
 %global root7 0
 %endif
 
-%if %{?fedora}%{!?fedora:0} >= 21 || %{?rhel}%{!?rhel:0} >= 8
-# Multi-threading support requires TBB version >= 4.3.
+%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+# Multi-threading support requires TBB version >= 2018
 %global tbb 1
 %else
 %global tbb 0
@@ -44,7 +44,7 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.14.06
+Version:	6.14.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -121,6 +121,9 @@ Patch20:	%{name}-crypto.patch
 #		Let clang ignore some gcc options it hasn't implemented
 #		https://github.com/root-project/root/pull/2933
 Patch21:	%{name}-clang-ignore-gcc-options.patch
+#		Make tutorial filenames unique to avoid overwrites
+#		https://github.com/root-project/root/pull/3029
+Patch22:	%{name}-unique-filenames.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -209,7 +212,7 @@ BuildRequires:	R-Rcpp-devel
 BuildRequires:	R-RInside-devel
 BuildRequires:	readline-devel
 %if %{tbb}
-BuildRequires:	tbb-devel >= 4.3
+BuildRequires:	tbb-devel >= 2018
 %endif
 BuildRequires:	emacs
 BuildRequires:	emacs-el
@@ -1827,6 +1830,7 @@ This package contains an histogram drawing extension for ROOT 7.
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2336,7 +2340,7 @@ mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot
 sed -e 's/ROOT C++/& (Python 2)/' \
-    -e 's!python!%{__python2}!' \
+    -e 's!python[0-9]*\.[0-9]*!%{__python2}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot/kernel.json
 sed -e '/^\#!/d' \
     -i %{buildroot}%{python2_sitearch}/JupyROOT/kernel/rootkernel.py
@@ -2345,7 +2349,7 @@ sed -e '/^\#!/d' \
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
 sed -e 's/ROOT C++/& (Python 3)/' \
-    -e 's!python!%{__python3}!' \
+    -e 's!python[0-9]*\.[0-9]*!%{__python3}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
 sed -e '/^\#!/d' \
     -i %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
@@ -2354,7 +2358,7 @@ sed -e '/^\#!/d' \
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
 sed -e 's/ROOT C++/& (Python %{python3_other_version})/' \
-    -e 's!python!%{__python3_other}!' \
+    -e 's!python[0-9]*\.[0-9]*!%{__python3_other}!' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot/kernel.json
 sed -e '/^\#!/d' \
     -i %{buildroot}%{python3_other_sitearch}/JupyROOT/kernel/rootkernel.py
@@ -3791,6 +3795,10 @@ end
 %endif
 
 %changelog
+* Fri Nov 23 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.08-1
+- Update to 6.14.08
+- Make tutorial filenames unique to avoid overwrites
+
 * Tue Nov 06 2018 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.06-1
 - Update to 6.14.06
 - Let clang ignore some gcc options it hasn't implemented
