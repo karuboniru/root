@@ -2774,158 +2774,83 @@ if [ $1 -eq 0 ] ; then
     fi
 fi
 
-%post core -p /sbin/ldconfig
-%postun core -p /sbin/ldconfig
-%post multiproc -p /sbin/ldconfig
-%postun multiproc -p /sbin/ldconfig
-%post cling -p /sbin/ldconfig
-%postun cling -p /sbin/ldconfig
-%post r -p /sbin/ldconfig
-%postun r -p /sbin/ldconfig
-%post r-tools -p /sbin/ldconfig
-%postun r-tools -p /sbin/ldconfig
-%post genetic -p /sbin/ldconfig
-%postun genetic -p /sbin/ldconfig
-%post geom -p /sbin/ldconfig
-%postun geom -p /sbin/ldconfig
-%post gdml -p /sbin/ldconfig
-%postun gdml -p /sbin/ldconfig
-%post geocad -p /sbin/ldconfig
-%postun geocad -p /sbin/ldconfig
-%post graf -p /sbin/ldconfig
-%postun graf -p /sbin/ldconfig
-%post graf-asimage -p /sbin/ldconfig
-%postun graf-asimage -p /sbin/ldconfig
-%post graf-fitsio -p /sbin/ldconfig
-%postun graf-fitsio -p /sbin/ldconfig
-%post graf-gpad -p /sbin/ldconfig
-%postun graf-gpad -p /sbin/ldconfig
-%post graf-gviz -p /sbin/ldconfig
-%postun graf-gviz -p /sbin/ldconfig
-%post graf-postscript -p /sbin/ldconfig
-%postun graf-postscript -p /sbin/ldconfig
-%post graf-qt -p /sbin/ldconfig
-%postun graf-qt -p /sbin/ldconfig
-%post graf-x11 -p /sbin/ldconfig
-%postun graf-x11 -p /sbin/ldconfig
-%post graf3d -p /sbin/ldconfig
-%postun graf3d -p /sbin/ldconfig
-%post graf3d-eve -p /sbin/ldconfig
-%postun graf3d-eve -p /sbin/ldconfig
-%post graf3d-gl -p /sbin/ldconfig
-%postun graf3d-gl -p /sbin/ldconfig
-%post graf3d-gviz3d -p /sbin/ldconfig
-%postun graf3d-gviz3d -p /sbin/ldconfig
-%post graf3d-x3d -p /sbin/ldconfig
-%postun graf3d-x3d -p /sbin/ldconfig
-%post gui -p /sbin/ldconfig
-%postun gui -p /sbin/ldconfig
-%post gui-html -p /sbin/ldconfig
-%postun gui-html -p /sbin/ldconfig
-%post gui-fitpanel -p /sbin/ldconfig
-%postun gui-fitpanel -p /sbin/ldconfig
-%post gui-ged -p /sbin/ldconfig
-%postun gui-ged -p /sbin/ldconfig
-%post gui-builder -p /sbin/ldconfig
-%postun gui-builder -p /sbin/ldconfig
-%post gui-qt -p /sbin/ldconfig
-%postun gui-qt -p /sbin/ldconfig
-%post gui-qtgsi -p /sbin/ldconfig
-%postun gui-qtgsi -p /sbin/ldconfig
-%post gui-recorder -p /sbin/ldconfig
-%postun gui-recorder -p /sbin/ldconfig
-%post hbook -p /sbin/ldconfig
-%postun hbook -p /sbin/ldconfig
-%post hist -p /sbin/ldconfig
-%postun hist -p /sbin/ldconfig
-%post hist-painter -p /sbin/ldconfig
-%postun hist-painter -p /sbin/ldconfig
-%post spectrum -p /sbin/ldconfig
-%postun spectrum -p /sbin/ldconfig
-%post spectrum-painter -p /sbin/ldconfig
-%postun spectrum-painter -p /sbin/ldconfig
-%post hist-factory -p /sbin/ldconfig
-%postun hist-factory -p /sbin/ldconfig
-%post html -p /sbin/ldconfig
-%postun html -p /sbin/ldconfig
-%post io -p /sbin/ldconfig
-%postun io -p /sbin/ldconfig
-%post io-dcache -p /sbin/ldconfig
-%postun io-dcache -p /sbin/ldconfig
-%post io-gfal -p /sbin/ldconfig
-%postun io-gfal -p /sbin/ldconfig
+%ldconfig_scriptlets core
+%ldconfig_scriptlets multiproc
+%ldconfig_scriptlets cling
+%ldconfig_scriptlets r
+%ldconfig_scriptlets r-tools
+%ldconfig_scriptlets genetic
+%ldconfig_scriptlets geom
+%ldconfig_scriptlets gdml
+%ldconfig_scriptlets geocad
+%ldconfig_scriptlets graf
+%ldconfig_scriptlets graf-asimage
+%ldconfig_scriptlets graf-fitsio
+%ldconfig_scriptlets graf-gpad
+%ldconfig_scriptlets graf-gviz
+%ldconfig_scriptlets graf-postscript
+%ldconfig_scriptlets graf-qt
+%ldconfig_scriptlets graf-x11
+%ldconfig_scriptlets graf3d
+%ldconfig_scriptlets graf3d-eve
+%ldconfig_scriptlets graf3d-gl
+%ldconfig_scriptlets graf3d-gviz3d
+%ldconfig_scriptlets graf3d-x3d
+%ldconfig_scriptlets gui
+%ldconfig_scriptlets gui-html
+%ldconfig_scriptlets gui-fitpanel
+%ldconfig_scriptlets gui-ged
+%ldconfig_scriptlets gui-builder
+%ldconfig_scriptlets gui-qt
+%ldconfig_scriptlets gui-qtgsi
+%ldconfig_scriptlets gui-recorder
+%ldconfig_scriptlets hbook
+%ldconfig_scriptlets hist
+%ldconfig_scriptlets hist-painter
+%ldconfig_scriptlets spectrum
+%ldconfig_scriptlets spectrum-painter
+%ldconfig_scriptlets hist-factory
+%ldconfig_scriptlets html
+%ldconfig_scriptlets io
+%ldconfig_scriptlets io-dcache
+%ldconfig_scriptlets io-gfal
 %if %{hadoop}
-%post io-hdfs -p /sbin/ldconfig
-%postun io-hdfs -p /sbin/ldconfig
+%ldconfig_scriptlets io-hdfs
 %endif
-%post io-rfio -p /sbin/ldconfig
-%postun io-rfio -p /sbin/ldconfig
-%post io-sql -p /sbin/ldconfig
-%postun io-sql -p /sbin/ldconfig
-%post io-xml -p /sbin/ldconfig
-%postun io-xml -p /sbin/ldconfig
-%post io-xmlparser -p /sbin/ldconfig
-%postun io-xmlparser -p /sbin/ldconfig
-%post foam -p /sbin/ldconfig
-%postun foam -p /sbin/ldconfig
-%post fftw -p /sbin/ldconfig
-%postun fftw -p /sbin/ldconfig
-%post fumili -p /sbin/ldconfig
-%postun fumili -p /sbin/ldconfig
-%post genvector -p /sbin/ldconfig
-%postun genvector -p /sbin/ldconfig
-%post mathcore -p /sbin/ldconfig
-%postun mathcore -p /sbin/ldconfig
-%post mathmore -p /sbin/ldconfig
-%postun mathmore -p /sbin/ldconfig
-%post matrix -p /sbin/ldconfig
-%postun matrix -p /sbin/ldconfig
-%post minuit -p /sbin/ldconfig
-%postun minuit -p /sbin/ldconfig
-%post minuit2 -p /sbin/ldconfig
-%postun minuit2 -p /sbin/ldconfig
-%post mlp -p /sbin/ldconfig
-%postun mlp -p /sbin/ldconfig
-%post physics -p /sbin/ldconfig
-%postun physics -p /sbin/ldconfig
-%post quadp -p /sbin/ldconfig
-%postun quadp -p /sbin/ldconfig
-%post smatrix -p /sbin/ldconfig
-%postun smatrix -p /sbin/ldconfig
-%post splot -p /sbin/ldconfig
-%postun splot -p /sbin/ldconfig
-%post unuran -p /sbin/ldconfig
-%postun unuran -p /sbin/ldconfig
-%post vecops -p /sbin/ldconfig
-%postun vecops -p /sbin/ldconfig
-%post memstat -p /sbin/ldconfig
-%postun memstat -p /sbin/ldconfig
-%post table -p /sbin/ldconfig
-%postun table -p /sbin/ldconfig
-%post montecarlo-eg -p /sbin/ldconfig
-%postun montecarlo-eg -p /sbin/ldconfig
-%post montecarlo-pythia8 -p /sbin/ldconfig
-%postun montecarlo-pythia8 -p /sbin/ldconfig
-%post montecarlo-vmc -p /sbin/ldconfig
-%postun montecarlo-vmc -p /sbin/ldconfig
-%post net -p /sbin/ldconfig
-%postun net -p /sbin/ldconfig
-%post net-rpdutils -p /sbin/ldconfig
-%postun net-rpdutils -p /sbin/ldconfig
-%post net-bonjour -p /sbin/ldconfig
-%postun net-bonjour -p /sbin/ldconfig
-%post net-auth -p /sbin/ldconfig
-%postun net-auth -p /sbin/ldconfig
-%post net-davix -p /sbin/ldconfig
-%postun net-davix -p /sbin/ldconfig
-%post net-globus -p /sbin/ldconfig
-%postun net-globus -p /sbin/ldconfig
-%post net-krb5 -p /sbin/ldconfig
-%postun net-krb5 -p /sbin/ldconfig
-%post net-ldap -p /sbin/ldconfig
-%postun net-ldap -p /sbin/ldconfig
-%post net-http -p /sbin/ldconfig
-%postun net-http -p /sbin/ldconfig
+%ldconfig_scriptlets io-rfio
+%ldconfig_scriptlets io-sql
+%ldconfig_scriptlets io-xml
+%ldconfig_scriptlets io-xmlparser
+%ldconfig_scriptlets foam
+%ldconfig_scriptlets fftw
+%ldconfig_scriptlets fumili
+%ldconfig_scriptlets genvector
+%ldconfig_scriptlets mathcore
+%ldconfig_scriptlets mathmore
+%ldconfig_scriptlets matrix
+%ldconfig_scriptlets minuit
+%ldconfig_scriptlets minuit2
+%ldconfig_scriptlets mlp
+%ldconfig_scriptlets physics
+%ldconfig_scriptlets quadp
+%ldconfig_scriptlets smatrix
+%ldconfig_scriptlets splot
+%ldconfig_scriptlets unuran
+%ldconfig_scriptlets vecops
+%ldconfig_scriptlets memstat
+%ldconfig_scriptlets table
+%ldconfig_scriptlets montecarlo-eg
+%ldconfig_scriptlets montecarlo-pythia8
+%ldconfig_scriptlets montecarlo-vmc
+%ldconfig_scriptlets net
+%ldconfig_scriptlets net-rpdutils
+%ldconfig_scriptlets net-bonjour
+%ldconfig_scriptlets net-auth
+%ldconfig_scriptlets net-davix
+%ldconfig_scriptlets net-globus
+%ldconfig_scriptlets net-krb5
+%ldconfig_scriptlets net-ldap
+%ldconfig_scriptlets net-http
 
 %pretrans net-http -p <lua>
 path = "%{_datadir}/%{name}/http"
@@ -2934,65 +2859,37 @@ if st and st.type == "directory" then
   os.execute("rm -rf " .. path)
 end
 
-%post net-httpsniff -p /sbin/ldconfig
-%postun net-httpsniff -p /sbin/ldconfig
-%post netx -p /sbin/ldconfig
-%postun netx -p /sbin/ldconfig
-%post proof -p /sbin/ldconfig
-%postun proof -p /sbin/ldconfig
-%post proof-bench -p /sbin/ldconfig
-%postun proof-bench -p /sbin/ldconfig
-%post proof-player -p /sbin/ldconfig
-%postun proof-player -p /sbin/ldconfig
-%post proof-sessionviewer -p /sbin/ldconfig
-%postun proof-sessionviewer -p /sbin/ldconfig
-%post xproof -p /sbin/ldconfig
-%postun xproof -p /sbin/ldconfig
-%post roofit -p /sbin/ldconfig
-%postun roofit -p /sbin/ldconfig
-%post sql-mysql -p /sbin/ldconfig
-%postun sql-mysql -p /sbin/ldconfig
-%post sql-odbc -p /sbin/ldconfig
-%postun sql-odbc -p /sbin/ldconfig
-%post sql-sqlite -p /sbin/ldconfig
-%postun sql-sqlite -p /sbin/ldconfig
-%post sql-pgsql -p /sbin/ldconfig
-%postun sql-pgsql -p /sbin/ldconfig
-%post tmva -p /sbin/ldconfig
-%postun tmva -p /sbin/ldconfig
-%post tmva-python -p /sbin/ldconfig
-%postun tmva-python -p /sbin/ldconfig
-%post tmva-r -p /sbin/ldconfig
-%postun tmva-r -p /sbin/ldconfig
-%post tmva-gui -p /sbin/ldconfig
-%postun tmva-gui -p /sbin/ldconfig
-%post tree -p /sbin/ldconfig
-%postun tree -p /sbin/ldconfig
-%post tree-dataframe -p /sbin/ldconfig
-%postun tree-dataframe -p /sbin/ldconfig
-%post tree-player -p /sbin/ldconfig
-%postun tree-player -p /sbin/ldconfig
-%post tree-viewer -p /sbin/ldconfig
-%postun tree-viewer -p /sbin/ldconfig
-%post unfold -p /sbin/ldconfig
-%postun unfold -p /sbin/ldconfig
+%ldconfig_scriptlets net-httpsniff
+%ldconfig_scriptlets netx
+%ldconfig_scriptlets proof
+%ldconfig_scriptlets proof-bench
+%ldconfig_scriptlets proof-player
+%ldconfig_scriptlets proof-sessionviewer
+%ldconfig_scriptlets xproof
+%ldconfig_scriptlets roofit
+%ldconfig_scriptlets sql-mysql
+%ldconfig_scriptlets sql-odbc
+%ldconfig_scriptlets sql-sqlite
+%ldconfig_scriptlets sql-pgsql
+%ldconfig_scriptlets tmva
+%ldconfig_scriptlets tmva-python
+%ldconfig_scriptlets tmva-r
+%ldconfig_scriptlets tmva-gui
+%ldconfig_scriptlets tree
+%ldconfig_scriptlets tree-dataframe
+%ldconfig_scriptlets tree-player
+%ldconfig_scriptlets tree-viewer
+%ldconfig_scriptlets unfold
 %if %{root7}
-%post graf-gpadv7 -p /sbin/ldconfig
-%postun graf-gpadv7 -p /sbin/ldconfig
-%post graf-primitives -p /sbin/ldconfig
-%postun graf-primitives -p /sbin/ldconfig
-%post gui-canvaspainter -p /sbin/ldconfig
-%postun gui-canvaspainter -p /sbin/ldconfig
-%post gui-fitpanelv7 -p /sbin/ldconfig
-%postun gui-fitpanelv7 -p /sbin/ldconfig
+%ldconfig_scriptlets graf-gpadv7
+%ldconfig_scriptlets graf-primitives
+%ldconfig_scriptlets gui-canvaspainter
+%ldconfig_scriptlets gui-fitpanelv7
 %ifarch %{qt5_qtwebengine_arches}
-%post gui-qt5webdisplay -p /sbin/ldconfig
-%postun gui-qt5webdisplay -p /sbin/ldconfig
+%ldconfig_scriptlets gui-qt5webdisplay
 %endif
-%post gui-webdisplay -p /sbin/ldconfig
-%postun gui-webdisplay -p /sbin/ldconfig
-%post hist-draw -p /sbin/ldconfig
-%postun hist-draw -p /sbin/ldconfig
+%ldconfig_scriptlets gui-webdisplay
+%ldconfig_scriptlets hist-draw
 %endif
 
 %files
