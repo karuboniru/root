@@ -2609,7 +2609,7 @@ excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistof
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
 
-%if %{?rhel}%{!?rhel:0} == 7
+%if %{?rhel} && 0%{?rhel} <= 7
 %post
 touch --no-create %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 update-desktop-database >/dev/null 2>&1 || :
