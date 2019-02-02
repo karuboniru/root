@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.14.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3692,6 +3692,9 @@ end
 %endif
 
 %changelog
+* Sat Feb 02 2019 Fedora Release Engineering <releng@fedoraproject.org>
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
+
 * Mon Jan 14 2019 Björn Esser <besser82@fedoraproject.org> - 6.14.08-2
 - Rebuilt for libcrypt.so.2 (#1666033)
 
