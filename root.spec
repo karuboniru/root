@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.14.08
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -2668,7 +2668,7 @@ fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
-/sbin/ldconfig
+%{?ldconfig}
 
 %preun -n python2-%{name}
 if [ $1 = 0 ] ; then
@@ -2676,7 +2676,7 @@ if [ $1 = 0 ] ; then
 	libPyROOT.so %{python2_sitearch}/libPyROOT.so
 fi
 
-%postun -n python2-%{name} -p /sbin/ldconfig
+%ldconfig_postun -n python2-%{name}
 
 %triggerpostun -n python2-%{name} -- %{name}-python
 # Uninstalling the old %{name}-python will remove the alternatives
@@ -2684,7 +2684,7 @@ fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
-/sbin/ldconfig
+%{?ldconfig}
 
 %post -n python%{python3_pkgversion}-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
@@ -2706,7 +2706,7 @@ fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
-/sbin/ldconfig
+%{?ldconfig}
 
 %preun -n python%{python3_pkgversion}-%{name}
 if [ $1 = 0 ] ; then
@@ -2714,7 +2714,7 @@ if [ $1 = 0 ] ; then
 	libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so
 fi
 
-%postun -n python%{python3_pkgversion}-%{name} -p /sbin/ldconfig
+%ldconfig_postun -n python%{python3_pkgversion}-%{name}
 
 %triggerpostun -n python%{python3_pkgversion}-%{name} -- %{name}-python%{python3_pkgversion}
 # Uninstalling the old %{name}-python%{python3_pkgversion} will remove the alternatives
@@ -2722,7 +2722,7 @@ fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
-/sbin/ldconfig
+%{?ldconfig}
 
 %if %{?rhel}%{!?rhel:0} == 7
 %post -n python%{python3_other_pkgversion}-%{name}
@@ -2741,7 +2741,7 @@ fi
 %{_sbindir}/update-alternatives --install \
     %{_libdir}/%{name}/libPyROOT.so.%{version} \
     libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so 5
-/sbin/ldconfig
+%{?ldconfig}
 
 %preun -n python%{python3_other_pkgversion}-%{name}
 if [ $1 = 0 ] ; then
@@ -2749,7 +2749,7 @@ if [ $1 = 0 ] ; then
 	libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
 fi
 
-%postun -n python%{python3_other_pkgversion}-%{name} -p /sbin/ldconfig
+%ldconfig_postun -n python%{python3_other_pkgversion}-%{name}
 %endif
 
 %post notebook
@@ -2774,7 +2774,9 @@ if [ $1 -eq 0 ] ; then
     fi
 fi
 
-%ldconfig_scriptlets core
+%post core -p /sbin/ldconfig
+%postun core -p /sbin/ldconfig
+
 %ldconfig_scriptlets multiproc
 %ldconfig_scriptlets cling
 %ldconfig_scriptlets r
@@ -3692,6 +3694,11 @@ end
 %endif
 
 %changelog
+* Mon Feb 04 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.08-4
+- Remove obsolete /sbin/ldconfig scriptlets
+- The root-core package installs a file in /etc/ld.so.conf.d, so it should
+  always call /sbin/ldconfig and not use the macros
+
 * Sat Feb 02 2019 Fedora Release Engineering <releng@fedoraproject.org>
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_30_Mass_Rebuild
 
