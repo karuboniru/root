@@ -10,9 +10,9 @@ diff -ur root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.12.04/bi
   
      ## String containing the link to JavaScript files
      __jsMVASourceDir = __jsMVARepo + "/js"
-diff -ur root-6.12.04.orig/bindings/pyroot/JupyROOT/utils.py root-6.12.04/bindings/pyroot/JupyROOT/utils.py
---- root-6.12.04.orig/bindings/pyroot/JupyROOT/utils.py	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/bindings/pyroot/JupyROOT/utils.py	2018-01-08 13:13:40.857391851 +0100
+diff -ur root-6.12.04.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.12.04/bindings/pyroot/JupyROOT/helpers/utils.py
+--- root-6.12.04.orig/bindings/pyroot/JupyROOT/helpers/utils.py	2017-12-13 08:27:42.000000000 +0100
++++ root-6.12.04/bindings/pyroot/JupyROOT/helpers/utils.py	2018-01-08 13:13:40.857391851 +0100
 @@ -39,7 +39,7 @@
  _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
  

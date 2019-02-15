@@ -1,0 +1,248 @@
+From b8b0d770b71b779812ec07b5689ccb30ea35d56e Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 14 Feb 2019 14:22:22 +0100
+Subject: [PATCH] Fix doxygen generation with Python 3
+
+---
+ documentation/doxygen/Makefile             |  3 +++
+ documentation/doxygen/converttonotebook.py |  4 ++--
+ documentation/doxygen/filter.cxx           | 19 +++++++++++++------
+ documentation/doxygen/makeimage.py         |  4 ++--
+ documentation/doxygen/parallelNotebooks.py |  6 +++---
+ tutorials/dataframe/df003_profiles.py      |  5 ++---
+ tutorials/dataframe/df017_vecOpsHEP.py     | 13 ++++++-------
+ tutorials/math/tStudent.py                 |  7 ++++++-
+ 8 files changed, 37 insertions(+), 24 deletions(-)
+
+diff --git a/documentation/doxygen/Makefile b/documentation/doxygen/Makefile
+index a886c1b729..b50f3cea9a 100644
+--- a/documentation/doxygen/Makefile
++++ b/documentation/doxygen/Makefile
+@@ -1,6 +1,9 @@
+ 
+ .PHONY: filter folders mathjax images doxygen
+ 
++PYTHON_EXECUTABLE ?= /usr/bin/python
++export PYTHON_EXECUTABLE
++
+ DOXYGEN_OUTPUT_DIRECTORY ?= $(HOME)/rootdoc
+ export DOXYGEN_OUTPUT_DIRECTORY
+ export DOXYGEN_SOURCE_DIRECTORY := ../..
+diff --git a/documentation/doxygen/converttonotebook.py b/documentation/doxygen/converttonotebook.py
+index 77aeacedf8..5c9b6cdbd8 100755
+--- a/documentation/doxygen/converttonotebook.py
++++ b/documentation/doxygen/converttonotebook.py
+@@ -727,7 +727,7 @@ def mainfunction(text):
+ 
+     # add the corresponding metadata
+     if extension == "py":
+-        json_data[u'metadata'] = {
++        json_data['metadata'] = {
+             "kernelspec": {
+                 "display_name": "Python 2",
+                 "language": "python",
+@@ -747,7 +747,7 @@ def mainfunction(text):
+             }
+         }
+     elif isCpp():
+-        json_data[u'metadata'] = {
++        json_data['metadata'] = {
+             "kernelspec": {
+                 "display_name": "ROOT C++",
+                 "language": "c++",
+diff --git a/documentation/doxygen/filter.cxx b/documentation/doxygen/filter.cxx
+index a199f8137b..6d0f49aacd 100644
+--- a/documentation/doxygen/filter.cxx
++++ b/documentation/doxygen/filter.cxx
+@@ -106,6 +106,7 @@ string gImageWidth;    // Width of image
+ string gCwd;           // Current working directory
+ string gOutDir;        // Output directory
+ string gSourceDir;     // Source directory
++string gPythonExec;    // Python executable
+ string gOutputName;    // File containing a macro std::out
+ bool   gHeader;        // True if the input file is a header
+ bool   gSource;        // True if the input file is a source file
+@@ -150,6 +151,10 @@ int main(int argc, char *argv[])
+    gSourceDir = getenv("DOXYGEN_SOURCE_DIRECTORY");
+    ReplaceAll(gSourceDir,"\"","");
+ 
++   // Retrieve the python executable
++   gPythonExec = getenv("PYTHON_EXECUTABLE");
++   ReplaceAll(gPythonExec,"\"","");
++
+    // Open the input file name.
+    f = fopen(gFileName.c_str(),"r");
+ 
+@@ -331,10 +336,12 @@ void FilterTutorial()
+          } else {
+             if (gPython) {
+                if (nobatch) {
+-                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 0",
++                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 0",
++                                             gPythonExec.c_str(),
+                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                } else {
+-                  ExecuteCommand(StringFormat("./makeimage.py %s %s %s 0 1 1",
++                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s 0 1 1",
++                                             gPythonExec.c_str(),
+                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str()));
+                }
+             } else {
+@@ -360,9 +367,9 @@ void FilterTutorial()
+ 
+       // notebook found
+       if (gLineString.find("\\notebook") != string::npos) {
+-         ExecuteCommand(StringFormat("python converttonotebook.py %s %s/notebooks/",
++         ExecuteCommand(StringFormat("%s converttonotebook.py %s %s/notebooks/",
++                                          gPythonExec.c_str(),
+                                           gFileName.c_str(), gOutDir.c_str()));
+-
+          if (gPython){
+              gLineString = "## ";
+          }
+@@ -370,13 +377,13 @@ void FilterTutorial()
+              gLineString = "/// ";
+          }
+          gLineString += StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"http://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+-
+       }
++
+       // \macro_output found
+       if (gLineString.find("\\macro_output") != string::npos) {
+          remove(gOutputName.c_str());
+          if (!gPython) ExecuteCommand(StringFormat("root -l -b -q %s", gFileName.c_str()).c_str());
+-         else          ExecuteCommand(StringFormat("python %s", gFileName.c_str()).c_str());
++         else          ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()).c_str());
+          ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
+          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
+          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
+diff --git a/documentation/doxygen/makeimage.py b/documentation/doxygen/makeimage.py
+index 8c68ac6314..f4f0ee9565 100755
+--- a/documentation/doxygen/makeimage.py
++++ b/documentation/doxygen/makeimage.py
+@@ -12,7 +12,7 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
+     if batch:
+         ROOT.gROOT.SetBatch(1)
+ 
+-    if py: execfile(MacroName)
++    if py: exec(compile(open(MacroName, "rb").read(), MacroName, 'exec'))
+     else: ROOT.gInterpreter.ProcessLine(".x " + MacroName)
+ 
+     if cp:
+@@ -37,4 +37,4 @@ def makeimage(MacroName, ImageName, OutDir, cp, py, batch):
+ 
+ if __name__ == "__main__":
+     from sys import argv
+-    makeimage(argv[1], argv[2], argv[3], bool(argv[4]), bool(argv[5]), bool(argv[6]))
+\ No newline at end of file
++    makeimage(argv[1], argv[2], argv[3], bool(argv[4]), bool(argv[5]), bool(argv[6]))
+diff --git a/documentation/doxygen/parallelNotebooks.py b/documentation/doxygen/parallelNotebooks.py
+index 1c8d1f4ef1..6144b72f5a 100644
+--- a/documentation/doxygen/parallelNotebooks.py
++++ b/documentation/doxygen/parallelNotebooks.py
+@@ -52,7 +52,7 @@ try:
+             iterator.remove(element)
+ 
+     for i in newinputs:
+-        print i
++        print(i)
+ 
+     def processInput(inputFile):
+         subprocess.call(['python', 
+@@ -69,5 +69,5 @@ try:
+         parallel(input)
+ 
+ except:
+-    print 'Parallel notebooks converter failed!!'
+-    pass
+\ No newline at end of file
++    print('Parallel notebooks converter failed!!')
++    pass
+diff --git a/tutorials/dataframe/df003_profiles.py b/tutorials/dataframe/df003_profiles.py
+index c80febfaed..cd8c324086 100644
+--- a/tutorials/dataframe/df003_profiles.py
++++ b/tutorials/dataframe/df003_profiles.py
+@@ -12,12 +12,11 @@
+ ## \author Danilo Piparo
+ 
+ import ROOT
+-RDataFrame = ROOT.ROOT.RDataFrame
+ 
+ # A simple helper function to fill a test tree: this makes the example
+ # stand-alone.
+ def fill_tree(treeName, fileName):
+-    d = RDataFrame(25000)
++    d = ROOT.ROOT.RDataFrame(25000)
+     d.Define("px", "gRandom->Gaus()")\
+      .Define("py", "gRandom->Gaus()")\
+      .Define("pz", "sqrt(px * px + py * py)")\
+@@ -35,7 +34,7 @@ columns = ROOT.vector('string')()
+ columns.push_back("px")
+ columns.push_back("py")
+ columns.push_back("pz")
+-d = RDataFrame(treeName, fileName, columns)
++d = ROOT.ROOT.RDataFrame(treeName, fileName, columns)
+ 
+ # Create the profiles
+ hprof1d = d.Profile1D(("hprof1d", "Profile of pz versus px", 64, -4, 4))
+diff --git a/tutorials/dataframe/df017_vecOpsHEP.py b/tutorials/dataframe/df017_vecOpsHEP.py
+index c213c612c0..348b10de5f 100644
+--- a/tutorials/dataframe/df017_vecOpsHEP.py
++++ b/tutorials/dataframe/df017_vecOpsHEP.py
+@@ -11,13 +11,12 @@
+ ## \author Danilo Piparo, Andre Vieira Silva
+ 
+ import ROOT
+-from math import sqrt
+ 
+ filename = ROOT.gROOT.GetTutorialDir().Data() + "/dataframe/df017_vecOpsHEP.root"
+ treename = "myDataset"
+-RDF = ROOT.ROOT.RDataFrame
+ 
+-def WithPyROOT():
++def WithPyROOT(filename):
++    from math import sqrt
+     f = ROOT.TFile(filename)
+     h = ROOT.TH1F("pt", "pt", 16, 0, 4)
+     for event in f.myDataset:
+@@ -26,8 +25,8 @@ def WithPyROOT():
+                h.Fill(sqrt(px*px + py*py))
+     h.DrawCopy()
+ 
+-def WithRDataFrameVecOpsJit():
+-    f = RDF(treename, filename)
++def WithRDataFrameVecOpsJit(treename, filename):
++    f = ROOT.ROOT.RDataFrame(treename, filename)
+     h = f.Define("good_pt", "sqrt(px*px + py*py)[E>100]")\
+          .Histo1D(("pt", "pt", 16, 0, 4), "good_pt")
+     h.DrawCopy()
+@@ -37,6 +36,6 @@ def WithRDataFrameVecOpsJit():
+ c = ROOT.TCanvas()
+ c.Divide(2,1)
+ c.cd(1)
+-WithPyROOT()
++WithPyROOT(filename)
+ c.cd(2)
+-WithRDataFrameVecOpsJit()
++WithRDataFrameVecOpsJit(treename, filename)
+diff --git a/tutorials/math/tStudent.py b/tutorials/math/tStudent.py
+index fe920c843a..12761d49fb 100644
+--- a/tutorials/math/tStudent.py
++++ b/tutorials/math/tStudent.py
+@@ -38,7 +38,12 @@ for i in range(1, 10):
+                                                               3.0))
+ 
+ # For each quantile fill with the pdf
+-xx = [-1.5] + [quant.GetBinContent(i)for i in range(1, 9)] + [1.5]
++xx = []
++xx.append(-1.5)
++for i in range(1, 9):
++    xx.append(quant.GetBinContent(i))
++xx.append(1.5)
++
+ pdfq = []
+ for i in range(9):
+     nbin = int(n * (xx[i+1] - xx[i]) / 3.0 + 1.0)
+-- 
+2.20.1
+

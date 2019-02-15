@@ -1,4 +1,4 @@
-From 3617dd1d911bb5e8fa17a6139dbb887c44dae0fe Mon Sep 17 00:00:00 2001
+From b587d85a5fc8f706362396dc347830f16797b1f2 Mon Sep 17 00:00:00 2001
 From: Mattias Ellert <mattias.ellert@physics.uu.se>
 Date: Tue, 16 Jan 2018 10:25:50 +0100
 Subject: [PATCH] Reduce the needed memory for compilation
@@ -18,18 +18,17 @@ A similar dependency existed before the code latest code changes
 (see commit 2638f6fc7f54b0995f2f9d60363daaf8aae2386e), then between
 rootcling and libCling.
 ---
- core/metacling/Module.mk          | 6 +++++-
  core/metacling/src/CMakeLists.txt | 4 ++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ 1 file changed, 4 insertions(+)
 
 diff --git a/core/metacling/src/CMakeLists.txt b/core/metacling/src/CMakeLists.txt
-index e820d144eb..3a1f1ca446 100644
+index eccd77681d..df941eb3b7 100644
 --- a/core/metacling/src/CMakeLists.txt
 +++ b/core/metacling/src/CMakeLists.txt
-@@ -37,6 +37,10 @@ ROOT_LINKER_LIBRARY(Cling
-         $<TARGET_OBJECTS:Dictgen>
+@@ -86,6 +86,10 @@ ROOT_LINKER_LIBRARY(Cling
          $<TARGET_OBJECTS:MetaCling>
-         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS})
+         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
+ 
 +# The dependency on rootcling_stage1 was added to prevent Cling (libCling) and
 +# rootcling_stage1 from being linked in parallel.
 +# This avoids doing two memory consuming operations in parallel.
@@ -38,5 +37,5 @@ index e820d144eb..3a1f1ca446 100644
  if(MSVC)
    set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 -- 
-2.14.3
+2.20.1
 

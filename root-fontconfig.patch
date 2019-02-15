@@ -203,14 +203,13 @@ diff -ur root-6.14.00.orig/graf2d/asimage/src/TASImage.cxx root-6.14.00/graf2d/a
 diff -ur root-6.14.00.orig/graf2d/graf/CMakeLists.txt root-6.14.00/graf2d/graf/CMakeLists.txt
 --- root-6.14.00.orig/graf2d/graf/CMakeLists.txt	2018-06-13 12:10:40.000000000 +0200
 +++ root-6.14.00/graf2d/graf/CMakeLists.txt	2018-06-14 10:36:18.869871880 +0200
-@@ -7,6 +7,6 @@
+@@ -7,5 +7,5 @@
  
  ROOT_STANDARD_LIBRARY_PACKAGE(Graf
                                DICTIONARY_OPTIONS "-writeEmptyRootPCM"
 -                              LIBRARIES ${FREETYPE_LIBRARIES} ZLIB::ZLIB mathtext
 +                              LIBRARIES ${FREETYPE_LIBRARIES} ZLIB::ZLIB mathtext fontconfig
                                DEPENDENCIES Hist Matrix MathCore RIO BUILTINS FREETYPE)
- 
 diff -ur root-6.14.00.orig/graf2d/graf/inc/TTF.h root-6.14.00/graf2d/graf/inc/TTF.h
 --- root-6.14.00.orig/graf2d/graf/inc/TTF.h	2018-06-13 12:10:40.000000000 +0200
 +++ root-6.14.00/graf2d/graf/inc/TTF.h	2018-06-14 10:28:26.055618281 +0200

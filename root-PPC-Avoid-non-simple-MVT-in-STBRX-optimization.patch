@@ -21,4 +21,3 @@ diff -ur root-6.14.00.orig/interpreter/llvm/src/lib/Target/PowerPC/PPCISelLoweri
        if (Op1VT.bitsGT(mVT)) {
          int Shift = Op1VT.getSizeInBits() - mVT.getSizeInBits();
          BSwapOp = DAG.getNode(ISD::SRL, dl, Op1VT, BSwapOp,
-Endast i root-6.14.00/interpreter/llvm/src: test

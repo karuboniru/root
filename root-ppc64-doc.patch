@@ -1,6 +1,17 @@
-diff -ur root-6.12.04.orig/tutorials/roostats/rs102_hypotestwithshapes.C root-6.12.04/tutorials/roostats/rs102_hypotestwithshapes.C
---- root-6.12.04.orig/tutorials/roostats/rs102_hypotestwithshapes.C	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/tutorials/roostats/rs102_hypotestwithshapes.C	2018-01-15 21:30:10.608693441 +0100
+diff -ur root-6.16.00.orig/tutorials/dataframe/df006_ranges.py root-6.16.00/tutorials/dataframe/df006_ranges.py
+--- root-6.16.00.orig/tutorials/dataframe/df006_ranges.py	2019-01-23 09:23:37.000000000 +0100
++++ root-6.16.00/tutorials/dataframe/df006_ranges.py	2019-02-14 15:05:28.515294288 +0100
+@@ -4,7 +4,6 @@
+ ## This tutorial shows how to express the concept of ranges when working with the RDataFrame.
+ ##
+ ## \macro_code
+-## \macro_output
+ ##
+ ## \date March 2017
+ ## \author Danilo Piparo
+diff -ur root-6.16.00.orig/tutorials/roostats/rs102_hypotestwithshapes.C root-6.16.00/tutorials/roostats/rs102_hypotestwithshapes.C
+--- root-6.16.00.orig/tutorials/roostats/rs102_hypotestwithshapes.C	2019-01-23 09:23:37.000000000 +0100
++++ root-6.16.00/tutorials/roostats/rs102_hypotestwithshapes.C	2019-02-14 15:00:40.498382881 +0100
 @@ -13,8 +13,6 @@
  /// In this example, shape uncertainties are not taken into account, but
  /// normalization uncertainties are.
@@ -10,9 +21,9 @@ diff -ur root-6.12.04.orig/tutorials/roostats/rs102_hypotestwithshapes.C root-6.
  /// \macro_code
  ///
  /// \author Kyle Cranmer
-diff -ur root-6.12.04.orig/tutorials/roostats/rs701_BayesianCalculator.C root-6.12.04/tutorials/roostats/rs701_BayesianCalculator.C
---- root-6.12.04.orig/tutorials/roostats/rs701_BayesianCalculator.C	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/tutorials/roostats/rs701_BayesianCalculator.C	2018-01-15 21:30:39.405371047 +0100
+diff -ur root-6.16.00.orig/tutorials/roostats/rs701_BayesianCalculator.C root-6.16.00/tutorials/roostats/rs701_BayesianCalculator.C
+--- root-6.16.00.orig/tutorials/roostats/rs701_BayesianCalculator.C	2019-01-23 09:23:37.000000000 +0100
++++ root-6.16.00/tutorials/roostats/rs701_BayesianCalculator.C	2019-02-14 15:00:40.510382752 +0100
 @@ -5,8 +5,6 @@
  ///
  /// This tutorial shows an example of using the BayesianCalculator class

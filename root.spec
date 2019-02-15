@@ -44,9 +44,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.14.08
+Version:	6.16.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -61,13 +61,10 @@ Source0:	%{name}-%{version}.tar.xz
 Source1:	%{name}-testfiles.tar.xz
 #		Script to generate above source
 Source2:	%{name}-testfiles.sh
-#		systemd unit files
-Source3:	rootd.service
-Source4:	proofd.service
 #		Use system fonts
 Patch0:		%{name}-fontconfig.patch
-#		Don't create documentation notebooks
-Patch1:		%{name}-doc-no-notebooks.patch
+#		Revert the removal of DataFrame for 32 bit architectures
+Patch1:		%{name}-32bit-dataframe.patch
 #		Don't run gui macros
 Patch2:		%{name}-avoid-gui-crash.patch
 #		Unbundle gtest
@@ -78,52 +75,35 @@ Patch4:		%{name}-jupyroot-static.patch
 Patch5:		%{name}-PowerPC-Don-t-use-xscvdpspn-on-the-P7.patch
 Patch6:		%{name}-Fix-return-type-in-ORC-readMem-client-interface.patch
 Patch7:		%{name}-PPC-Avoid-non-simple-MVT-in-STBRX-optimization.patch
-#		Fix some javascript syntax choking yuicompressor
-#		Adapt d3 path to updated jsroot
-#		https://github.com/root-project/root/pull/1520
-Patch8:		%{name}-js-syntax.patch
-#		Always use ROOT_ADD_TEST_SUBDIRECTORY when adding test dirs
-#		https://github.com/root-project/root/pull/2247
-Patch9:		%{name}-test-subdirs.patch
 #		Reduce memory usage of build
 #		https://github.com/root-project/root/pull/1516
-Patch10:	%{name}-memory-usage.patch
+Patch8:		%{name}-memory-usage.patch
 #		Reduce memory usage during linking on ARM and x86 by generating
 #		smaller debuginfo for the llmv libraries.
 #		Fedora builders run out of memory with the default setting.
-Patch11:	%{name}-memory-arm-x86.patch
+Patch9:		%{name}-memory-arm-x86.patch
 #		Don't run tutorials that crash on ppc64 during doc generation.
 #		Ensures content of doc package is the same on all architecture
 #		so that koji accepts it as a noarch package.
-Patch12:	%{name}-ppc64-doc.patch
-#		Adjust allowed deviation for PDF file sizes (aarch64)
-#		https://github.com/root-project/root/pull/2120
-Patch13:	%{name}-stressgraphics-ref.patch
-#		Adjust Vavilov test for Fedora 29 ix86
-#		https://github.com/root-project/root/pull/2273
-Patch14:	%{name}-adjust-allowed-test-difference-for-32-bit-ix86.patch
+Patch10:	%{name}-ppc64-doc.patch
 #		Don't install minicern static library
-Patch15:	%{name}-dont-install-minicern.patch
-#		Set Cache File Dir
-#		https://github.com/root-project/root/pull/2246
-Patch16:	%{name}-set-cache-file-dir.patch
-#		Fix test compilation on EPEL 7
-#		https://github.com/root-project/root/pull/2263
-Patch17:	%{name}-test-compilation-epel7.patch
-#		Missing include for std::shuffle
-#		https://github.com/root-project/root/pull/2267
-Patch18:	%{name}-missing-header.patch
+Patch11:	%{name}-dont-install-minicern.patch
 #		Optimization issue in Geom library
-Patch19:	%{name}-ix32-geom-opt.patch
-#		Missing libcrypto dependency for libSrvAuth
-#		https://github.com/root-project/root/pull/2436
-Patch20:	%{name}-crypto.patch
+Patch12:	%{name}-ix32-geom-opt.patch
 #		Let clang ignore some gcc options it hasn't implemented
 #		https://github.com/root-project/root/pull/2933
-Patch21:	%{name}-clang-ignore-gcc-options.patch
-#		Make tutorial filenames unique to avoid overwrites
-#		https://github.com/root-project/root/pull/3029
-Patch22:	%{name}-unique-filenames.patch
+Patch13:	%{name}-clang-ignore-gcc-options.patch
+#		Make doxygen generation wotk with Python 3
+#		https://github.com/root-project/root/pull/3434
+Patch14:	%{name}-doxygen-generation-with-python-3.patch
+#		Don't create documentation notebooks
+Patch15:	%{name}-doc-no-notebooks.patch
+#		Make tutorial/v7/line.cxx run in batch mode
+#		https://github.com/root-project/root/pull/3435
+Patch16:	%{name}-v7-line.patch
+#		Only install eve7 js files when eve7 is built
+#		https://github.com/root-project/root/pull/3436
+Patch17:	%{name}-dont-install-eve7-files.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -231,7 +211,6 @@ BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	yuicompressor
 BuildRequires:	perl-generators
-BuildRequires:	systemd-units
 BuildRequires:	gtest-devel
 BuildRequires:	gmock-devel
 #		Some of the tests call lsb_release
@@ -375,6 +354,8 @@ Requires:	urw-fonts
 Requires:	font(droidsansfallback)
 Obsoletes:	%{name}-ruby < 6.00.00
 Obsoletes:	%{name}-vdt < 6.10.00
+Obsoletes:	%{name}-proof-pq2 < 6.16.00
+Obsoletes:	%{name}-rootd < 6.16.00
 %if %{py3default}
 #		Don't build python2-jupyroot/jsmva packages for Fedora >= 29
 Obsoletes:	python2-jupyroot < %{version}-%{release}
@@ -417,38 +398,6 @@ Obsoletes:	%{name}-reflex < 6.00.00
 %description cling
 Cling is an interactive C++ interpreter, built on top of Clang and
 LLVM compiler infrastructure.
-
-%package proofd
-Summary:	Parallel ROOT Facility - distributed, parallel computing
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
-#		Dynamic dependency
-Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
-Requires(preun):	systemd-units
-Requires(post):		systemd-units
-Requires(postun):	systemd-units
-
-%description proofd
-This package contains the PROOF server. Proofd is the core daemon of
-the PROOF (Parallel ROOT Facility) system for distributed parallel
-computing. Installing this package on a machine makes it possible
-for the machine to participate in a parallel computing farm (cluster
-or via the Internet), either as a master or a slave, using a
-transparent interface.
-
-%package rootd
-Summary:	ROOT remote file server
-#		Dynamic dependency
-Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
-Requires(preun):	systemd-units
-Requires(post):		systemd-units
-Requires(postun):	systemd-units
-
-%description rootd
-This package contains the ROOT file server. Rootd is a server for ROOT
-files, serving files over the Internet. Using this daemon, you can
-access files on the machine from anywhere on the Internet, using a
-transparent interface.
 
 %package -n python2-%{name}
 Summary:	Python extension for ROOT
@@ -1312,11 +1261,11 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 This package contains the ROOT networking library.
 
 %package net-rpdutils
-Summary:	Authentication utilities used by rootd and proofd
+Summary:	Authentication utilities used by xproofd
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 
 %description net-rpdutils
-This package contains authentication utilities used by rootd and proofd.
+This package contains authentication utilities used by xproofd.
 
 %package net-bonjour
 Summary:	Bonjour extension for ROOT
@@ -1460,17 +1409,6 @@ Obsoletes:	%{name}-proof < 6.14.00
 %description proof-player
 This package contains the proof player extension for ROOT.
 
-%package proof-pq2
-Summary:	PROOF Quick Query (pq2)
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-net%{?_isa} = %{version}-%{release}
-Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
-
-%description proof-pq2
-Shell-based interface to the PROOF dataset handling.
-
 %package proof-sessionviewer
 Summary:	GUI to browse an interactive PROOF session
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1495,6 +1433,7 @@ Requires:	%{name}-proof%{?_isa} = %{version}-%{release}
 #		Dynamic dependency
 Requires:	%{name}-net-rpdutils%{?_isa} = %{version}-%{release}
 Requires:	xrootd-server%{?_isa}
+Obsoletes:	%{name}-proofd < 6.16.00
 
 %description xproof
 This package contains the xproof extension for ROOT. This provides a
@@ -1575,6 +1514,7 @@ ROOT environment.
 Summary:	Toolkit for multivariate data analysis
 License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
@@ -1663,6 +1603,7 @@ This package contains the Tree library for ROOT.
 Summary:	A high level interface to ROOT trees
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 #		Library split (tree-dataframe and vecops from tree-player)
@@ -1754,6 +1695,25 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 %description graf-primitives
 This package contains graphics primitives for ROOT 7
 
+%package graf3d-eve7
+Summary:	Event display library for ROOT (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-geom%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf3d%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-montecarlo-eg%{?_isa} = %{version}-%{release}
+Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
+
+%description graf3d-eve7
+This package contains a library for defining event displays in ROOT 7.
+
 %package gui-canvaspainter
 Summary:	Canvas painter (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1781,10 +1741,11 @@ various kinds of data.
 %package gui-qt5webdisplay
 Summary:	Qt5 Web display (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
 Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
 
 %description gui-qt5webdisplay
-This package contains a Qt5 web display extension for ROOT 7
+This package contains a Qt5 web display extension for ROOT 7.
 %endif
 
 %package gui-webdisplay
@@ -1794,7 +1755,19 @@ Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
 
 %description gui-webdisplay
-This package contains a web display extension for ROOT 7
+This package contains a web display extension for ROOT 7.
+
+%package gui-webgui6
+Summary:	Web based GUI for ROOT
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+
+%description gui-webgui6
+This package provides a Web based GUI for ROOT.
 
 %package hist-draw
 Summary:	Histogram drawing (ROOT 7)
@@ -1818,7 +1791,10 @@ This package contains an histogram drawing extension for ROOT 7.
 %patch7 -p1
 %patch8 -p1
 %patch9 -p1
+%if %{?fedora}%{!?fedora:0} <= 28 && %{?rhel}%{!?rhel:0} <= 7
+# Only relevant for distributions with ppc64 build (ppc64le not affected)
 %patch10 -p1
+%endif
 %patch11 -p1
 %patch12 -p1
 %patch13 -p1
@@ -1826,11 +1802,6 @@ This package contains an histogram drawing extension for ROOT 7.
 %patch15 -p1
 %patch16 -p1
 %patch17 -p1
-%patch18 -p1
-%patch19 -p1
-%patch20 -p1
-%patch21 -p1
-%patch22 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1955,7 +1926,6 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_xxhash:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
        -Dafdsmgrd:BOOL=OFF \
-       -Dafs:BOOL=OFF \
        -Dalien:BOOL=OFF \
        -Darrow:BOOL=OFF \
        -Dasimage:BOOL=ON \
@@ -1964,7 +1934,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dcastor:BOOL=OFF \
        -Dccache:BOOL=OFF \
        -Dcefweb:BOOL=OFF \
-       -Dchirp:BOOL=OFF \
+       -Dclad:BOOL=OFF \
        -Dcling:BOOL=ON \
        -Dcocoa:BOOL=OFF \
        -Dcuda:BOOL=OFF \
@@ -1985,10 +1955,8 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dfitsio:BOOL=ON \
        -Dfortran:BOOL=ON \
        -Dgdml:BOOL=ON \
-       -Dgenvector:BOOL=ON \
        -Dgeocad:BOOL=ON \
        -Dgfal:BOOL=ON \
-       -Dglite:BOOL=OFF \
        -Dglobus:BOOL=ON \
        -Dgsl_shared:BOOL=ON \
        -Dgviz:BOOL=ON \
@@ -2035,12 +2003,10 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Drpath:BOOL=OFF \
        -Druby:BOOL=OFF \
        -Druntime_cxxmodules:BOOL=OFF \
-       -Dsapdb:BOOL=OFF \
        -Dshadowpw:BOOL=ON \
        -Dshared:BOOL=ON \
        -Dsoversion:BOOL=ON \
        -Dsqlite:BOOL=ON \
-       -Dsrp:BOOL=OFF \
        -Dssl:BOOL=ON \
        -Dtable:BOOL=ON \
        -Dtcmalloc:BOOL=OFF \
@@ -2052,6 +2018,8 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dtmva-cpu:BOOL=OFF \
 %endif
        -Dtmva-gpu:BOOL=OFF \
+       -Dtmva-pymva:BOOL=ON \
+       -Dtmva-rmva:BOOL=ON \
        -Dunuran:BOOL=ON \
        -Dvc:BOOL=OFF \
        -Dvdt:BOOL=OFF \
@@ -2188,11 +2156,6 @@ install -p -m 644 build/package/debian/root-system-bin.sharedmimeinfo \
     %{buildroot}%{_datadir}/mime/packages/root.xml
 install -p -m 644 build/package/debian/application-x-root.png \
     %{buildroot}%{_datadir}/icons/hicolor/48x48/mimetypes
-
-# systemd unit files for services
-mkdir -p %{buildroot}%{_unitdir}
-install -p -m 644 %SOURCE3 %{buildroot}%{_unitdir}
-install -p -m 644 %SOURCE4 %{buildroot}%{_unitdir}
 
 # Move python cli helper to its own directory
 mkdir -p %{buildroot}%{_datadir}/%{name}/cli
@@ -2381,11 +2344,8 @@ if [ -z "\$(type jupyter-notebook 2>/dev/null)" ] ; then
    echo jupyter-notebook not found in path. Exiting.
    exit 1
 fi
-jupyter notebook
+jupyter notebook "\$@"
 EOF
-
-# These should be in PATH
-mv %{buildroot}%{_datadir}/%{name}/proof/utils/pq2/pq2* %{buildroot}%{_bindir}
 
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
@@ -2418,15 +2378,10 @@ sed -e 's!/usr/bin/env python!%{__pythondef}!' \
        %{buildroot}%{_pkgdocdir}/tutorials/tmva/keras/RegressionKeras.py
 
 # Remove some junk
-rm %{buildroot}%{_datadir}/%{name}/daemons/*.plist
-rm %{buildroot}%{_datadir}/%{name}/daemons/*.rc.d
-rm %{buildroot}%{_datadir}/%{name}/daemons/*.xinetd
-rm %{buildroot}%{_datadir}/%{name}/daemons/README
 rm %{buildroot}%{_datadir}/%{name}/hostcert.conf
 rm %{buildroot}%{_datadir}/%{name}/proof/*.sample
 rm -rf %{buildroot}%{_datadir}/%{name}/proof/utils
 rm %{buildroot}%{_datadir}/%{name}/root.desktop
-rm %{buildroot}%{_datadir}/%{name}/system.plugins-ios
 rm %{buildroot}%{_bindir}/setenvwrap.csh
 rm %{buildroot}%{_bindir}/setxrd*
 rm %{buildroot}%{_bindir}/thisroot*
@@ -2434,11 +2389,11 @@ rm %{buildroot}%{_mandir}/man1/g2rootold.1
 rm %{buildroot}%{_mandir}/man1/genmap.1
 rm %{buildroot}%{_mandir}/man1/proofserva.1
 rm %{buildroot}%{_mandir}/man1/roota.1
-rm %{buildroot}%{_mandir}/man1/setup-pq2.1
 rm %{buildroot}%{_includedir}/%{name}/*.cw
 rm %{buildroot}%{_includedir}/%{name}/*.pri
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
+rm %{buildroot}%{_pkgdocdir}/README.CXXMODULES.md
 rm %{buildroot}%{_pkgdocdir}/README.MONALISA
 
 # Only used on Windows
@@ -2450,7 +2405,6 @@ rm TAFS/P010_TAFS.C
 rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P030_TCastorFile.C
-rm TFile/P060_TChirpFile.C
 rm TFile/P070_TAlienFile.C
 %if %{hadoop} == 0
 rm TFile/P110_THDFSFile.C
@@ -2459,6 +2413,9 @@ rm TGLManager/P020_TGWin32GLManager.C
 rm TGLManager/P030_TGOSXGLManager.C
 rm TGrid/P010_TAlien.C
 rm TGrid/P020_TGLite.C
+%if %{root7} == 0
+rm TGuiFactory/P030_TWebGuiFactory.C
+%endif
 rm TImagePlugin/P010_TASPluginGS.C
 rm TSQLServer/P030_TSapDBServer.C
 rm TSQLServer/P040_TOracleServer.C
@@ -2472,6 +2429,9 @@ rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
 rm TVirtualX/P050_TGQuartz.C
+%if %{root7} == 0
+rm TVirtualX/P060_TWebVirtualX.C
+%endif
 rmdir TAFS
 rmdir TDataProgressDialog
 rmdir TGrid
@@ -2511,6 +2471,7 @@ cp -p interpreter/llvm/src/README.txt interpreter/llvm/src/llvm-README.txt
 # Generate documentation
 pushd documentation/doxygen
 ln -s ../../files files
+ln -sf ../../files/tutorials/df014_CsvDataSource_MuRun2010B.csv
 # Create the py-hsimple.root file in advance (needed as input)
 ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
@@ -2521,7 +2482,7 @@ ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
     ROOTSYS=${PWD}/../../builddir \
     LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
     PYTHONPATH=${PWD}/../../builddir/lib \
-    make DOXYGEN_OUTPUT_DIRECTORY=${PWD}/doc
+    make DOXYGEN_OUTPUT_DIRECTORY=${PWD}/doc PYTHON_EXECUTABLE=%{__pythondef}
 mv doc/html %{buildroot}%{_pkgdocdir}/html
 popd
 
@@ -2556,8 +2517,8 @@ pushd runtutorials
 ln -s ../../files files
 ln -sf ../../files/tutorials/df014_CsvDataSource_MuRun2010B.csv
 popd
-pushd tmva/tmva/test/DNN/CNN
-ln -s ../../../../../../files files
+pushd tmva/tmva/test/DNN
+ln -s ../../../../../files files
 popd
 pushd tmva/tmva/test/envelope
 ln -s ../../../../../files files
@@ -2578,32 +2539,41 @@ popd
 # - tutorial-multicore-imt101_parTreeProcessing
 #   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
 #
+# - gtest-tree-dataframe-test-datasource-sqlite
+#   reads sqlite data over network:
+#   http://root.cern.ch/files/RSqliteDS_test.sqlite
+#
+# - tutorial-dataframe-df102_NanoAODDimuonAnalysis
+# - tutorial-dataframe-df103_NanoAODHiggsAnalysis
+#   reads input data over network:
+#   root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/
+#
 # - tutorial-pythia-pythia8
 #   sometimes times out
-excluded="test-stressIOPlugins-.*|tutorial-dataframe-df101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|tutorial-pythia-pythia8"
+excluded="test-stressIOPlugins-.*|tutorial-dataframe-df101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|gtest-tree-dataframe-test-datasource-sqlite|tutorial-dataframe-df102_NanoAODDimuonAnalysis|tutorial-dataframe-df103_NanoAODHiggsAnalysis|tutorial-pythia-pythia8"
 
-%ifarch %{arm}
-# Tests failing on arm on Fedora <= 27
-# https://sft.its.cern.ch/jira/browse/ROOT-8500
-# - test-stressiterators-interpreted
-# - tutorial-hist-sparsehist
-# - tutorial-r-*
-%if %{?fedora}%{!?fedora:0} <= 27 && %{?rhel}%{!?rhel:0} <= 7
-excluded="${excluded}|test-stressiterators-interpreted|tutorial-hist-sparsehist|tutorial-r-.*"
+%ifarch %{ix86}
+%if %{?fedora}%{!?fedora:0} == 28
+# Test failing on ix86 on Fedora 28
+# https://sft.its.cern.ch/jira/browse/ROOT-9893
+# - test-stressgeometry(-interpreted)
+excluded="${excluded}|test-stressgeometry"
 %endif
 %endif
 
 %ifarch ppc64
 # Tests failing on ppc64
 # https://sft.its.cern.ch/jira/browse/ROOT-6434
-# - test-stresshistogram[-interpreted]
-# - test-stressroostats[-interpreted]
-# - test-stresshistofit[-interpreted]
-# - tutorial-roofit-rf511_wsfactory_basic
+# - test-stresshistofit(-interpreted)
+# - test-stresshistogram(-interpreted)
+# - test-stressroostats(-interpreted)
+# - tutorial-dataframe-df006_ranges-py
+# - tutorial-roofit-rf203_ranges-py
+# - tutorial-roofit-rf511_wsfactory_basic(-py)
+# - tutorial-roofit-rf902_numgenconfig-py
 # - tutorial-roostats-rs102_hypotestwithshapes (work on EPEL 7)
 # - tutorial-roostats-rs701_BayesianCalculator
-# - tutorial-dataframe-df006_ranges-py
-excluded="${excluded}|test-stresshistogram|test-stressroostats|test-stresshistofit|tutorial-roofit-rf511_wsfactory_basic|tutorial-roostats-rs102_hypotestwithshapes|tutorial-roostats-rs701_BayesianCalculator|tutorial-dataframe-df006_ranges-py"
+excluded="${excluded}|test-stresshistofit|test-stresshistogram|test-stressroostats|tutorial-dataframe-df006_ranges-py|tutorial-roofit-rf203_ranges-py|tutorial-roofit-rf511_wsfactory_basic|tutorial-roofit-rf902_numgenconfig-py|tutorial-roostats-rs102_hypotestwithshapes|tutorial-roostats-rs701_BayesianCalculator"
 %endif
 
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
@@ -2626,32 +2596,6 @@ update-mime-database %{_datadir}/mime >/dev/null 2>&1 || :
 %posttrans
 gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 %endif
-
-%pre rootd
-# Remove old init config when systemd is used
-/sbin/chkconfig --del rootd >/dev/null 2>&1 || :
-
-%post rootd
-%systemd_post rootd.service
-
-%preun rootd
-%systemd_preun rootd.service
-
-%postun rootd
-%systemd_postun_with_restart rootd.service
-
-%pre proofd
-# Remove old init config when systemd is used
-/sbin/chkconfig --del proofd >/dev/null 2>&1 || :
-
-%post proofd
-%systemd_post proofd.service
-
-%preun proofd
-%systemd_preun proofd.service
-
-%postun proofd
-%systemd_postun_with_restart proofd.service
 
 %post -n python2-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
@@ -2885,12 +2829,14 @@ end
 %if %{root7}
 %ldconfig_scriptlets graf-gpadv7
 %ldconfig_scriptlets graf-primitives
+%ldconfig_scriptlets graf3d-eve7
 %ldconfig_scriptlets gui-canvaspainter
 %ldconfig_scriptlets gui-fitpanelv7
 %ifarch %{qt5_qtwebengine_arches}
 %ldconfig_scriptlets gui-qt5webdisplay
 %endif
 %ldconfig_scriptlets gui-webdisplay
+%ldconfig_scriptlets gui-webgui6
 %ldconfig_scriptlets hist-draw
 %endif
 
@@ -2901,13 +2847,11 @@ end
 %{_bindir}/rootn.exe
 %{_bindir}/roots
 %{_bindir}/roots.exe
-%{_bindir}/ssh2rpd
 %{_mandir}/man1/hadd.1*
 %{_mandir}/man1/root.1*
 %{_mandir}/man1/root.exe.1*
 %{_mandir}/man1/rootn.exe.1*
 %{_mandir}/man1/roots.exe.1*
-%{_mandir}/man1/ssh2rpd.1*
 %{_datadir}/applications/root.desktop
 %{_datadir}/icons/hicolor/48x48/apps/root.png
 %{_datadir}/icons/hicolor/48x48/mimetypes/application-x-root.png
@@ -3004,21 +2948,6 @@ end
 %files tutorial
 %doc %{_pkgdocdir}/test
 %doc %{_pkgdocdir}/tutorials
-
-%files proofd
-%{_bindir}/proofd
-%{_bindir}/proofserv
-%{_bindir}/proofserv.exe
-%{_bindir}/xpdtest
-%{_mandir}/man1/proofd.1*
-%{_mandir}/man1/proofserv.1*
-%{_mandir}/man1/xpdtest.1*
-%{_unitdir}/proofd.service
-
-%files rootd
-%{_bindir}/rootd
-%{_mandir}/man1/rootd.1*
-%{_unitdir}/rootd.service
 
 %files -n python2-%{name} -f includelist-bindings-pyroot
 %{_libdir}/%{name}/libPyROOT.rootmap
@@ -3526,7 +3455,6 @@ end
 %{_datadir}/%{name}/plugins/TProof/P030_TProofLite.C
 %{_datadir}/%{name}/plugins/TProof/P040_TProof.C
 %{_datadir}/%{name}/valgrind-root.supp
-%doc %{_pkgdocdir}/README.PROOF
 
 %files proof-bench -f includelist-proof-proofbench
 %{_libdir}/%{name}/libProofBench.*
@@ -3547,10 +3475,6 @@ end
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P050_TProofPlayerSuperMaster.C
 %{_datadir}/%{name}/plugins/TVirtualProofPlayer/P060_TProofPlayerLite.C
 
-%files proof-pq2
-%{_bindir}/pq2*
-%{_mandir}/man1/pq2*.1*
-
 %files proof-sessionviewer -f includelist-gui-sessionviewer
 %{_libdir}/%{name}/libSessionViewer.*
 %{_libdir}/%{name}/libSessionViewer_rdict.pcm
@@ -3560,7 +3484,12 @@ end
 
 %files xproof -f includelist-proof-proofx
 %{_bindir}/proofexecv
+%{_bindir}/proofserv
+%{_bindir}/proofserv.exe
+%{_bindir}/xpdtest
 %{_bindir}/xproofd
+%{_mandir}/man1/proofserv.1*
+%{_mandir}/man1/xpdtest.1*
 %{_mandir}/man1/xproofd.1*
 %{_libdir}/%{name}/libProofx.*
 %{_libdir}/%{name}/libProofx_rdict.pcm
@@ -3672,6 +3601,11 @@ end
 %{_libdir}/%{name}/libROOTGraphicsPrimitives.*
 %{_libdir}/%{name}/libROOTGraphicsPrimitives_rdict.pcm
 
+%files graf3d-eve7 -f includelist-graf3d-eve7
+%{_libdir}/%{name}/libROOTEve.*
+%{_libdir}/%{name}/libROOTEve_rdict.pcm
+%{_datadir}/%{name}/eve7
+
 %files gui-canvaspainter
 %{_libdir}/%{name}/libROOTCanvasPainter.*
 
@@ -3688,12 +3622,39 @@ end
 %{_libdir}/%{name}/libROOTWebDisplay.*
 %{_libdir}/%{name}/libROOTWebDisplay_rdict.pcm
 
+%files gui-webgui6 -f includelist-gui-webgui6
+%{_libdir}/%{name}/libWebGui6.*
+%{_libdir}/%{name}/libWebGui6_rdict.pcm
+%{_datadir}/%{name}/plugins/TGuiFactory/P030_TWebGuiFactory.C
+%{_datadir}/%{name}/plugins/TVirtualX/P060_TWebVirtualX.C
+
 %files hist-draw -f includelist-hist-histdraw
 %{_libdir}/%{name}/libROOTHistDraw.*
 %{_libdir}/%{name}/libROOTHistDraw_rdict.pcm
 %endif
 
 %changelog
+* Mon Feb 11 2019 Mattias Ellert <ellert@ellert.physics.uu.se> - 6.16.00-1
+- Update to 6.16.00
+- Drop patches accepted upstream:
+  - root-adjust-allowed-test-difference-for-32-bit-ix86.patch
+  - root-crypto.patch
+  - root-js-syntax.patch
+  - root-missing-header.patch
+  - root-set-cache-file-dir.patch
+  - root-stressgraphics-ref.patch
+  - root-test-compilation-epel7.patch
+  - root-test-subdirs.patch
+  - root-unique-filenames.patch
+- Dropped subpackages:
+  - root-rootd (obsolete - use xrootd)
+  - root-proofd (obsolete - use root-xproofd)
+  - root-proof-pq2
+- New ROOT 7 subpackage:
+  - root-graf3d-eve7
+  - root-gui-webgui6
+- Make tutorial/v7/line.cxx run in batch mode
+
 * Mon Feb 04 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.14.08-4
 - Remove obsolete /sbin/ldconfig scriptlets
 - The root-core package installs a file in /etc/ld.so.conf.d, so it should
@@ -3780,10 +3741,10 @@ end
   - root-io-xmlparser from root-io-xml
   - root-proof-player from root-proof
 - New ROOT 7 subpackages
-  - graf-gpadv7
-  - graf-primitives
-  - gui-fitpanelv7
-  - gui-qt5webdisplay
+  - root-graf-gpadv7
+  - root-graf-primitives
+  - root-gui-fitpanelv7
+  - root-gui-qt5webdisplay
 - Rename root-guibuilder package to root-gui-builder
 - Create empty .dist-info files so that rpm auto-generates provides
 

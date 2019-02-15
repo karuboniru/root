@@ -11,7 +11,7 @@ wget -N ${SITE}/alice3_ref_6.root
 wget -N ${SITE}/alice3.root
 wget -N ${SITE}/ams_ref_4.root
 wget -N ${SITE}/ams.root
-wget -N ${SITE}/atlas_ref_5.root
+wget -N ${SITE}/atlas_ref_6.root
 wget -N ${SITE}/atlas.root
 wget -N ${SITE}/babar2_ref_4.root
 wget -N ${SITE}/babar2.root

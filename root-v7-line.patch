@@ -1,0 +1,32 @@
+From 197ba8fbeccaa49d70a3593ed0e4b1595dd64218 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 14 Feb 2019 13:14:54 +0100
+Subject: [PATCH] Fix v7 line tutorial when running in batch mode
+
+---
+ tutorials/v7/line.cxx | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/tutorials/v7/line.cxx b/tutorials/v7/line.cxx
+index b016fd0371..3256de4ecf 100644
+--- a/tutorials/v7/line.cxx
++++ b/tutorials/v7/line.cxx
+@@ -6,7 +6,6 @@
+ /// "normal" coordinates' system and changing the line color linearly from black
+ /// to red.
+ ///
+-/// \macro_image (line.png)
+ /// \macro_code
+ ///
+ /// \date 2018-03-18
+@@ -43,6 +42,5 @@ void line()
+    canvas->Draw(RLine({0.1_normal, 0.1_normal}, {0.1_normal,0.9_normal}));
+    canvas->Draw(RLine({0.0_normal, 1.0_normal}, {1.0_normal,0.0_normal}));
+ 
+-  // canvas->Show();
+-   canvas->SaveAs("line.png");
++   canvas->Show();
+ }
+-- 
+2.20.1
+
