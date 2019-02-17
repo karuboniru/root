@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.16.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3634,6 +3634,9 @@ end
 %endif
 
 %changelog
+* Sun Feb 17 2019 Igor Gnatenko <ignatenkobrain@fedoraproject.org> - 6.16.00-2
+- Rebuild for readline 8.0
+
 * Mon Feb 11 2019 Mattias Ellert <ellert@ellert.physics.uu.se> - 6.16.00-1
 - Update to 6.16.00
 - Drop patches accepted upstream:
