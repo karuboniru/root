@@ -59,7 +59,7 @@ diff -ur root-6.16.00.orig/config/root-config.in root-6.16.00/config/root-config
  rootglibs="-lGui"
  rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
 -rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps-lTree -lTreePlayer\
++rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
            -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
            -lMultiProc"
  
