@@ -46,7 +46,7 @@
 Name:		root
 Version:	6.16.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -160,8 +160,8 @@ BuildRequires:	python2-devel
 BuildRequires:	python3-devel
 %endif
 %if %{?rhel}%{!?rhel:0} == 7
-BuildRequires:	python34-devel
-BuildRequires:	python36-devel
+BuildRequires:	python%{python3_pkgversion}-devel
+BuildRequires:	python%{python3_other_pkgversion}-devel
 %endif
 BuildRequires:	qt4-devel
 %if %{root7}
@@ -3634,6 +3634,9 @@ end
 %endif
 
 %changelog
+* Fri Mar 08 2019 Troy Dawson <tdawson@redhat.com> - 6.16.00-4
+- Rebuilt to change main python from 3.4 to 3.6
+
 * Mon Feb 18 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.16.00-3
 - Fix typo in patch (missing space)
 
