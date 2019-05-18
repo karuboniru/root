@@ -13,12 +13,26 @@
 %global py3_soabi %([ -x %{__python3} ] && %{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 %global py3_other_soabi %([ -x %{__python3_other} ] && %{__python3_other} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 
+%if %{?fedora}%{!?fedora:0} >= 31
+# Hadoop is FTBFS and uninstallable due to missing Java dependencies
+%global hadoop 0
+%else
+%if %{?fedora}%{!?fedora:0} >= 30
+# Hadoop is not installable on 32 bit archs due to missing Eclipse dependencies
+%ifarch %{arm} %{ix86}
+%global hadoop 0
+%else
+%global hadoop 1
+%endif
+%else
 %if %{?fedora}%{!?fedora:0} >= 24
 # libhdfs is available for all architectures for Fedora 24 and later.
 # For Fedora 20-23 it was only available on Intel (ix86 and x86_64).
 %global hadoop 1
 %else
 %global hadoop 0
+%endif
+%endif
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 24 || %{?rhel}%{!?rhel:0} >= 8
@@ -46,7 +60,7 @@
 Name:		root
 Version:	6.16.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -66,6 +80,7 @@ Patch0:		%{name}-fontconfig.patch
 #		Revert the removal of DataFrame for 32 bit architectures
 Patch1:		%{name}-32bit-dataframe.patch
 #		Don't run gui macros
+#		https://github.com/root-project/root/pull/3563
 Patch2:		%{name}-avoid-gui-crash.patch
 #		Unbundle gtest
 Patch3:		%{name}-unbundle-gtest.patch
@@ -98,8 +113,7 @@ Patch13:	%{name}-clang-ignore-gcc-options.patch
 Patch14:	%{name}-doxygen-generation-with-python-3.patch
 #		Don't create documentation notebooks
 Patch15:	%{name}-doc-no-notebooks.patch
-#		Make tutorial/v7/line.cxx run in batch mode
-#		https://github.com/root-project/root/pull/3435
+#		Don't run tutorial requiring firefox during doc generation
 Patch16:	%{name}-v7-line.patch
 #		Only install eve7 js files when eve7 is built
 #		https://github.com/root-project/root/pull/3436
@@ -130,7 +144,9 @@ BuildRequires:	zlib-devel
 BuildRequires:	xz-devel
 BuildRequires:	lz4-devel
 BuildRequires:	xxhash-devel
-BuildRequires:	libAfterImage-devel >= 1.20
+#		Require a version of libAfterImage that is properly linked to
+#		its dependencies
+BuildRequires:	libAfterImage-devel >= 1.20-21
 BuildRequires:	ncurses-devel
 BuildRequires:	avahi-compat-libdns_sd-devel
 BuildRequires:	avahi-devel
@@ -361,6 +377,9 @@ Obsoletes:	%{name}-rootd < 6.16.00
 Obsoletes:	python2-jupyroot < %{version}-%{release}
 Obsoletes:	python2-jsmva < %{version}-%{release}
 Obsoletes:	%{name}-rootaas < 6.08.00
+%endif
+%if ! %{hadoop}
+Obsoletes:	%{name}-io-hdfs < %{version}-%{release}
 %endif
 
 %description core
@@ -596,6 +615,9 @@ Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+#		Require a version of libAfterImage that is properly linked to
+#		its dependencies
+Requires:	libAfterImage >= 1.20-21
 
 %description graf-asimage
 This package contains the AfterImage renderer for ROOT, which allows
@@ -1952,6 +1974,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dexceptions:BOOL=ON \
        -Dexplicitlink:BOOL=ON \
        -Dfftw3:BOOL=ON \
+       -DFIREFOX_EXECUTABLE:PATH=/usr/bin/firefox \
        -Dfitsio:BOOL=ON \
        -Dfortran:BOOL=ON \
        -Dgdml:BOOL=ON \
@@ -2550,7 +2573,10 @@ popd
 #
 # - tutorial-pythia-pythia8
 #   sometimes times out
-excluded="test-stressIOPlugins-.*|tutorial-dataframe-df101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|gtest-tree-dataframe-test-datasource-sqlite|tutorial-dataframe-df102_NanoAODDimuonAnalysis|tutorial-dataframe-df103_NanoAODHiggsAnalysis|tutorial-pythia-pythia8"
+#
+# - tutorial-v7-line.cxx
+#   requires a web browser (and js-jsroot) to render javascript graphics
+excluded="test-stressIOPlugins-.*|tutorial-dataframe-df101_h1Analysis|tutorial-tree-run_h1analysis|tutorial-multicore-imt001_parBranchProcessing|tutorial-multicore-mp103_processSelector|tutorial-multicore-mp104_processH1|tutorial-multicore-mp105_processEntryList|tutorial-multicore-imt101_parTreeProcessing|gtest-tree-dataframe-test-datasource-sqlite|tutorial-dataframe-df102_NanoAODDimuonAnalysis|tutorial-dataframe-df103_NanoAODHiggsAnalysis|tutorial-pythia-pythia8|tutorial-v7-line.cxx"
 
 %ifarch %{ix86}
 %if %{?fedora}%{!?fedora:0} == 28
@@ -3634,6 +3660,12 @@ end
 %endif
 
 %changelog
+* Fri May 17 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.16.00-5
+- Build without HDFS support on Fedora 31+
+  - Hadoop is FTBFS and uninstallable due to missing Java dependencies
+- Build without HDFS support for 32 bit architectures on Fedora 30
+  - Hadoop is not installable due to missing Eclipse dependencies
+
 * Fri Mar 08 2019 Troy Dawson <tdawson@redhat.com> - 6.16.00-4
 - Rebuilt to change main python from 3.4 to 3.6
 
