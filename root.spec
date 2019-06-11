@@ -60,7 +60,7 @@
 Name:		root
 Version:	6.16.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -2083,8 +2083,13 @@ sed 's!bindings/pyroot!bindings/python2!g' CMakeFiles/Makefile2.save \
     > CMakeFiles/Makefile2
 py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
 py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
-py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
+if pkg-config --exists python3-embed ; then
+    py3i=`pkg-config --cflags-only-I python3-embed | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python3-embed | sed -e 's/-l//' -e 's/\s*$//'`
+else
+    py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
+fi
 sed -e "s,${py3i},${py2i},g" -e "s,-l${py3l},-l${py2l},g" \
     -e "s,lib${py3l},lib${py2l},g" -e 's,%{__python3},%{__python2},g' \
     -e 's,lib/libPyROOT,python2/libPyROOT,g' \
@@ -2103,8 +2108,13 @@ sed 's!bindings/pyroot!bindings/python3!g' CMakeFiles/Makefile2.save \
     > CMakeFiles/Makefile2
 py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
 py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
-py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
+if pkg-config --exists python3-embed ; then
+    py3i=`pkg-config --cflags-only-I python3-embed | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python3-embed | sed -e 's/-l//' -e 's/\s*$//'`
+else
+    py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
+fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
     -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3},g' \
     -e 's,lib/libPyROOT,python3/libPyROOT,g' \
@@ -2125,8 +2135,13 @@ sed 's!bindings/pyroot!bindings/python3oth!g' CMakeFiles/Makefile2.save \
     > CMakeFiles/Makefile2
 py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
 py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-py3i=`pkg-config --cflags-only-I python-%{python3_other_version} | sed -e 's/-I//' -e 's/\s*$//'`
-py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
+if pkg-config --exists python-%{python3_other_version}-embed ; then
+    py3i=`pkg-config --cflags-only-I python-%{python3_other_version}-embed | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python-%{python3_other_version}-embed | sed -e 's/-l//' -e 's/\s*$//'`
+else
+    py3i=`pkg-config --cflags-only-I python-%{python3_other_version} | sed -e 's/-I//' -e 's/\s*$//'`
+    py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
+fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
     -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3_other},g' \
     -e 's,lib/libPyROOT,python3oth/libPyROOT,g' \
@@ -3660,6 +3675,9 @@ end
 %endif
 
 %changelog
+* Tue Jun 11 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.16.00-6
+- Check python-config for --embed flag (python 3.8 compatibility)
+
 * Fri May 17 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.16.00-5
 - Build without HDFS support on Fedora 31+
   - Hadoop is FTBFS and uninstallable due to missing Java dependencies
