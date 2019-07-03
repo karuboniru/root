@@ -1,9 +1,9 @@
-diff -ur root-6.16.00.orig/bindings/pyroot/ROOT.py root-6.16.00/bindings/pyroot/ROOT.py
---- root-6.16.00.orig/bindings/pyroot/ROOT.py	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/bindings/pyroot/ROOT.py	2019-02-12 03:57:19.824223542 +0100
-@@ -379,9 +379,7 @@
-     else:
-         return reshaped_matrix_np
+diff -ur root-6.18.00.orig/bindings/pyroot/ROOT.py root-6.18.00/bindings/pyroot/ROOT.py
+--- root-6.18.00.orig/bindings/pyroot/ROOT.py	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/bindings/pyroot/ROOT.py	2019-06-26 15:14:34.684257765 +0200
+@@ -449,9 +449,7 @@
+ # This function is injected as method to the respective classes in Pythonize.cxx.
+ _root._RDataFrameAsNumpy = _RDataFrameAsNumpy
  
 -# This Pythonisation is there only for 64 bits builds
 -if (sys.maxsize > 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
@@ -12,24 +12,26 @@ diff -ur root-6.16.00.orig/bindings/pyroot/ROOT.py root-6.16.00/bindings/pyroot/
  
  
  ### RINT command emulation ------------------------------------------------------
-diff -ur root-6.16.00.orig/bindings/pyroot/test/CMakeLists.txt root-6.16.00/bindings/pyroot/test/CMakeLists.txt
---- root-6.16.00.orig/bindings/pyroot/test/CMakeLists.txt	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/bindings/pyroot/test/CMakeLists.txt	2019-02-11 19:30:17.443068631 +0100
-@@ -4,9 +4,6 @@
+diff -ur root-6.18.00.orig/bindings/pyroot/test/CMakeLists.txt root-6.18.00/bindings/pyroot/test/CMakeLists.txt
+--- root-6.18.00.orig/bindings/pyroot/test/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/bindings/pyroot/test/CMakeLists.txt	2019-06-26 15:22:03.843577496 +0200
+@@ -4,10 +4,7 @@
  ROOT_ADD_PYUNITTEST(pyroot_rvec rvec.py)
  if(NUMPY_FOUND)
    ROOT_ADD_PYUNITTEST(pyroot_array_interface array_interface.py)
 -  # this excludes RDF for 32 bits builds because of clang/gcc abi issues
 -  if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
+-    ROOT_ADD_PYUNITTEST(pyroot_rdataframe_asnumpy rdataframe_asnumpy.py)
 -    ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
 -  endif()
++  ROOT_ADD_PYUNITTEST(pyroot_rdataframe_asnumpy rdataframe_asnumpy.py)
 +  ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
  endif()
  
-diff -ur root-6.16.00.orig/build/unix/makepchinput.py root-6.16.00/build/unix/makepchinput.py
---- root-6.16.00.orig/build/unix/makepchinput.py	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/build/unix/makepchinput.py	2019-02-12 04:01:47.071320473 +0100
-@@ -261,9 +261,6 @@
+diff -ur root-6.18.00.orig/build/unix/makepchinput.py root-6.18.00/build/unix/makepchinput.py
+--- root-6.18.00.orig/build/unix/makepchinput.py	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/build/unix/makepchinput.py	2019-06-26 15:14:34.760256972 +0200
+@@ -263,9 +263,6 @@
                             "math/vdt",
                             "tmva/rmva"]
  
@@ -39,9 +41,9 @@ diff -ur root-6.16.00.orig/build/unix/makepchinput.py root-6.16.00/build/unix/ma
     accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                 not isAnyPatternInString(PCHPatternsBlacklist,dirName)
  
-diff -ur root-6.16.00.orig/cmake/scripts/ROOTConfig.cmake.in root-6.16.00/cmake/scripts/ROOTConfig.cmake.in
---- root-6.16.00.orig/cmake/scripts/ROOTConfig.cmake.in	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/cmake/scripts/ROOTConfig.cmake.in	2019-02-11 19:42:40.603045735 +0100
+diff -ur root-6.18.00.orig/cmake/scripts/ROOTConfig.cmake.in root-6.18.00/cmake/scripts/ROOTConfig.cmake.in
+--- root-6.18.00.orig/cmake/scripts/ROOTConfig.cmake.in	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/cmake/scripts/ROOTConfig.cmake.in	2019-06-26 15:14:34.768256889 +0200
 @@ -83,7 +83,7 @@
    set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
    set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
@@ -51,9 +53,9 @@ diff -ur root-6.16.00.orig/cmake/scripts/ROOTConfig.cmake.in root-6.16.00/cmake/
    find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
    if(ROOT_${_cpt}_LIBRARY)
      mark_as_advanced(ROOT_${_cpt}_LIBRARY)
-diff -ur root-6.16.00.orig/config/root-config.in root-6.16.00/config/root-config.in
---- root-6.16.00.orig/config/root-config.in	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/config/root-config.in	2019-02-11 19:42:38.951063533 +0100
+diff -ur root-6.18.00.orig/config/root-config.in root-6.18.00/config/root-config.in
+--- root-6.18.00.orig/config/root-config.in	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/config/root-config.in	2019-06-26 15:41:39.518330743 +0200
 @@ -72,15 +72,10 @@
  newlib="-lNew"
  rootglibs="-lGui"
@@ -63,7 +65,7 @@ diff -ur root-6.16.00.orig/config/root-config.in root-6.16.00/config/root-config
            -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
            -lMultiProc"
  
--if [ `uname -m` != 'i686' ]; then
+-if [ "@UNIX@" != "1" ] || [ "@CMAKE_SIZEOF_VOID_P@" != "4" ]; then
 -   rootlibs="$rootlibs -lROOTDataFrame"
 -fi
 -
@@ -71,9 +73,9 @@ diff -ur root-6.16.00.orig/config/root-config.in root-6.16.00/config/root-config
  if test "$platform" = "win32"; then
     rootulibs="-include:_G__cpp_setupG__Net        \
                -include:_G__cpp_setupG__IO         \
-diff -ur root-6.16.00.orig/tree/dataframe/CMakeLists.txt root-6.16.00/tree/dataframe/CMakeLists.txt
---- root-6.16.00.orig/tree/dataframe/CMakeLists.txt	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/tree/dataframe/CMakeLists.txt	2019-02-11 19:26:43.236382519 +0100
+diff -ur root-6.18.00.orig/tree/dataframe/CMakeLists.txt root-6.18.00/tree/dataframe/CMakeLists.txt
+--- root-6.18.00.orig/tree/dataframe/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/tree/dataframe/CMakeLists.txt	2019-06-26 15:14:34.827256273 +0200
 @@ -3,11 +3,6 @@
  # @author Danilo Piparo CERN, Pere Mato CERN
  ############################################################################
@@ -86,21 +88,21 @@ diff -ur root-6.16.00.orig/tree/dataframe/CMakeLists.txt root-6.16.00/tree/dataf
  if(arrow)
    list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RArrowDS.hxx)
    list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${ARROW_INCLUDE_DIR})
-diff -ur root-6.16.00.orig/tutorials/CMakeLists.txt root-6.16.00/tutorials/CMakeLists.txt
---- root-6.16.00.orig/tutorials/CMakeLists.txt	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/tutorials/CMakeLists.txt	2019-02-11 19:29:09.215805630 +0100
-@@ -207,10 +207,6 @@
-       )
+diff -ur root-6.18.00.orig/tutorials/CMakeLists.txt root-6.18.00/tutorials/CMakeLists.txt
+--- root-6.18.00.orig/tutorials/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/tutorials/CMakeLists.txt	2019-06-26 15:18:15.834951333 +0200
+@@ -212,10 +212,6 @@
+                  v7/ntuple/ntpl004_dimuon.C)
  endif()
  
 -if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
--  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C)
+-  set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C v7/ntuple/ntpl004_dimuon.C)
 -endif()
 -
  #---These ones are disabled !!! ------------------------------------
  set(extra_veto
    htmlex.C
-@@ -262,7 +258,6 @@
+@@ -266,7 +262,6 @@
               ${classic_veto}
               ${pythia_veto}
               ${root7_veto}
@@ -108,7 +110,7 @@ diff -ur root-6.16.00.orig/tutorials/CMakeLists.txt root-6.16.00/tutorials/CMake
               ${xrootd_veto}
               )
  
-@@ -418,13 +413,6 @@
+@@ -424,13 +419,6 @@
  
    list(REMOVE_ITEM pytutorials ${pyveto})
  

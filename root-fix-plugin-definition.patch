@@ -1,0 +1,92 @@
+From 444b03b6e3ce0554f687443a42310fe01fba276c Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 27 Jun 2019 18:24:58 +0200
+Subject: [PATCH 2/2] Use the correct library name in the plugin definitions
+
+---
+ etc/plugins/TFile/P090_TSQLFile.C                     | 4 ++--
+ etc/plugins/TFileStager/P010_TXNetFileStager.C        | 2 +-
+ etc/plugins/TGuiFactory/P030_TWebGuiFactory.C         | 2 +-
+ etc/plugins/TImagePlugin/P010_TASPluginGS.C           | 6 +++---
+ etc/plugins/TVirtualGraphPainter/P010_TGraphPainter.C | 2 +-
+ etc/plugins/TVirtualX/P060_TWebVirtualX.C             | 2 +-
+ 6 files changed, 9 insertions(+), 9 deletions(-)
+
+diff --git a/etc/plugins/TFile/P090_TSQLFile.C b/etc/plugins/TFile/P090_TSQLFile.C
+index bc006053d4..a6441ffbef 100644
+--- a/etc/plugins/TFile/P090_TSQLFile.C
++++ b/etc/plugins/TFile/P090_TSQLFile.C
+@@ -1,7 +1,7 @@
+ void P090_TSQLFile()
+ {
+    gPluginMgr->AddHandler("TFile", "^mysql:", "TSQLFile",
+-      "SQL", "TSQLFile(const char*,Option_t*,const char*,const char*)");
++      "SQLIO", "TSQLFile(const char*,Option_t*,const char*,const char*)");
+    gPluginMgr->AddHandler("TFile", "^oracle:", "TSQLFile",
+-      "SQL", "TSQLFile(const char*,Option_t*,const char*,const char*)");
++      "SQLIO", "TSQLFile(const char*,Option_t*,const char*,const char*)");
+ }
+diff --git a/etc/plugins/TFileStager/P010_TXNetFileStager.C b/etc/plugins/TFileStager/P010_TXNetFileStager.C
+index 884ce7e103..66cd8d575e 100644
+--- a/etc/plugins/TFileStager/P010_TXNetFileStager.C
++++ b/etc/plugins/TFileStager/P010_TXNetFileStager.C
+@@ -2,7 +2,7 @@ void P010_TXNetFileStager()
+ {
+    if (!gEnv->GetValue("XNet.UseOldClient", 0)) {
+       gPluginMgr->AddHandler("TFileStager", "^[x]?root:", "TNetXNGFileStager",
+-         "NetXNG", "TNetXNGFileStager(const char *)");
++         "NetxNG", "TNetXNGFileStager(const char *)");
+    } else {
+       gPluginMgr->AddHandler("TFileStager", "^[x]?root:", "TXNetFileStager",
+          "Netx", "TXNetFileStager(const char *)");
+diff --git a/etc/plugins/TGuiFactory/P030_TWebGuiFactory.C b/etc/plugins/TGuiFactory/P030_TWebGuiFactory.C
+index 873ba03ebd..fe83cf06e1 100644
+--- a/etc/plugins/TGuiFactory/P030_TWebGuiFactory.C
++++ b/etc/plugins/TGuiFactory/P030_TWebGuiFactory.C
+@@ -1,4 +1,4 @@
+ void P030_TWebGuiFactory()
+ {
+-   gPluginMgr->AddHandler("TGuiFactory", "web", "TWebGuiFactory", "WebGui", "TWebGuiFactory()");
++   gPluginMgr->AddHandler("TGuiFactory", "web", "TWebGuiFactory", "WebGui6", "TWebGuiFactory()");
+ }
+diff --git a/etc/plugins/TImagePlugin/P010_TASPluginGS.C b/etc/plugins/TImagePlugin/P010_TASPluginGS.C
+index c2e3e45c1a..9e401e74f1 100644
+--- a/etc/plugins/TImagePlugin/P010_TASPluginGS.C
++++ b/etc/plugins/TImagePlugin/P010_TASPluginGS.C
+@@ -1,9 +1,9 @@
+ void P010_TASPluginGS()
+ {
+    gPluginMgr->AddHandler("TImagePlugin", "ps", "TASPluginGS",
+-      "ASPluginGS", "TASPluginGS(const char*)");
++      "ASImage", "TASPluginGS(const char*)");
+    gPluginMgr->AddHandler("TImagePlugin", "eps", "TASPluginGS",
+-      "ASPluginGS", "TASPluginGS(const char*)");
++      "ASImage", "TASPluginGS(const char*)");
+    gPluginMgr->AddHandler("TImagePlugin", "pdf", "TASPluginGS",
+-      "ASPluginGS", "TASPluginGS(const char*)");
++      "ASImage", "TASPluginGS(const char*)");
+ }
+diff --git a/etc/plugins/TVirtualGraphPainter/P010_TGraphPainter.C b/etc/plugins/TVirtualGraphPainter/P010_TGraphPainter.C
+index 2a919023f9..f1be760487 100644
+--- a/etc/plugins/TVirtualGraphPainter/P010_TGraphPainter.C
++++ b/etc/plugins/TVirtualGraphPainter/P010_TGraphPainter.C
+@@ -1,5 +1,5 @@
+ void P010_TGraphPainter()
+ {
+    gPluginMgr->AddHandler("TVirtualGraphPainter", "*", "TGraphPainter",
+-      "GraphPainter", "TGraphPainter()");
++      "HistPainter", "TGraphPainter()");
+ }
+diff --git a/etc/plugins/TVirtualX/P060_TWebVirtualX.C b/etc/plugins/TVirtualX/P060_TWebVirtualX.C
+index e624c34e7b..26f9650e94 100644
+--- a/etc/plugins/TVirtualX/P060_TWebVirtualX.C
++++ b/etc/plugins/TVirtualX/P060_TWebVirtualX.C
+@@ -1,4 +1,4 @@
+ void P060_TWebVirtualX()
+ {
+-   gPluginMgr->AddHandler("TVirtualX", "web", "TWebVirtualX", "WebGui", "TWebVirtualX(const char*,const char*)");
++   gPluginMgr->AddHandler("TVirtualX", "web", "TWebVirtualX", "WebGui6", "TWebVirtualX(const char*,const char*)");
+ }
+-- 
+2.21.0
+

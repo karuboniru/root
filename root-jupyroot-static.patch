@@ -1,6 +1,6 @@
-diff -ur root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.12.04/bindings/pyroot/JsMVA/JPyInterface.py
---- root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/bindings/pyroot/JsMVA/JPyInterface.py	2018-01-08 13:07:08.088711528 +0100
+diff -ur root-6.18.00.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.18.00/bindings/pyroot/JsMVA/JPyInterface.py
+--- root-6.18.00.orig/bindings/pyroot/JsMVA/JPyInterface.py	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/bindings/pyroot/JsMVA/JPyInterface.py	2019-06-28 22:54:03.937480738 +0200
 @@ -188,7 +188,7 @@
  ## Class for creating the output scripts and inserting them to cell output
  class JsDraw:
@@ -10,9 +10,9 @@ diff -ur root-6.12.04.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.12.04/bi
   
      ## String containing the link to JavaScript files
      __jsMVASourceDir = __jsMVARepo + "/js"
-diff -ur root-6.12.04.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.12.04/bindings/pyroot/JupyROOT/helpers/utils.py
---- root-6.12.04.orig/bindings/pyroot/JupyROOT/helpers/utils.py	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/bindings/pyroot/JupyROOT/helpers/utils.py	2018-01-08 13:13:40.857391851 +0100
+diff -ur root-6.18.00.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.18.00/bindings/pyroot/JupyROOT/helpers/utils.py
+--- root-6.18.00.orig/bindings/pyroot/JupyROOT/helpers/utils.py	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/bindings/pyroot/JupyROOT/helpers/utils.py	2019-06-28 22:54:03.938480727 +0200
 @@ -39,7 +39,7 @@
  _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
  
@@ -22,9 +22,9 @@ diff -ur root-6.12.04.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.12.0
  _jsCanvasWidth = 800
  _jsCanvasHeight = 600
  
-diff -ur root-6.12.04.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.12.04/etc/notebook/JsMVA/js/JsMVA.js
---- root-6.12.04.orig/etc/notebook/JsMVA/js/JsMVA.js	2017-12-13 08:27:42.000000000 +0100
-+++ root-6.12.04/etc/notebook/JsMVA/js/JsMVA.js	2018-01-08 13:20:04.248138322 +0100
+diff -ur root-6.18.00.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.18.00/etc/notebook/JsMVA/js/JsMVA.js
+--- root-6.18.00.orig/etc/notebook/JsMVA/js/JsMVA.js	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/etc/notebook/JsMVA/js/JsMVA.js	2019-06-28 22:54:03.938480727 +0200
 @@ -16,7 +16,7 @@
  
  (function(factory){
@@ -34,3 +34,15 @@ diff -ur root-6.12.04.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.12.04/etc/noteb
  
      var url = "";
      if (requirejs.s.contexts.hasOwnProperty("_")) {
+diff -ur root-6.18.00.orig/etc/notebook/JsMVA/js/NetworkDesigner.js root-6.18.00/etc/notebook/JsMVA/js/NetworkDesigner.js
+--- root-6.18.00.orig/etc/notebook/JsMVA/js/NetworkDesigner.js	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/etc/notebook/JsMVA/js/NetworkDesigner.js	2019-06-29 07:08:46.582682582 +0200
+@@ -19,7 +19,7 @@
+         paths: {
+             "jquery-connections": baseURL + "jquery.connections.min",
+             "jquery-timing": baseURL + "jquery-timing.min",
+-            "d3": "https://root.cern.ch/js/notebook/scripts/d3.min"
++            "d3": "/static/jsroot/scripts/d3.min"
+         },
+         shim: {
+             "jquery-ui": {

@@ -1,0 +1,64 @@
+From 3207d634576d48462b41b4aec0e9198293aa4a9f Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 28 Jun 2019 09:23:19 +0200
+Subject: [PATCH] Don't download input file if it already exists This allows
+ running the tests with pre-fetched file in environments without network -
+ like e.g. the Fedora package build server
+
+---
+ tutorials/dataframe/df014_CSVDataSource.C  | 3 ++-
+ tutorials/dataframe/df014_CSVDataSource.py | 4 +++-
+ tutorials/dataframe/df015_LazyDataSource.C | 3 ++-
+ 3 files changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/tutorials/dataframe/df014_CSVDataSource.C b/tutorials/dataframe/df014_CSVDataSource.C
+index 18a6a5afaf..9f1b69688a 100644
+--- a/tutorials/dataframe/df014_CSVDataSource.C
++++ b/tutorials/dataframe/df014_CSVDataSource.C
+@@ -23,7 +23,8 @@ int df014_CSVDataSource()
+    // The types of the columns will be automatically inferred.
+    auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
+-   TFile::Cp(fileNameUrl, fileName);
++   if(gSystem->AccessPathName(fileName))
++      TFile::Cp(fileNameUrl, fileName);
+    auto tdf = ROOT::RDF::MakeCsvDataFrame(fileName);
+ 
+    // Now we will apply a first filter based on two columns of the CSV,
+diff --git a/tutorials/dataframe/df014_CSVDataSource.py b/tutorials/dataframe/df014_CSVDataSource.py
+index dd4823d62f..a8668f5e49 100644
+--- a/tutorials/dataframe/df014_CSVDataSource.py
++++ b/tutorials/dataframe/df014_CSVDataSource.py
+@@ -18,12 +18,14 @@
+ ## \author Enric Tejedor
+ 
+ import ROOT
++import os
+ 
+ # Let's first create a RDF that will read from the CSV file.
+ # The types of the columns will be automatically inferred.
+ fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
+ fileName = "df014_CsvDataSource_MuRun2010B_py.csv"
+-ROOT.TFile.Cp(fileNameUrl, fileName)
++if not os.path.isfile(fileName):
++    ROOT.TFile.Cp(fileNameUrl, fileName)
+ 
+ MakeCsvDataFrame = ROOT.ROOT.RDF.MakeCsvDataFrame
+ tdf = MakeCsvDataFrame(fileName)
+diff --git a/tutorials/dataframe/df015_LazyDataSource.C b/tutorials/dataframe/df015_LazyDataSource.C
+index fc5567b5bd..f8623ddce4 100644
+--- a/tutorials/dataframe/df015_LazyDataSource.C
++++ b/tutorials/dataframe/df015_LazyDataSource.C
+@@ -25,7 +25,8 @@ int df015_LazyDataSource()
+    // See the tutorial relative to CSV data sources for more details!
+    auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+    auto fileName = "df015_CsvDataSource_MuRun2010B.csv";
+-   TFile::Cp(fileNameUrl, fileName);
++   if(gSystem->AccessPathName(fileName))
++      TFile::Cp(fileNameUrl, fileName);
+ 
+    auto csv_rdf = MakeCsvDataFrame(fileName);
+ 
+-- 
+2.21.0
+

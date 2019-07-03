@@ -67,7 +67,7 @@ wget -N ${SITE}/sld_ref_4.root
 wget -N ${SITE}/sld.root
 wget -N ${SITE}/star_ref_4.root
 wget -N ${SITE}/star.root
-wget -N ${SITE}/tesla_ref_3.root
+wget -N ${SITE}/tesla_ref_4.root
 wget -N ${SITE}/tesla.root
 wget -N ${SITE}/wa91_ref_3.root
 wget -N ${SITE}/wa91.root

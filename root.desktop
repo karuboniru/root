@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Root
+GenericName=Root
+Comment=Numerical data analysis framework
+Exec=root
+Icon=root
+Terminal=true
+Type=Application
+MimeType=application/x-root;
+Categories=Utility;
+Encoding=UTF-8

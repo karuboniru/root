@@ -1,7 +1,7 @@
-diff -ur root-6.16.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.16.00/cmake/modules/SearchInstalledSoftware.cmake
---- root-6.16.00.orig/cmake/modules/SearchInstalledSoftware.cmake	2019-01-23 09:23:37.000000000 +0100
-+++ root-6.16.00/cmake/modules/SearchInstalledSoftware.cmake	2019-01-25 12:43:58.106532400 +0100
-@@ -1525,76 +1525,18 @@
+diff -ur root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.18.00/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/cmake/modules/SearchInstalledSoftware.cmake	2019-06-26 16:00:21.275634375 +0200
+@@ -1380,80 +1380,18 @@
  
  #---Download googletest--------------------------------------------------------------
  if (testing)
@@ -74,6 +74,10 @@ diff -ur root-6.16.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.16
 +  foreach (lib gmock gmock_main)
      add_library(${lib} IMPORTED STATIC GLOBAL)
 -    add_dependencies(${lib} googletest)
+-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND
+-        ${CMAKE_CXX_COMPILER_VERSION} VERSION_GREATER_EQUAL 9)
+-      target_compile_options(${lib} INTERFACE -Wno-deprecated-copy)
+-    endif()
    endforeach()
 -  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
 -  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -83,4 +87,4 @@ diff -ur root-6.16.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.16
 + endif()
  endif()
  
- 
+ #------------------------------------------------------------------------------------

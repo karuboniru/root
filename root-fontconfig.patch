@@ -1,7 +1,7 @@
-diff -ur root-6.14.00.orig/core/base/src/TApplication.cxx root-6.14.00/core/base/src/TApplication.cxx
---- root-6.14.00.orig/core/base/src/TApplication.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/core/base/src/TApplication.cxx	2018-06-14 10:28:26.052618314 +0200
-@@ -277,18 +277,11 @@
+diff -ur root-6.18.00.orig/core/base/src/TApplication.cxx root-6.18.00/core/base/src/TApplication.cxx
+--- root-6.18.00.orig/core/base/src/TApplication.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/core/base/src/TApplication.cxx	2019-06-26 15:00:32.048047903 +0200
+@@ -267,18 +267,11 @@
     LoadGraphicsLibs();
  
     // Try to load TrueType font renderer. Only try to load if not in batch
@@ -22,7 +22,7 @@ diff -ur root-6.14.00.orig/core/base/src/TApplication.cxx root-6.14.00/core/base
        if (gClassTable->GetDict("TGX11TTF")) {
           // in principle we should not have linked anything against libGX11TTF
           // but with ACLiC this can happen, initialize TGX11TTF by hand
-@@ -302,7 +295,6 @@
+@@ -292,7 +285,6 @@
        }
     }
  #endif
@@ -30,21 +30,20 @@ diff -ur root-6.14.00.orig/core/base/src/TApplication.cxx root-6.14.00/core/base
  
     // Create WM dependent application environment
     if (fAppImp)
-diff -ur root-6.14.00.orig/graf2d/asimage/CMakeLists.txt root-6.14.00/graf2d/asimage/CMakeLists.txt
---- root-6.14.00.orig/graf2d/asimage/CMakeLists.txt	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/asimage/CMakeLists.txt	2018-06-14 10:32:01.365570910 +0200
-@@ -15,7 +15,7 @@
-                               HEADERS TASImage.h TASImagePlugin.h TASPluginGS.h
-                               SOURCES TASImage.cxx TASPluginGS.cxx
-                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
--                              LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ZLIB::ZLIB
-+                              LIBRARIES Core ${AFTERIMAGE_LIBRARIES} ${FREETYPE_LIBRARIES} fontconfig ${ASEXTRA_LIBRARIES} ${X11_LIBRARIES} ZLIB::ZLIB
-                               DEPENDENCIES Graf BUILTINS AFTERIMAGE)
- 
- 
-diff -ur root-6.14.00.orig/graf2d/asimage/src/TASImage.cxx root-6.14.00/graf2d/asimage/src/TASImage.cxx
---- root-6.14.00.orig/graf2d/asimage/src/TASImage.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/asimage/src/TASImage.cxx	2018-06-14 10:28:26.054618292 +0200
+diff -ur root-6.18.00.orig/graf2d/asimage/CMakeLists.txt root-6.18.00/graf2d/asimage/CMakeLists.txt
+--- root-6.18.00.orig/graf2d/asimage/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/asimage/CMakeLists.txt	2019-06-26 15:05:32.584912789 +0200
+@@ -26,6 +26,7 @@
+     ${FREETYPE_LIBRARIES}
+     ${X11_LIBRARIES}
+     ZLIB::ZLIB
++    fontconfig
+   DEPENDENCIES
+     Core
+     Graf
+diff -ur root-6.18.00.orig/graf2d/asimage/src/TASImage.cxx root-6.18.00/graf2d/asimage/src/TASImage.cxx
+--- root-6.18.00.orig/graf2d/asimage/src/TASImage.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/asimage/src/TASImage.cxx	2019-06-26 15:00:32.062047757 +0200
 @@ -110,6 +110,8 @@
  #   include <draw.h>
  }
@@ -200,19 +199,20 @@ diff -ur root-6.14.00.orig/graf2d/asimage/src/TASImage.cxx root-6.14.00/graf2d/a
     }
  
     get_text_size(text, font, (ASText3DType)type, &width, &height);
-diff -ur root-6.14.00.orig/graf2d/graf/CMakeLists.txt root-6.14.00/graf2d/graf/CMakeLists.txt
---- root-6.14.00.orig/graf2d/graf/CMakeLists.txt	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/graf/CMakeLists.txt	2018-06-14 10:36:18.869871880 +0200
-@@ -7,5 +7,5 @@
- 
- ROOT_STANDARD_LIBRARY_PACKAGE(Graf
-                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
--                              LIBRARIES ${FREETYPE_LIBRARIES} ZLIB::ZLIB mathtext
-+                              LIBRARIES ${FREETYPE_LIBRARIES} ZLIB::ZLIB mathtext fontconfig
-                               DEPENDENCIES Hist Matrix MathCore RIO BUILTINS FREETYPE)
-diff -ur root-6.14.00.orig/graf2d/graf/inc/TTF.h root-6.14.00/graf2d/graf/inc/TTF.h
---- root-6.14.00.orig/graf2d/graf/inc/TTF.h	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/graf/inc/TTF.h	2018-06-14 10:28:26.055618281 +0200
+diff -ur root-6.18.00.orig/graf2d/graf/CMakeLists.txt root-6.18.00/graf2d/graf/CMakeLists.txt
+--- root-6.18.00.orig/graf2d/graf/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/graf/CMakeLists.txt	2019-06-26 15:03:42.153064782 +0200
+@@ -87,6 +87,7 @@
+     ${FREETYPE_LIBRARIES}
+     ZLIB::ZLIB
+     mathtext
++    fontconfig
+   DEPENDENCIES
+     Hist
+     Matrix
+diff -ur root-6.18.00.orig/graf2d/graf/inc/TTF.h root-6.18.00/graf2d/graf/inc/TTF.h
+--- root-6.18.00.orig/graf2d/graf/inc/TTF.h	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/graf/inc/TTF.h	2019-06-26 15:00:32.063047746 +0200
 @@ -76,9 +76,8 @@
     static FT_BBox        fgCBox;                  ///< string control box
     static FT_CharMap     fgCharMap[kTTMaxFonts];  ///< font character map
@@ -224,9 +224,9 @@ diff -ur root-6.14.00.orig/graf2d/graf/inc/TTF.h root-6.14.00/graf2d/graf/inc/TT
     static FT_Face        fgFace[kTTMaxFonts];     ///< font face
     static TTF::TTGlyph   fgGlyphs[kMaxGlyphs];    ///< glyphs
     static Bool_t         fgHinting;               ///< use hinting (true by default)
-diff -ur root-6.14.00.orig/graf2d/graf/src/TTF.cxx root-6.14.00/graf2d/graf/src/TTF.cxx
---- root-6.14.00.orig/graf2d/graf/src/TTF.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/graf/src/TTF.cxx	2018-06-14 10:28:26.055618281 +0200
+diff -ur root-6.18.00.orig/graf2d/graf/src/TTF.cxx root-6.18.00/graf2d/graf/src/TTF.cxx
+--- root-6.18.00.orig/graf2d/graf/src/TTF.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/graf/src/TTF.cxx	2019-06-26 15:00:32.064047736 +0200
 @@ -25,6 +25,8 @@
  #include "TMath.h"
  #include "TError.h"
@@ -787,19 +787,20 @@ diff -ur root-6.14.00.orig/graf2d/graf/src/TTF.cxx root-6.14.00/graf2d/graf/src/
  }
  
  ////////////////////////////////////////////////////////////////////////////////
-diff -ur root-6.14.00.orig/graf2d/postscript/CMakeLists.txt root-6.14.00/graf2d/postscript/CMakeLists.txt
---- root-6.14.00.orig/graf2d/postscript/CMakeLists.txt	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/postscript/CMakeLists.txt	2018-06-14 10:35:47.829194226 +0200
-@@ -5,5 +5,5 @@
- 
- ROOT_STANDARD_LIBRARY_PACKAGE(Postscript
-                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
--                              LIBRARIES  ZLIB::ZLIB mathtext
-+                              LIBRARIES  ZLIB::ZLIB mathtext fontconfig
-                               DEPENDENCIES Graf)
-diff -ur root-6.14.00.orig/graf2d/postscript/src/TPostScript.cxx root-6.14.00/graf2d/postscript/src/TPostScript.cxx
---- root-6.14.00.orig/graf2d/postscript/src/TPostScript.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf2d/postscript/src/TPostScript.cxx	2018-06-14 10:28:26.057618259 +0200
+diff -ur root-6.18.00.orig/graf2d/postscript/CMakeLists.txt root-6.18.00/graf2d/postscript/CMakeLists.txt
+--- root-6.18.00.orig/graf2d/postscript/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/postscript/CMakeLists.txt	2019-06-26 15:06:11.017511871 +0200
+@@ -21,6 +21,7 @@
+   LIBRARIES
+     ZLIB::ZLIB
+     mathtext
++    fontconfig
+   DEPENDENCIES
+     Graf
+ )
+diff -ur root-6.18.00.orig/graf2d/postscript/src/TPostScript.cxx root-6.18.00/graf2d/postscript/src/TPostScript.cxx
+--- root-6.18.00.orig/graf2d/postscript/src/TPostScript.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf2d/postscript/src/TPostScript.cxx	2019-06-26 15:00:32.065047726 +0200
 @@ -229,6 +229,7 @@
  #include <string.h>
  #include <ctype.h>
@@ -1059,20 +1060,20 @@ diff -ur root-6.14.00.orig/graf2d/postscript/src/TPostScript.cxx root-6.14.00/gr
        { "Root.PSFont.STIXGen", "/STIXGeneral" },
        { "Root.PSFont.STIXGenIt", "/STIXGeneral-Italic" },
        { "Root.PSFont.STIXGenBd", "/STIXGeneral-Bold" },
-diff -ur root-6.14.00.orig/graf3d/gl/CMakeLists.txt root-6.14.00/graf3d/gl/CMakeLists.txt
---- root-6.14.00.orig/graf3d/gl/CMakeLists.txt	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf3d/gl/CMakeLists.txt	2018-06-14 10:28:26.057618259 +0200
-@@ -41,6 +41,6 @@
-                               HEADERS ${headers}
-                               SOURCES ${sources}
-                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
--                              LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES}
-+                              LIBRARIES ${gllibs} ${GL2PS_LIBRARIES} GLEW ${FTGL_LIBRARIES} fontconfig
-                               DEPENDENCIES Hist Gui Ged
-                               INSTALL_OPTIONS ${installoptions})
-diff -ur root-6.14.00.orig/graf3d/gl/src/TGLFontManager.cxx root-6.14.00/graf3d/gl/src/TGLFontManager.cxx
---- root-6.14.00.orig/graf3d/gl/src/TGLFontManager.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf3d/gl/src/TGLFontManager.cxx	2018-06-14 10:28:26.058618248 +0200
+diff -ur root-6.18.00.orig/graf3d/gl/CMakeLists.txt root-6.18.00/graf3d/gl/CMakeLists.txt
+--- root-6.18.00.orig/graf3d/gl/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf3d/gl/CMakeLists.txt	2019-06-26 15:02:38.318730684 +0200
+@@ -206,6 +206,7 @@
+     ${FTGL_LIBRARIES}
+     ${GL2PS_LIBRARIES}
+     ${X11_LIBRARIES}
++    fontconfig
+   DEPENDENCIES
+     Hist
+     Gui
+diff -ur root-6.18.00.orig/graf3d/gl/src/TGLFontManager.cxx root-6.18.00/graf3d/gl/src/TGLFontManager.cxx
+--- root-6.18.00.orig/graf3d/gl/src/TGLFontManager.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf3d/gl/src/TGLFontManager.cxx	2019-06-26 15:00:32.066047715 +0200
 @@ -37,6 +37,7 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -1328,9 +1329,9 @@ diff -ur root-6.14.00.orig/graf3d/gl/src/TGLFontManager.cxx root-6.14.00/graf3d/
     fgFontFileArray.Add(new TObjString("STIXGeneral.otf"));          // 200
     fgFontFileArray.Add(new TObjString("STIXGeneralItalic.otf"));    // 210
     fgFontFileArray.Add(new TObjString("STIXGeneralBol.otf"));       // 220
-diff -ur root-6.14.00.orig/graf3d/gl/src/TGLText.cxx root-6.14.00/graf3d/gl/src/TGLText.cxx
---- root-6.14.00.orig/graf3d/gl/src/TGLText.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/graf3d/gl/src/TGLText.cxx	2018-06-14 10:28:26.058618248 +0200
+diff -ur root-6.18.00.orig/graf3d/gl/src/TGLText.cxx root-6.18.00/graf3d/gl/src/TGLText.cxx
+--- root-6.18.00.orig/graf3d/gl/src/TGLText.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/graf3d/gl/src/TGLText.cxx	2019-06-26 15:00:32.066047715 +0200
 @@ -34,6 +34,8 @@
  # include "FTGLBitmapFont.h"
  #endif
@@ -1465,9 +1466,9 @@ diff -ur root-6.14.00.orig/graf3d/gl/src/TGLText.cxx root-6.14.00/graf3d/gl/src/
        Error("SetGLTextFont","Cannot set FTGL::FaceSize");
 -   delete [] ttfont;
  }
-diff -ur root-6.14.00.orig/gui/gui/src/TGApplication.cxx root-6.14.00/gui/gui/src/TGApplication.cxx
---- root-6.14.00.orig/gui/gui/src/TGApplication.cxx	2018-06-13 12:10:40.000000000 +0200
-+++ root-6.14.00/gui/gui/src/TGApplication.cxx	2018-06-14 10:28:26.058618248 +0200
+diff -ur root-6.18.00.orig/gui/gui/src/TGApplication.cxx root-6.18.00/gui/gui/src/TGApplication.cxx
+--- root-6.18.00.orig/gui/gui/src/TGApplication.cxx	2019-06-25 10:52:11.000000000 +0200
++++ root-6.18.00/gui/gui/src/TGApplication.cxx	2019-06-26 15:00:32.066047715 +0200
 @@ -83,20 +83,12 @@
     gROOT->SetBatch(kFALSE);
  
