@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3585,6 +3585,9 @@ fi
 %endif
 
 %changelog
+* Fri Jul 26 2019 Fedora Release Engineering <releng@fedoraproject.org> - 6.18.00-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
 * Wed Jun 26 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.00-1
 - Update to 6.18.00
 - Drop patches accepted upstream:
