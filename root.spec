@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -2120,6 +2120,10 @@ mv %{buildroot}%{_libdir}/%{name}/*-gdb.py \
 mkdir -p %{buildroot}%{python3_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT.rootmap \
+   %{buildroot}%{python3_sitearch}/libPyROOT.rootmap
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT_rdict.pcm \
+   %{buildroot}%{python3_sitearch}/libPyROOT_rdict.pcm
 mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libJupyROOT.so
 mv %{buildroot}%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
@@ -2151,6 +2155,10 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python2/cmake_install.cmake
 mkdir -p %{buildroot}%{python2_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python2_sitearch}/libPyROOT.so
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
+   %{buildroot}%{python2_sitearch}/libPyROOT.rootmap
+mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
+   %{buildroot}%{python2_sitearch}/libPyROOT_rdict.pcm
 mv $tmpdir%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
 
 rm -rf $tmpdir
@@ -2166,6 +2174,10 @@ touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
 mkdir -p %{buildroot}%{python2_sitearch}
 mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python2_sitearch}/libPyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT.rootmap \
+   %{buildroot}%{python2_sitearch}/libPyROOT.rootmap
+mv %{buildroot}%{_libdir}/%{name}/libPyROOT_rdict.pcm \
+   %{buildroot}%{python2_sitearch}/libPyROOT_rdict.pcm
 mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python2_sitearch}/libJupyROOT.so
 mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
@@ -2194,6 +2206,10 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3/cmake_install.cmake
 mkdir -p %{buildroot}%{python3_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
+   %{buildroot}%{python3_sitearch}/libPyROOT.rootmap
+mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
+   %{buildroot}%{python3_sitearch}/libPyROOT_rdict.pcm
 mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python3_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
@@ -2225,6 +2241,10 @@ DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3oth/cmake_install.cmake
 mkdir -p %{buildroot}%{python3_other_sitearch}
 mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
    %{buildroot}%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
+mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
+   %{buildroot}%{python3_other_sitearch}/libPyROOT.rootmap
+mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
+   %{buildroot}%{python3_other_sitearch}/libPyROOT_rdict.pcm
 mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
    %{buildroot}%{python3_other_sitearch}/libJupyROOT.so
 mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_other_sitearch}
@@ -2606,9 +2626,18 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
 	fi
     done
 fi
-%{_sbindir}/update-alternatives --install \
-    %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
+for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
+    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
+	rm %{_libdir}/%{name}/$f
+    fi
+done
+%{_sbindir}/update-alternatives \
+    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
+    %{python2_sitearch}/libPyROOT.so %{py2prio} \
+    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
+    %{python2_sitearch}/libPyROOT.rootmap \
+    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
+    %{python2_sitearch}/libPyROOT_rdict.pcm
 %{?ldconfig}
 
 %preun -n python2-%{name}
@@ -2622,9 +2651,13 @@ fi
 %triggerpostun -n python2-%{name} -- %{name}-python
 # Uninstalling the old %{name}-python will remove the alternatives
 # for python2-%{name} - put them back in this triggerpostun script
-%{_sbindir}/update-alternatives --install \
-    %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python2_sitearch}/libPyROOT.so %{py2prio}
+%{_sbindir}/update-alternatives \
+    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
+    %{python2_sitearch}/libPyROOT.so %{py2prio} \
+    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
+    %{python2_sitearch}/libPyROOT.rootmap \
+    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
+    %{python2_sitearch}/libPyROOT_rdict.pcm
 %{?ldconfig}
 
 %endif
@@ -2646,9 +2679,18 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
 	fi
     done
 fi
-%{_sbindir}/update-alternatives --install \
-    %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
+for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
+    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
+	rm %{_libdir}/%{name}/$f
+    fi
+done
+%{_sbindir}/update-alternatives \
+    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
+    %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio} \
+    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
+    %{python3_sitearch}/libPyROOT.rootmap \
+    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
+    %{python3_sitearch}/libPyROOT_rdict.pcm
 %{?ldconfig}
 
 %preun -n python%{python3_pkgversion}-%{name}
@@ -2662,9 +2704,13 @@ fi
 %triggerpostun -n python%{python3_pkgversion}-%{name} -- %{name}-python%{python3_pkgversion}
 # Uninstalling the old %{name}-python%{python3_pkgversion} will remove the alternatives
 # for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
-%{_sbindir}/update-alternatives --install \
-    %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio}
+%{_sbindir}/update-alternatives \
+    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
+    %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio} \
+    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
+    %{python3_sitearch}/libPyROOT.rootmap \
+    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
+    %{python3_sitearch}/libPyROOT_rdict.pcm
 %{?ldconfig}
 
 %if %{?rhel}%{!?rhel:0} == 7
@@ -2681,9 +2727,18 @@ if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
 	fi
     done
 fi
-%{_sbindir}/update-alternatives --install \
-    %{_libdir}/%{name}/libPyROOT.so.%{version} \
-    libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so 5
+for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
+    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
+	rm %{_libdir}/%{name}/$f
+    fi
+done
+%{_sbindir}/update-alternatives \
+    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
+    %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so 5 \
+    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
+    %{python3_other_sitearch}/libPyROOT.rootmap \
+    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
+    %{python3_other_sitearch}/libPyROOT_rdict.pcm
 %{?ldconfig}
 
 %preun -n python%{python3_other_pkgversion}-%{name}
@@ -2936,12 +2991,14 @@ fi
 
 %if %{buildpy2}
 %files -n python2-%{name} -f includelist-bindings-pyroot
-%{_libdir}/%{name}/libPyROOT.rootmap
+%ghost %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%{_libdir}/%{name}/libPyROOT_rdict.pcm
+%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
+%{python2_sitearch}/libPyROOT.rootmap
 %{python2_sitearch}/libPyROOT.so
+%{python2_sitearch}/libPyROOT_rdict.pcm
 %{python2_sitearch}/ROOT.py*
 %{python2_sitearch}/ROOT-*.egg-info
 %{python2_sitearch}/cppyy.py*
@@ -2962,12 +3019,14 @@ fi
 %endif
 
 %files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
-%{_libdir}/%{name}/libPyROOT.rootmap
+%ghost %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%{_libdir}/%{name}/libPyROOT_rdict.pcm
+%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
+%{python3_sitearch}/libPyROOT.rootmap
 %{python3_sitearch}/libPyROOT.%{py3_soabi}.so
+%{python3_sitearch}/libPyROOT_rdict.pcm
 %{python3_sitearch}/ROOT.py
 %{python3_sitearch}/ROOT-*.egg-info
 %{python3_sitearch}/cppyy.py
@@ -2987,12 +3046,14 @@ fi
 
 %if %{?rhel}%{!?rhel:0} == 7
 %files -n python%{python3_other_pkgversion}-%{name} -f includelist-bindings-pyroot
-%{_libdir}/%{name}/libPyROOT.rootmap
+%ghost %{_libdir}/%{name}/libPyROOT.rootmap
 %{_libdir}/%{name}/libPyROOT.so
 %{_libdir}/%{name}/libPyROOT.so.%{libversion}
 %ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%{_libdir}/%{name}/libPyROOT_rdict.pcm
+%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
+%{python3_other_sitearch}/libPyROOT.rootmap
 %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
+%{python3_other_sitearch}/libPyROOT_rdict.pcm
 %{python3_other_sitearch}/ROOT.py
 %{python3_other_sitearch}/ROOT-*.egg-info
 %{python3_other_sitearch}/cppyy.py
@@ -3585,6 +3646,11 @@ fi
 %endif
 
 %changelog
+* Wed Jul 31 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.00-3
+- Root 6.18 requires pcm files to be in the same directory as libraries
+- Add libPyROOT.rootmap and libPyROOT_rdict.pcm as slaves to libPyROOT.so
+  in update-alternatives
+
 * Fri Jul 26 2019 Fedora Release Engineering <releng@fedoraproject.org> - 6.18.00-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
 
