@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3646,6 +3646,9 @@ fi
 %endif
 
 %changelog
+* Mon Aug 19 2019 Miro Hrončok <mhroncok@redhat.com> - 6.18.00-4
+- Rebuilt for Python 3.8
+
 * Wed Jul 31 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.00-3
 - Root 6.18 requires pcm files to be in the same directory as libraries
 - Add libPyROOT.rootmap and libPyROOT_rdict.pcm as slaves to libPyROOT.so
