@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3646,6 +3646,9 @@ fi
 %endif
 
 %changelog
+* Tue Aug 20 2019 Susi Lehtola <jussilehtola@fedoraproject.org> - 6.18.00-5
+- Rebuilt for GSL 2.6.
+
 * Mon Aug 19 2019 Miro Hrončok <mhroncok@redhat.com> - 6.18.00-4
 - Rebuilt for Python 3.8
 
