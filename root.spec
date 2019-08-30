@@ -16,7 +16,7 @@
 %global __pythondef %{__python2}
 %endif
 
-%if %{?fedora}%{!?fedora:0} >= 31
+%if %{?fedora}%{!?fedora:0} >= 31 || %{?rhel}%{!?rhel:0} >= 8
 # Don't build python2-root for Fedora >= 31
 %global buildpy2 0
 %else
@@ -49,9 +49,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.18.00
+Version:	6.18.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -282,13 +282,8 @@ This package contains icons used by the ROOT GUI.
 %package fonts
 Summary:	ROOT font collection
 BuildArch:	noarch
-%if %{?rhel}%{!?rhel:0}
-#		STIX version 0.9 and Driod Sans Fallback
-License:	OFL and ASL 2.0
-%else
 #		STIX version 0.9 only
 License:	OFL
-%endif
 Requires:	%{name}-core = %{version}-%{release}
 
 %description fonts
@@ -297,7 +292,15 @@ In particular it contains STIX version 0.9 that is used by TMathText.
 
 %package doc
 Summary:	Documentation for the ROOT system
+%if %{?rhel}%{!?rhel:0} != 7
+#		RHEL 7 is now RHEL 7.7, but aarch64 is stuck on RHEL 7.6.
+#		Differences in graphics libraries (SVG support in doxygen)
+#		between the releases result in that the content of the
+#		documentation package differs between architectures in such a
+#		way that the build is rejected as invalid if the documentation
+#		package is noarch. Don't declare the package noarch in EPEL 7.
 BuildArch:	noarch
+%endif
 License:	LGPLv2+ and GPLv2+ and BSD
 Requires:	mathjax
 
@@ -452,8 +455,8 @@ The Jupyter kernel for the ROOT notebook.
 
 %package -n python2-jsmva
 Summary:	TMVA interface used by JupyROOT
-%{?python_provide:%python_provide python2-jsmva}
 BuildArch:	noarch
+%{?python_provide:%python_provide python2-jsmva}
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python2-jsmva
@@ -463,6 +466,12 @@ TMVA interface used by JupyROOT.
 %package -n python%{python3_pkgversion}-%{name}
 Summary:	Python extension for ROOT
 %{?python_provide:%python_provide python%{python3_pkgversion}-%{name}}
+%if %{?rhel}%{!?rhel:0} == 7
+%ifarch aarch64
+#		Workaround broken RHEL 7 aarch64
+Provides:	python3-%{name} = %{version}-%{release}
+%endif
+%endif
 Provides:	%{name}-python%{python3_pkgversion} = %{version}-%{release}
 Obsoletes:	%{name}-python%{python3_pkgversion} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -476,6 +485,12 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
 %{?python_provide:%python_provide python%{python3_pkgversion}-jupyroot}
+%if %{?rhel}%{!?rhel:0} == 7
+%ifarch aarch64
+#		Workaround broken RHEL 7 aarch64
+Provides:	python3-jupyroot = %{version}-%{release}
+%endif
+%endif
 Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python%{python3_pkgversion}-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -495,8 +510,14 @@ The Jupyter kernel for the ROOT notebook.
 
 %package -n python%{python3_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
-%{?python_provide:%python_provide python%{python3_pkgversion}-jsmva}
 BuildArch:	noarch
+%{?python_provide:%python_provide python%{python3_pkgversion}-jsmva}
+%if %{?rhel}%{!?rhel:0} == 7
+%ifarch aarch64
+#		Workaround broken RHEL 7 aarch64
+Provides:	python3-jsmva = %{version}-%{release}
+%endif
+%endif
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_pkgversion}-jsmva
@@ -528,8 +549,8 @@ The Jupyter kernel for the ROOT notebook.
 
 %package -n python%{python3_other_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
-%{?python_provide:%python_provide python%{python3_other_pkgversion}-jsmva}
 BuildArch:	noarch
+%{?python_provide:%python_provide python%{python3_other_pkgversion}-jsmva}
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_other_pkgversion}-jsmva
@@ -3646,6 +3667,11 @@ fi
 %endif
 
 %changelog
+* Mon Aug 26 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.02-1
+- Update to 6.18.02
+- Add workarounds for issues caused by the RHEL 7.7 update, that left the
+  aarch64 architecture at RHEL 7.6.
+
 * Tue Aug 20 2019 Susi Lehtola <jussilehtola@fedoraproject.org> - 6.18.00-5
 - Rebuilt for GSL 2.6.
 
