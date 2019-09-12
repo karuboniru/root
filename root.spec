@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -204,7 +204,7 @@ BuildRequires:	expat-devel
 BuildRequires:	pythia8-devel >= 8.1.80
 BuildRequires:	blas-devel
 %if %{py3default}
-BuildRequires:	python3-numpy
+BuildRequires:	python%{python3_pkgversion}-numpy
 %else
 BuildRequires:	python2-numpy
 %endif
@@ -526,7 +526,7 @@ TMVA interface used by JupyROOT.
 %if %{?rhel}%{!?rhel:0} == 7
 %package -n python%{python3_other_pkgversion}-%{name}
 Summary:	Python extension for ROOT
-%{?python_provide:%python_provide python%{python3_other_pkgversion}-%{name}}
+%{?python_provide:%python_provide python%{?python3_other_pkgversion}-%{name}}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
@@ -537,7 +537,7 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 
 %package -n python%{python3_other_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
-%{?python_provide:%python_provide python%{python3_other_pkgversion}-jupyroot}
+%{?python_provide:%python_provide python%{?python3_other_pkgversion}-jupyroot}
 Requires:	python%{python3_other_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python%{python3_other_pkgversion}-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -550,7 +550,7 @@ The Jupyter kernel for the ROOT notebook.
 %package -n python%{python3_other_pkgversion}-jsmva
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
-%{?python_provide:%python_provide python%{python3_other_pkgversion}-jsmva}
+%{?python_provide:%python_provide python%{?python3_other_pkgversion}-jsmva}
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_other_pkgversion}-jsmva
@@ -1505,7 +1505,7 @@ License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tmva%{?_isa} = %{version}-%{release}
 %if %{py3default}
-Requires:	python3-numpy
+Requires:	python%{python3_pkgversion}-numpy
 %else
 Requires:	python2-numpy
 %endif
@@ -1614,7 +1614,7 @@ An algorithm to unfold distributions from detector to truth level.
 Summary:	ROOT command line utilities
 BuildArch:	noarch
 %if %{py3default}
-Requires:	python3-%{name} = %{version}-%{release}
+Requires:	python%{python3_pkgversion}-%{name} = %{version}-%{release}
 %else
 Requires:	python2-%{name} = %{version}-%{release}
 %endif
@@ -3667,6 +3667,9 @@ fi
 %endif
 
 %changelog
+* Thu Sep 12 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.02-2
+- Rebuild for g++ 9.2
+
 * Mon Aug 26 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.02-1
 - Update to 6.18.02
 - Add workarounds for issues caused by the RHEL 7.7 update, that left the
