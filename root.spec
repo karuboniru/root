@@ -34,6 +34,12 @@
 %global root7 0
 %endif
 
+%if %{?rhel}%{!?rhel:0} == 8
+# qt5-qtwebengine not yet available in EPEL 8 (only in -playground)
+# https://pagure.io/epel/issue/79
+%global qt5_qtwebengine_arches none
+%endif
+
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
 # Multi-threading support requires TBB version >= 2018
 %global tbb 1
@@ -49,9 +55,9 @@
 %global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.18.02
+Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -439,13 +445,13 @@ Requires:	python2-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python2-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-notebook = %{version}-%{release}
-%if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
+%if %{?fedora}%{!?fedora:0} >= 26
 #		python-metakernel for python2 not available in
 #		Fedora <= 25 or RHEL/EPEL - some functionality missing
 Requires:	python2-ipython
 Requires:	python2-metakernel
 %endif
-%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+%if %{?fedora}%{!?fedora:0} >= 28
 Requires:	python-jupyter-filesystem
 %endif
 Obsoletes:	%{name}-rootaas < 6.08.00
@@ -495,13 +501,13 @@ Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python%{python3_pkgversion}-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-notebook = %{version}-%{release}
-%if %{?fedora}%{!?fedora:0} >= 26 || %{?rhel}%{!?rhel:0} >= 8
+%if %{?fedora}%{!?fedora:0} >= 26
 #		python-metakernel for python3 not available in
 #		Fedora <= 25 or RHEL/EPEL - some functionality missing
 Requires:	python%{python3_pkgversion}-ipython
 Requires:	python%{python3_pkgversion}-metakernel
 %endif
-%if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
+%if %{?fedora}%{!?fedora:0} >= 28
 Requires:	python-jupyter-filesystem
 %endif
 
@@ -2343,6 +2349,7 @@ EOF
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e 's!/usr/bin/env python3!%{__python3}!' \
+    -e 's!/usr/bin/env platform-python!%{__pythondef}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2357,6 +2364,7 @@ sed -e 's!/usr/bin/env python2!%{__python2}!' \
        %{buildroot}%{_bindir}/rootslimtree
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e 's!/usr/bin/env python3!%{__python3}!' \
+    -e 's!/usr/bin/env platform-python!%{__pythondef}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
 sed -e 's!/usr/bin/env python!%{__pythondef}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
@@ -3667,6 +3675,10 @@ fi
 %endif
 
 %changelog
+* Mon Sep 30 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-1
+- Update to 6.18.04
+- First build for EPEL 8
+
 * Thu Sep 12 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.02-2
 - Rebuild for g++ 9.2
 
