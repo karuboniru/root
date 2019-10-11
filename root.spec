@@ -2610,8 +2610,8 @@ tutorial-v7-draw_subpads.cxx"
 %endif
 
 %ifarch ppc64le
-%if %{?fedora}%{!?fedora:0} == 30
-# This test fails on Fedora 30 ppc64le with the following error:
+%if %{?fedora}%{!?fedora:0} == 29 || %{?fedora}%{!?fedora:0} == 30
+# This test fails on Fedora 29 and 30 ppc64le with the following error:
 # cling::DynamicLibraryManager::loadLibrary():
 #   /lib64/libGLdispatch.so.0: cannot allocate memory in static TLS block
 # Error in <TInterpreter::TCling::AutoLoad>:
