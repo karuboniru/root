@@ -1,0 +1,37 @@
+While all is fine in Fedora and all packages needed to run the JupyROOT
+notebook are available there, this is not true for EPEL.
+
+Hopefully the ipython/jupyter stack will at some point be available in
+EPEL too, but at this point in time it is not.
+
+However, it is possible to work around this issue using a python
+virtual environment.
+
+First, install the required root packages (as root):
+
+$ yum install root root-notebook python3-jupyroot
+
+Then return to your non-root user and create a python3 virtual
+environment:
+
+$ python3 -m venv ~/jupyter-env
+
+Activate the environment:
+
+$ . ~/jupyter-env/bin/activate
+
+Then install the missing packages in the virtual environment using pip:
+
+$ pip install notebook metakernel
+
+Then start the root notebook:
+
+$ PYTHONPATH=~/jupyter-env/lib/python3.6/site-packages root --notebook
+
+And that is it.
+
+If you want to start it again and you haven't removed the virtual
+environment, only two of the steps are necessary:
+
+$ . ~/jupyter-env/bin/activate
+$ PYTHONPATH=~/jupyter-env/lib/python3.6/site-packages root --notebook

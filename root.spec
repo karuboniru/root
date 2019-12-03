@@ -34,12 +34,6 @@
 %global root7 0
 %endif
 
-%if %{?rhel}%{!?rhel:0} == 8
-# qt5-qtwebengine not yet available in EPEL 8 (only in -playground)
-# https://pagure.io/epel/issue/79
-%global qt5_qtwebengine_arches none
-%endif
-
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
 # Multi-threading support requires TBB version >= 2018
 %global tbb 1
@@ -57,7 +51,7 @@
 Name:		root
 Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -78,6 +72,9 @@ Source4:	%{name}.png
 #		MIME type file and icon
 Source5:	%{name}.xml
 Source6:	application-x-root.png
+#		Instructions for setting up a python virtual environment
+#		for running the JupyROOT notebook on EPEL
+Source7:	JupyROOT-on-EPEL
 #		Use system fonts
 Patch0:		%{name}-fontconfig.patch
 #		Revert the removal of DataFrame for 32 bit architectures
@@ -226,13 +223,9 @@ BuildRequires:	redhat-lsb-core
 BuildRequires:	font(freesans)
 BuildRequires:	font(freeserif)
 BuildRequires:	font(freemono)
-%if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	font(standardsymbolsps)
 BuildRequires:	font(d050000l)
 BuildRequires:	font(z003)
-%else
-BuildRequires:	urw-fonts
-%endif
 BuildRequires:	font(droidsansfallback)
 #		With gdb installed test failures will show backtraces
 BuildRequires:	gdb
@@ -298,15 +291,7 @@ In particular it contains STIX version 0.9 that is used by TMathText.
 
 %package doc
 Summary:	Documentation for the ROOT system
-%if %{?rhel}%{!?rhel:0} != 7
-#		RHEL 7 is now RHEL 7.7, but aarch64 is stuck on RHEL 7.6.
-#		Differences in graphics libraries (SVG support in doxygen)
-#		between the releases result in that the content of the
-#		documentation package differs between architectures in such a
-#		way that the build is rejected as invalid if the documentation
-#		package is noarch. Don't declare the package noarch in EPEL 7.
 BuildArch:	noarch
-%endif
 License:	LGPLv2+ and GPLv2+ and BSD
 Requires:	mathjax
 
@@ -354,13 +339,9 @@ Requires:	xorg-x11-fonts-ISO8859-1-75dpi
 Requires:	font(freesans)
 Requires:	font(freeserif)
 Requires:	font(freemono)
-%if %{?fedora}%{!?fedora:0} >= 27 || %{?rhel}%{!?rhel:0} >= 8
 Requires:	font(standardsymbolsps)
 Requires:	font(d050000l)
 Requires:	font(z003)
-%else
-Requires:	urw-fonts
-%endif
 Requires:	font(droidsansfallback)
 Obsoletes:	%{name}-ruby < 6.00.00
 Obsoletes:	%{name}-vdt < 6.10.00
@@ -472,12 +453,6 @@ TMVA interface used by JupyROOT.
 %package -n python%{python3_pkgversion}-%{name}
 Summary:	Python extension for ROOT
 %{?python_provide:%python_provide python%{python3_pkgversion}-%{name}}
-%if %{?rhel}%{!?rhel:0} == 7
-%ifarch aarch64
-#		Workaround broken RHEL 7 aarch64
-Provides:	python3-%{name} = %{version}-%{release}
-%endif
-%endif
 Provides:	%{name}-python%{python3_pkgversion} = %{version}-%{release}
 Obsoletes:	%{name}-python%{python3_pkgversion} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -491,12 +466,6 @@ provide a Python interface to ROOT, and a ROOT interface to Python.
 %package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
 %{?python_provide:%python_provide python%{python3_pkgversion}-jupyroot}
-%if %{?rhel}%{!?rhel:0} == 7
-%ifarch aarch64
-#		Workaround broken RHEL 7 aarch64
-Provides:	python3-jupyroot = %{version}-%{release}
-%endif
-%endif
 Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
 Requires:	python%{python3_pkgversion}-jsmva = %{version}-%{release}
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -518,12 +487,6 @@ The Jupyter kernel for the ROOT notebook.
 Summary:	TMVA interface used by JupyROOT
 BuildArch:	noarch
 %{?python_provide:%python_provide python%{python3_pkgversion}-jsmva}
-%if %{?rhel}%{!?rhel:0} == 7
-%ifarch aarch64
-#		Workaround broken RHEL 7 aarch64
-Provides:	python3-jsmva = %{version}-%{release}
-%endif
-%endif
 Requires:	%{name}-tmva = %{version}-%{release}
 
 %description -n python%{python3_pkgversion}-jsmva
@@ -1634,6 +1597,11 @@ Summary:	Static files for the Jupyter ROOT Notebook
 BuildArch:	noarch
 Requires:	%{name}-core = %{version}-%{release}
 Requires:	js-jsroot
+%if %{?fedora}%{!?fedora:0} >= 26
+#		jupyter-notebook not available in
+#		Fedora <= 25 or RHEL/EPEL - some functionality missing
+Requires:	jupyter-notebook
+%endif
 
 %description notebook
 Javascript and style files for the Jupyter ROOT Notebook.
@@ -2118,6 +2086,9 @@ install -p -m 644 %{SOURCE5} %{buildroot}%{_datadir}/mime/packages
 install -p -m 644 %{SOURCE6} \
     %{buildroot}%{_datadir}/icons/hicolor/48x48/mimetypes
 
+# Additional documentation
+install -p -m 644 %{SOURCE7} %{buildroot}%{_pkgdocdir}
+
 # Move python cli helper to its own directory
 mkdir -p %{buildroot}%{_datadir}/%{name}/cli
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
@@ -2133,11 +2104,7 @@ mv %{buildroot}%{_libdir}/%{name}/*-gdb.py \
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
 # This is the default for Fedora 30+, set it for Fedora 28-29
 %global _python_bytecompile_extra 0
-%if %{py3default}
-%py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/cli
-%else
-%py_byte_compile %{__python2} %{buildroot}%{_datadir}/%{name}/cli
-%endif
+%py_byte_compile %{__pythondef} %{buildroot}%{_datadir}/%{name}/cli
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}
 %endif
 
@@ -2349,7 +2316,6 @@ EOF
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e 's!/usr/bin/env python3!%{__python3}!' \
-    -e 's!/usr/bin/env platform-python!%{__pythondef}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2364,7 +2330,6 @@ sed -e 's!/usr/bin/env python2!%{__python2}!' \
        %{buildroot}%{_bindir}/rootslimtree
 sed -e 's!/usr/bin/env python2!%{__python2}!' \
     -e 's!/usr/bin/env python3!%{__python3}!' \
-    -e 's!/usr/bin/env platform-python!%{__pythondef}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
 sed -e 's!/usr/bin/env python!%{__pythondef}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
@@ -3625,6 +3590,7 @@ fi
 %files notebook
 %{_bindir}/rootnb.exe
 %{_datadir}/%{name}/notebook
+%doc %{_pkgdocdir}/JupyROOT-on-EPEL
 
 %if %{root7}
 %files graf-gpadv7 -f includelist-graf2d-gpadv7
@@ -3675,6 +3641,10 @@ fi
 %endif
 
 %changelog
+* Tue Dec 03 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-2
+- Remove workarounds for RHEL 7 aarch64 (architecture dropped by EPEL 7)
+- Enable QtWebEngine dependent modules on EPEL 8 (now available)
+
 * Mon Sep 30 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-1
 - Update to 6.18.04
 - First build for EPEL 8
