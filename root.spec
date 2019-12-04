@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -2093,6 +2093,9 @@ install -p -m 644 %{SOURCE7} %{buildroot}%{_pkgdocdir}
 mkdir -p %{buildroot}%{_datadir}/%{name}/cli
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
    %{buildroot}%{_datadir}/%{name}/cli
+%if %{py3default}
+rm %{buildroot}%{_libdir}/%{name}/__pycache__/cmdLineUtils.*
+%endif
 sed -e '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
 
 # Move GDB pretty printers to auto load safe path
@@ -2314,8 +2317,7 @@ EOF
 
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
-sed -e 's!/usr/bin/env python2!%{__python2}!' \
-    -e 's!/usr/bin/env python3!%{__python3}!' \
+sed -e 's!/usr/bin/env python.*!%{__pythondef}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2328,8 +2330,7 @@ sed -e 's!/usr/bin/env python2!%{__python2}!' \
        %{buildroot}%{_bindir}/rootprint \
        %{buildroot}%{_bindir}/rootrm \
        %{buildroot}%{_bindir}/rootslimtree
-sed -e 's!/usr/bin/env python2!%{__python2}!' \
-    -e 's!/usr/bin/env python3!%{__python3}!' \
+sed -e 's!/usr/bin/env python.*!%{__pythondef}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
 sed -e 's!/usr/bin/env python!%{__pythondef}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
@@ -3641,6 +3642,9 @@ fi
 %endif
 
 %changelog
+* Wed Dec 04 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-3
+- Fix shebangs in root-cli for EPEL 8
+
 * Tue Dec 03 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-2
 - Remove workarounds for RHEL 7 aarch64 (architecture dropped by EPEL 7)
 - Enable QtWebEngine dependent modules on EPEL 8 (now available)
