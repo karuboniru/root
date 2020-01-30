@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	4%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3642,6 +3642,9 @@ fi
 %endif
 
 %changelog
+* Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 6.18.04-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
+
 * Wed Dec 04 2019 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-3
 - Fix shebangs in root-cli for EPEL 8
 
