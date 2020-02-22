@@ -1,0 +1,12 @@
+diff -ur root-6.18.04.orig/graf2d/gpadv7/v7/src/RDrawingAttr.cxx root-6.18.04/graf2d/gpadv7/v7/src/RDrawingAttr.cxx
+--- root-6.18.04.orig/graf2d/gpadv7/v7/src/RDrawingAttr.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/graf2d/gpadv7/v7/src/RDrawingAttr.cxx	2020-02-15 21:16:58.819735413 +0100
+@@ -26,6 +26,8 @@
+ {
+ }
+ 
++constexpr const ROOT::Experimental::RDrawingAttrBase::FromOption_t ROOT::Experimental::RDrawingAttrBase::FromOption;
++
+ ROOT::Experimental::RDrawingAttrBase::RDrawingAttrBase(FromOption_t, const Name &name, RDrawingOptsBase &opts) :
+    fPath{name.fStr}, fHolder(opts.GetHolder())
+ {

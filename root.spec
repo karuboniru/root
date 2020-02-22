@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	4%{?dist}
+Release:	5%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -121,11 +121,22 @@ Patch17:	%{name}-stress-aarch64-ppc64le.patch
 #		Fix GDB pretty printers install name and location
 #		https://github.com/root-project/root/pull/4024
 Patch18:	%{name}-pretty-printers.patch
+#		Missing include - fails with gcc 10
+Patch19:	%{name}-missing-include-string.patch
+#		Fix ppc64le build with gcc 10
+Patch20:	%{name}-clang-altivec-vector.patch
+#		Missing symbol - with gcc 10
+Patch21:	%{name}-static-constexpr.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
 #		https://sft.its.cern.ch/jira/browse/ROOT-8703
 ExcludeArch:	s390x
+%if %{?fedora}%{!?fedora:0} >= 32
+#		The rootcling_stage1 binary segfaults on 32-bit arm when
+#		compiled with gcc 10 - exclude the architecture for now
+ExcludeArch:	%{arm}
+%endif
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	cmake >= 3.4.3
@@ -1744,6 +1755,9 @@ This package contains an ntuple extension for ROOT 7.
 %patch16 -p1
 %patch17 -p1
 %patch18 -p1
+%patch19 -p1
+%patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2583,6 +2597,28 @@ tutorial-v7-draw_subpads.cxx"
 # Error in <TInterpreter::TCling::AutoLoad>:
 #   failure loading library libRGL.so for TGLHistPainter
 excluded="${excluded}|tutorial-roofit-rf608_fitresultaspdf-py"
+%endif
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 32
+# New failures with Fedora 32+ (gcc 10)
+excluded="${excluded}|tutorial-v7-markerStyle.cxx"
+%ifarch %{ix86}
+excluded="${excluded}|\
+TMVA-DNN-CNN-Reshape-CPU|\
+gtest-tree-dataframe-test-dataframe-interface"
+%endif
+%ifarch ppc64le
+excluded="${excluded}|\
+TMVA-DNN-CNN-Reshape-CPU|\
+tutorial-v7-lineStyle.cxx|\
+tutorial-v7-lineWidth.cxx"
+%endif
+%endif
+
+%if %{?fedora}%{!?fedora:0} >= 33
+%ifarch aarch64
+excluded="${excluded}|tutorial-tmva-TMVARegression"
 %endif
 %endif
 
@@ -3642,6 +3678,10 @@ fi
 %endif
 
 %changelog
+* Sat Feb 22 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-5
+- Fixes and workarounds for gcc 10
+- ExcludeArch for 32 bit ARM because rootcling_stage1 segfaults
+
 * Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 6.18.04-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
 

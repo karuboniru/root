@@ -1,0 +1,12 @@
+diff -ur root-6.18.04.orig/interpreter/llvm/src/tools/clang/lib/Lex/Lexer.cpp root-6.18.04/interpreter/llvm/src/tools/clang/lib/Lex/Lexer.cpp
+--- root-6.18.04.orig/interpreter/llvm/src/tools/clang/lib/Lex/Lexer.cpp	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/interpreter/llvm/src/tools/clang/lib/Lex/Lexer.cpp	2020-02-06 14:36:14.580497452 +0100
+@@ -2373,7 +2373,7 @@
+         '/', '/', '/', '/',  '/', '/', '/', '/'
+       };
+       while (CurPtr+16 <= BufferEnd &&
+-             !vec_any_eq(*(const vector unsigned char*)CurPtr, Slashes))
++             !vec_any_eq(*(const __vector unsigned char*)CurPtr, Slashes))
+         CurPtr += 16;
+ #else
+       // Scan for '/' quickly.  Many block comments are very large.
