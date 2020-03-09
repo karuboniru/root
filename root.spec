@@ -134,7 +134,8 @@ Patch21:	%{name}-static-constexpr.patch
 ExcludeArch:	s390x
 %if %{?fedora}%{!?fedora:0} >= 32
 #		The rootcling_stage1 binary segfaults on 32-bit arm when
-#		compiled with gcc 10 - exclude the architecture for now
+#		compiled with gcc 10 - exclude the architecture for now,
+#		bug #1811604
 ExcludeArch:	%{arm}
 %endif
 
@@ -3680,7 +3681,7 @@ fi
 %changelog
 * Sat Feb 22 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-5
 - Fixes and workarounds for gcc 10
-- ExcludeArch for 32 bit ARM because rootcling_stage1 segfaults
+- ExcludeArch for 32 bit ARM because rootcling_stage1 segfaults (bug #1811604)
 
 * Thu Jan 30 2020 Fedora Release Engineering <releng@fedoraproject.org> - 6.18.04-4
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_32_Mass_Rebuild
