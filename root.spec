@@ -46,12 +46,12 @@
 
 # Do not generate autoprovides for libJupyROOT.so
 # Note: the ones from libPyROOT.so we do want though
-%global __provides_exclude_from ^(%{python2_sitearch}|%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
+%global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
 Version:	6.18.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	5%{?dist}
+Release:	6%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -124,20 +124,35 @@ Patch18:	%{name}-pretty-printers.patch
 #		Missing include - fails with gcc 10
 Patch19:	%{name}-missing-include-string.patch
 #		Fix ppc64le build with gcc 10
+#		https://github.com/root-project/root/pull/5157
 Patch20:	%{name}-clang-altivec-vector.patch
 #		Missing symbol - with gcc 10
 Patch21:	%{name}-static-constexpr.patch
+#		Fix -Wmissing-field-initializers in python bindings for
+#		Python 3.8 and 3.9
+#		https://github.com/root-project/root/pull/5158
+Patch22:	%{name}-python3.8-object.patch
+#		Correct broken assert statements
+#		https://github.com/root-project/root/pull/5159
+Patch23:	%{name}-FitData-assert-fix.patch
+#		The test that creates the file must run before the test that
+#		modifies it
+#		https://github.com/root-project/root/pull/5160
+Patch24:	%{name}-xmlmodify-dep.patch
+#		Use unique filenames in tutorials so they can be run in
+#		parallel
+#		Backport from upstream's git
+Patch25:	%{name}-tutorials-unique-filenames.patch
+#		Size types should use %z
+#		https://github.com/root-project/root/pull/5161
+Patch26:	%{name}-format-fix.patch
+#		Run some test on 32 bit that upstream has disabled
+Patch27:	%{name}-32bit-tests.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
 #		https://sft.its.cern.ch/jira/browse/ROOT-8703
 ExcludeArch:	s390x
-%if %{?fedora}%{!?fedora:0} >= 32
-#		The rootcling_stage1 binary segfaults on 32-bit arm when
-#		compiled with gcc 10 - exclude the architecture for now,
-#		bug #1811604
-ExcludeArch:	%{arm}
-%endif
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
 BuildRequires:	cmake >= 3.4.3
@@ -1759,6 +1774,12 @@ This package contains an ntuple extension for ROOT 7.
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
+%patch23 -p1
+%patch24 -p1
+%patch25 -p1
+%patch26 -p1
+%patch27 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1769,7 +1790,7 @@ rm -rf graf3d/ftgl/src graf3d/ftgl/inc
 rm -rf graf2d/freetype/src
 #  * glew
 rm -rf graf3d/glew/src graf3d/glew/inc graf3d/glew/isystem
-#  * lz4, pcre, xxhash, zlib
+#  * davix, lz4, openssl, pcre, xxhash, zlib
 rm -rf builtins
 #  * lzma
 rm -rf core/lzma/src/*.tar.gz
@@ -1788,9 +1809,10 @@ sed /mathjax.tar.gz/d -i documentation/doxygen/Makefile
 #  * string_view (<experimental/string_view> requires c++-14)
 rm core/foundation/inc/ROOT/libcpp_string_view.h \
    core/foundation/inc/ROOT/RWrap_libcpp_string_view.h
+sed /RWrap_libcpp_string_view.h/d -i build/unix/module.modulemap
 %endif
 #  * jsroot
-rm -rf etc/js/*
+rm -rf js/*
 
 # Fix file permissions
 chmod -x interpreter/llvm/src/lib/Target/X86/X86EvexToVex.cpp
@@ -2401,7 +2423,7 @@ rmdir TVirtualGeoConverter
 popd
 
 # Replace bundled jsroot with symlink to system version
-rm -rf %{buildroot}%{_datadir}/%{name}/js
+rmdir %{buildroot}%{_datadir}/%{name}/js
 ln -s /usr/share/javascript/jsroot %{buildroot}%{_datadir}/%{name}/js
 
 # Create ldconfig configuration
@@ -2564,26 +2586,32 @@ tutorial-v7-line.cxx"
 # - gtest-tree-dataframe-test-dataframe-colnames
 # - gtest-tree-dataframe-test-dataframe-friends
 # - gtest-tree-dataframe-test-dataframe-helpers
+# - gtest-tree-dataframe-test-dataframe-interface
 # - gtest-tree-dataframe-test-dataframe-simple
 # - gtest-tree-dataframe-test-dataframe-snapshot
+# - gtest-tree-dataframe-test-datasource-root
 excluded="${excluded}|\
 gtest-tree-dataframe-test-dataframe-cache|\
 gtest-tree-dataframe-test-dataframe-callbacks|\
 gtest-tree-dataframe-test-dataframe-colnames|\
 gtest-tree-dataframe-test-dataframe-friends|\
 gtest-tree-dataframe-test-dataframe-helpers|\
+gtest-tree-dataframe-test-dataframe-interface|\
 gtest-tree-dataframe-test-dataframe-simple|\
-gtest-tree-dataframe-test-dataframe-snapshot"
+gtest-tree-dataframe-test-dataframe-snapshot|\
+gtest-tree-dataframe-test-datasource-root"
 %endif
 %endif
 
 %ifarch %{arm}
 # Tests failing on 32 bit arm
+# - gtest-tree-tree-test-testBulkApiSillyStruct
 # - tutorial-v7-draw.cxx
 # - tutorial-v7-draw_mt.cxx
 # - tutorial-v7-draw_rh1.cxx
 # - tutorial-v7-draw_subpads.cxx
 excluded="${excluded}|\
+gtest-tree-tree-test-testBulkApiSillyStruct|\
 tutorial-v7-draw.cxx|\
 tutorial-v7-draw_mt.cxx|\
 tutorial-v7-draw_rh1.cxx|\
@@ -2604,22 +2632,11 @@ excluded="${excluded}|tutorial-roofit-rf608_fitresultaspdf-py"
 %if %{?fedora}%{!?fedora:0} >= 32
 # New failures with Fedora 32+ (gcc 10)
 excluded="${excluded}|tutorial-v7-markerStyle.cxx"
-%ifarch %{ix86}
-excluded="${excluded}|\
-TMVA-DNN-CNN-Reshape-CPU|\
-gtest-tree-dataframe-test-dataframe-interface"
+%ifarch %{ix86} ppc64le
+excluded="${excluded}|TMVA-DNN-CNN-Reshape-CPU"
 %endif
 %ifarch ppc64le
-excluded="${excluded}|\
-TMVA-DNN-CNN-Reshape-CPU|\
-tutorial-v7-lineStyle.cxx|\
-tutorial-v7-lineWidth.cxx"
-%endif
-%endif
-
-%if %{?fedora}%{!?fedora:0} >= 33
-%ifarch aarch64
-excluded="${excluded}|tutorial-tmva-TMVARegression"
+excluded="${excluded}|tutorial-v7-lineStyle.cxx|tutorial-v7-lineWidth.cxx"
 %endif
 %endif
 
@@ -3679,6 +3696,9 @@ fi
 %endif
 
 %changelog
+* Sat Mar 14 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-6
+- Build for 32 bit ARM again - gcc-10.0.1-0.9 fixes the problem
+
 * Sat Feb 22 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-5
 - Fixes and workarounds for gcc 10
 - ExcludeArch for 32 bit ARM because rootcling_stage1 segfaults (bug #1811604)

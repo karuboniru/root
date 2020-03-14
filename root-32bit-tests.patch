@@ -1,0 +1,53 @@
+From 70d941cd6ebbc3726e08ef7f52d0135453f0b840 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 13 Mar 2020 16:21:55 +0100
+Subject: [PATCH 2/3] Run tests on 32 bit
+
+---
+ test/stressGeometry.cxx       |  8 --------
+ tree/tree/test/CMakeLists.txt | 10 +++-------
+ 2 files changed, 3 insertions(+), 15 deletions(-)
+
+diff --git a/test/stressGeometry.cxx b/test/stressGeometry.cxx
+index 5e81f5f2ca..18e41a6f45 100644
+--- a/test/stressGeometry.cxx
++++ b/test/stressGeometry.cxx
+@@ -257,14 +257,6 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecg
+       if (opt.Contains(exps[i])) iexp[i] = 1;
+       else                       iexp[i] = 0;
+    }
+-#if defined(linux) && !defined(__x86_64__)
+-   // 32bit linux: we have an error with ATLAS, see https://sft.its.cern.ch/jira/browse/ROOT-9893
+-   // Disable unless explicitly enabled.
+-   if (all) {
+-      printf("DISABLED ATLAS TEST due to known failure on Linux 32 bit!\n");
+-      iexp[32] = 0;
+-   }
+-#endif
+    TFile::SetCacheFileDir(".");
+    TString fname;
+    for (i=0; i<NG; i++) {
+diff --git a/tree/tree/test/CMakeLists.txt b/tree/tree/test/CMakeLists.txt
+index 0c1a39d01e..3bafe47934 100644
+--- a/tree/tree/test/CMakeLists.txt
++++ b/tree/tree/test/CMakeLists.txt
+@@ -12,13 +12,9 @@ ROOT_ADD_GTEST(testTOffsetGeneration TOffsetGeneration.cxx ElementStruct.cxx Ele
+ target_include_directories(testTOffsetGeneration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+ ROOT_STANDARD_LIBRARY_PACKAGE(SillyStruct NO_INSTALL_HEADERS HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/SillyStruct.h SOURCES SillyStruct.cxx LINKDEF SillyStructLinkDef.h DEPENDENCIES RIO)
+ ROOT_ADD_GTEST(testBulkApi BulkApi.cxx LIBRARIES RIO Tree TreePlayer)
+-#FIXME: tests are having timeout on 32bit CERN VM (in docker container everything is fine),
+-# to be reverted after investigation.
+-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 4)
+-  ROOT_ADD_GTEST(testBulkApiMultiple BulkApiMultiple.cxx LIBRARIES RIO Tree TreePlayer)
+-  ROOT_ADD_GTEST(testBulkApiVarLength BulkApiVarLength.cxx LIBRARIES RIO Tree TreePlayer)
+-  ROOT_ADD_GTEST(testBulkApiSillyStruct BulkApiSillyStruct.cxx LIBRARIES RIO Tree TreePlayer SillyStruct)
+-endif()
++ROOT_ADD_GTEST(testBulkApiMultiple BulkApiMultiple.cxx LIBRARIES RIO Tree TreePlayer)
++ROOT_ADD_GTEST(testBulkApiVarLength BulkApiVarLength.cxx LIBRARIES RIO Tree TreePlayer)
++ROOT_ADD_GTEST(testBulkApiSillyStruct BulkApiSillyStruct.cxx LIBRARIES RIO Tree TreePlayer SillyStruct)
+ ROOT_ADD_GTEST(testTBasket TBasket.cxx LIBRARIES RIO Tree)
+ ROOT_ADD_GTEST(testTBranch TBranch.cxx LIBRARIES RIO Tree MathCore)
+ ROOT_ADD_GTEST(testTIOFeatures TIOFeatures.cxx LIBRARIES RIO Tree)
+-- 
+2.24.1
+

@@ -1,0 +1,28 @@
+From 07c5d640dd53c83c8b3350b520170fd9a5526495 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 13 Mar 2020 14:09:07 +0100
+Subject: [PATCH] Correct broken assert statements
+
+---
+ math/mathcore/src/FitData.cxx | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/math/mathcore/src/FitData.cxx b/math/mathcore/src/FitData.cxx
+index a2be20ab0d..0bad8ff7cd 100644
+--- a/math/mathcore/src/FitData.cxx
++++ b/math/mathcore/src/FitData.cxx
+@@ -200,9 +200,9 @@ namespace ROOT {
+       /// dummy virtual destructor
+       FitData::~FitData()
+       {
++         assert(fWrapped == fCoords.empty());
+          for (unsigned int i = 0; i < fDim; i++) {
+-            assert(fWrapped == fCoords.empty());
+-            assert(fCoords.empty() || &fCoords[i].front() == fCoordsPtr[i]);
++            assert(fWrapped || fCoords[i].empty() || &fCoords[i].front() == fCoordsPtr[i]);
+          }
+          if (fpTmpCoordVector)  delete[] fpTmpCoordVector;
+ 
+-- 
+2.24.1
+

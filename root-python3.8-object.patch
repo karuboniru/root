@@ -1,0 +1,539 @@
+diff -ur root-6.18.04.orig/bindings/pyroot/src/MethodProxy.cxx root-6.18.04/bindings/pyroot/src/MethodProxy.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/MethodProxy.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/MethodProxy.cxx	2020-03-13 16:46:56.538971601 +0100
+@@ -839,7 +839,8 @@
+    sizeof(MethodProxy),       // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)mp_dealloc,    // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -888,6 +889,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/ObjectProxy.cxx root-6.18.04/bindings/pyroot/src/ObjectProxy.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/ObjectProxy.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/ObjectProxy.cxx	2020-03-13 16:46:56.539971591 +0100
+@@ -397,7 +397,8 @@
+    sizeof(ObjectProxy),       // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)op_dealloc,    // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -449,6 +450,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/PropertyProxy.cxx root-6.18.04/bindings/pyroot/src/PropertyProxy.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/PropertyProxy.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/PropertyProxy.cxx	2020-03-13 16:46:56.539971591 +0100
+@@ -133,7 +133,8 @@
+    sizeof(PropertyProxy),     // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)pp_dealloc,    // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -182,6 +183,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/PyRootType.cxx root-6.18.04/bindings/pyroot/src/PyRootType.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/PyRootType.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/PyRootType.cxx	2020-03-13 16:46:56.539971591 +0100
+@@ -230,7 +230,8 @@
+    sizeof(PyROOT::PyRootClass),// tp_basicsize
+    0,                         // tp_itemsize
+    0,                         // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -279,6 +280,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/Pythonize.cxx root-6.18.04/bindings/pyroot/src/Pythonize.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/Pythonize.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/Pythonize.cxx	2020-03-13 16:46:56.540971580 +0100
+@@ -944,6 +944,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+       , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++      , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++      , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+    };
+ 
+    static PyObject* vector_iter( PyObject* v ) {
+diff -ur root-6.18.04.orig/bindings/pyroot/src/RootModule.cxx root-6.18.04/bindings/pyroot/src/RootModule.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/RootModule.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/RootModule.cxx	2020-03-13 16:46:56.540971580 +0100
+@@ -134,6 +134,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ PyObject _PyROOT_NullPtrStruct = {
+diff -ur root-6.18.04.orig/bindings/pyroot/src/TCustomPyTypes.cxx root-6.18.04/bindings/pyroot/src/TCustomPyTypes.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/TCustomPyTypes.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/TCustomPyTypes.cxx	2020-03-13 16:46:56.540971580 +0100
+@@ -19,7 +19,8 @@
+    0,                         // tp_basicsize
+    0,                         // tp_itemsize
+    0,                         // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -69,6 +70,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ //= long type allowed for reference passing ==================================
+@@ -78,7 +85,8 @@
+    0,                         // tp_basicsize
+    0,                         // tp_itemsize
+    0,                         // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -128,6 +136,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ //= instancemethod object with a more efficient call function ================
+@@ -277,7 +291,8 @@
+    0,                         // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)im_dealloc,    // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -327,6 +342,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/TemplateProxy.cxx root-6.18.04/bindings/pyroot/src/TemplateProxy.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/TemplateProxy.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/TemplateProxy.cxx	2020-03-13 16:46:56.541971570 +0100
+@@ -395,7 +395,8 @@
+    sizeof(TemplateProxy),     // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)tpp_dealloc,   // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -444,6 +445,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot/src/TTupleOfInstances.cxx root-6.18.04/bindings/pyroot/src/TTupleOfInstances.cxx
+--- root-6.18.04.orig/bindings/pyroot/src/TTupleOfInstances.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/src/TTupleOfInstances.cxx	2020-03-13 16:46:56.540971580 +0100
+@@ -42,7 +42,8 @@
+    0,                         // tp_basicsize
+    0,                         // tp_itemsize
+    0,                         // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -92,6 +93,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace PyROOT
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPDataMember.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPDataMember.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPDataMember.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPDataMember.cxx	2020-03-13 16:47:15.029777701 +0100
+@@ -168,7 +168,8 @@
+     sizeof(CPPDataMember),         // tp_basicsize
+     0,                             // tp_itemsize
+     (destructor)pp_dealloc,        // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -217,6 +218,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPInstance.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPInstance.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPInstance.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPInstance.cxx	2020-03-13 16:47:15.029777701 +0100
+@@ -385,7 +385,8 @@
+     sizeof(CPPInstance),           // tp_basicsize
+     0,                             // tp_itemsize
+     (destructor)op_dealloc,        // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -437,6 +438,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPOverload.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPOverload.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPOverload.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPOverload.cxx	2020-03-13 16:47:15.030777691 +0100
+@@ -813,7 +813,8 @@
+     sizeof(CPPOverload),           // tp_basicsize
+     0,                             // tp_itemsize
+     (destructor)mp_dealloc,        // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -862,6 +863,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPScope.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPScope.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPScope.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPPScope.cxx	2020-03-13 16:47:15.030777691 +0100
+@@ -424,7 +424,8 @@
+     sizeof(CPyCppyy::CPPScope),    // tp_basicsize
+     0,                             // tp_itemsize
+     0,                             // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -473,6 +474,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CPyCppyyModule.cxx	2020-03-13 16:47:15.030777691 +0100
+@@ -140,6 +140,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                  // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                  // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                  // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ namespace {
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CustomPyTypes.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CustomPyTypes.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CustomPyTypes.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/CustomPyTypes.cxx	2020-03-13 16:57:57.529034828 +0100
+@@ -32,6 +32,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ //= long type allowed for reference passing ==================================
+@@ -54,6 +60,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ //= instancemethod object with a more efficient call function ================
+@@ -219,6 +231,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ 
+@@ -269,6 +287,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                           // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                           // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                           // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ 
+@@ -320,6 +344,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                           // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                           // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                           // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/LowLevelViews.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/LowLevelViews.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/LowLevelViews.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/LowLevelViews.cxx	2020-03-13 16:47:15.031777680 +0100
+@@ -657,7 +657,8 @@
+     sizeof(CPyCppyy::LowLevelView),// tp_basicsize
+     0,                             // tp_itemsize
+     (destructor)ll_dealloc,        // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -707,6 +708,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TemplateProxy.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TemplateProxy.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TemplateProxy.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TemplateProxy.cxx	2020-03-13 16:47:15.032777670 +0100
+@@ -515,7 +515,8 @@
+    sizeof(TemplateProxy),     // tp_basicsize
+    0,                         // tp_itemsize
+    (destructor)tpp_dealloc,   // tp_dealloc
+-   0,                         // tp_print
++   0,                         // tp_print (python < 3.8)
++                              // tp_vectorcall_offset (python >= 3.8)
+    0,                         // tp_getattr
+    0,                         // tp_setattr
+    0,                         // tp_compare
+@@ -564,6 +565,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+    , 0                        // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++   , 0                        // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++   , 0                        // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy
+diff -ur root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TupleOfInstances.cxx root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TupleOfInstances.cxx
+--- root-6.18.04.orig/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TupleOfInstances.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot_experimental/cppyy/CPyCppyy/src/TupleOfInstances.cxx	2020-03-13 16:47:15.032777670 +0100
+@@ -79,6 +79,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                           // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                           // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                           // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ 
+@@ -152,7 +158,8 @@
+     0,                             // tp_basicsize
+     0,                             // tp_itemsize
+     0,                             // tp_dealloc
+-    0,                             // tp_print
++    0,                             // tp_print (python < 3.8)
++                                   // tp_vectorcall_offset (python >= 3.8)
+     0,                             // tp_getattr
+     0,                             // tp_setattr
+     0,                             // tp_compare
+@@ -202,6 +209,12 @@
+ #if PY_VERSION_HEX >= 0x03040000
+     , 0                            // tp_finalize
+ #endif
++#if PY_VERSION_HEX >= 0x03080000
++    , 0                            // tp_vectorcall
++#if PY_VERSION_HEX < 0x03090000
++    , 0                            // tp_print (python 3.8 only)
++#endif
++#endif
+ };
+ 
+ } // namespace CPyCppyy

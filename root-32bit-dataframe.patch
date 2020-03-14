@@ -1,6 +1,6 @@
-diff -ur root-6.18.00.orig/bindings/pyroot/ROOT.py root-6.18.00/bindings/pyroot/ROOT.py
---- root-6.18.00.orig/bindings/pyroot/ROOT.py	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/bindings/pyroot/ROOT.py	2019-06-26 15:14:34.684257765 +0200
+diff -ur root-6.18.04.orig/bindings/pyroot/ROOT.py root-6.18.04/bindings/pyroot/ROOT.py
+--- root-6.18.04.orig/bindings/pyroot/ROOT.py	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/ROOT.py	2020-03-13 19:58:32.330575246 +0100
 @@ -449,9 +449,7 @@
  # This function is injected as method to the respective classes in Pythonize.cxx.
  _root._RDataFrameAsNumpy = _RDataFrameAsNumpy
@@ -12,9 +12,9 @@ diff -ur root-6.18.00.orig/bindings/pyroot/ROOT.py root-6.18.00/bindings/pyroot/
  
  
  ### RINT command emulation ------------------------------------------------------
-diff -ur root-6.18.00.orig/bindings/pyroot/test/CMakeLists.txt root-6.18.00/bindings/pyroot/test/CMakeLists.txt
---- root-6.18.00.orig/bindings/pyroot/test/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/bindings/pyroot/test/CMakeLists.txt	2019-06-26 15:22:03.843577496 +0200
+diff -ur root-6.18.04.orig/bindings/pyroot/test/CMakeLists.txt root-6.18.04/bindings/pyroot/test/CMakeLists.txt
+--- root-6.18.04.orig/bindings/pyroot/test/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/bindings/pyroot/test/CMakeLists.txt	2020-03-13 19:58:32.330575246 +0100
 @@ -4,10 +4,7 @@
  ROOT_ADD_PYUNITTEST(pyroot_rvec rvec.py)
  if(NUMPY_FOUND)
@@ -28,9 +28,9 @@ diff -ur root-6.18.00.orig/bindings/pyroot/test/CMakeLists.txt root-6.18.00/bind
 +  ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
  endif()
  
-diff -ur root-6.18.00.orig/build/unix/makepchinput.py root-6.18.00/build/unix/makepchinput.py
---- root-6.18.00.orig/build/unix/makepchinput.py	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/build/unix/makepchinput.py	2019-06-26 15:14:34.760256972 +0200
+diff -ur root-6.18.04.orig/build/unix/makepchinput.py root-6.18.04/build/unix/makepchinput.py
+--- root-6.18.04.orig/build/unix/makepchinput.py	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/build/unix/makepchinput.py	2020-03-13 19:58:32.331575236 +0100
 @@ -263,9 +263,6 @@
                             "math/vdt",
                             "tmva/rmva"]
@@ -41,27 +41,10 @@ diff -ur root-6.18.00.orig/build/unix/makepchinput.py root-6.18.00/build/unix/ma
     accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                 not isAnyPatternInString(PCHPatternsBlacklist,dirName)
  
-diff -ur root-6.18.00.orig/cmake/scripts/ROOTConfig.cmake.in root-6.18.00/cmake/scripts/ROOTConfig.cmake.in
---- root-6.18.00.orig/cmake/scripts/ROOTConfig.cmake.in	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/cmake/scripts/ROOTConfig.cmake.in	2019-06-26 15:14:34.768256889 +0200
-@@ -83,7 +83,7 @@
-   set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
-   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
- endif()
--foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame Tree TreePlayer Rint Postscript Matrix Physics MathCore Thread MultiProc ${ROOT_FIND_COMPONENTS})
-+foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame ROOTVecOps Tree TreePlayer Rint Postscript Matrix Physics MathCore Thread MultiProc ${ROOT_FIND_COMPONENTS})
-   find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
-   if(ROOT_${_cpt}_LIBRARY)
-     mark_as_advanced(ROOT_${_cpt}_LIBRARY)
-diff -ur root-6.18.00.orig/config/root-config.in root-6.18.00/config/root-config.in
---- root-6.18.00.orig/config/root-config.in	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/config/root-config.in	2019-06-26 15:41:39.518330743 +0200
-@@ -72,15 +72,10 @@
- newlib="-lNew"
- rootglibs="-lGui"
- rootevelibs="-lEve -lEG -lGeom -lGed -lRGL"
--rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTVecOps -lTree -lTreePlayer\
-+rootlibs="-lCore -lImt -lRIO -lNet -lHist -lGraf -lGraf3d -lGpad -lROOTDataFrame -lROOTVecOps -lTree -lTreePlayer\
+diff -ur root-6.18.04.orig/config/root-config.in root-6.18.04/config/root-config.in
+--- root-6.18.04.orig/config/root-config.in	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/config/root-config.in	2020-03-13 20:06:39.876361426 +0100
+@@ -76,10 +76,7 @@
            -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
            -lMultiProc"
  
@@ -69,13 +52,13 @@ diff -ur root-6.18.00.orig/config/root-config.in root-6.18.00/config/root-config
 -   rootlibs="$rootlibs -lROOTDataFrame"
 -fi
 -
--
++rootlibs="$rootlibs -lROOTDataFrame"
+ 
  if test "$platform" = "win32"; then
     rootulibs="-include:_G__cpp_setupG__Net        \
-               -include:_G__cpp_setupG__IO         \
-diff -ur root-6.18.00.orig/tree/dataframe/CMakeLists.txt root-6.18.00/tree/dataframe/CMakeLists.txt
---- root-6.18.00.orig/tree/dataframe/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/tree/dataframe/CMakeLists.txt	2019-06-26 15:14:34.827256273 +0200
+diff -ur root-6.18.04.orig/tree/dataframe/CMakeLists.txt root-6.18.04/tree/dataframe/CMakeLists.txt
+--- root-6.18.04.orig/tree/dataframe/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/CMakeLists.txt	2020-03-13 19:58:32.332575225 +0100
 @@ -3,11 +3,6 @@
  # @author Danilo Piparo CERN, Pere Mato CERN
  ############################################################################
@@ -88,9 +71,99 @@ diff -ur root-6.18.00.orig/tree/dataframe/CMakeLists.txt root-6.18.00/tree/dataf
  if(arrow)
    list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RArrowDS.hxx)
    list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${ARROW_INCLUDE_DIR})
-diff -ur root-6.18.00.orig/tutorials/CMakeLists.txt root-6.18.00/tutorials/CMakeLists.txt
---- root-6.18.00.orig/tutorials/CMakeLists.txt	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/tutorials/CMakeLists.txt	2019-06-26 15:18:15.834951333 +0200
+diff -ur root-6.18.04.orig/tree/dataframe/test/dataframe_cache.cxx root-6.18.04/tree/dataframe/test/dataframe_cache.cxx
+--- root-6.18.04.orig/tree/dataframe/test/dataframe_cache.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/test/dataframe_cache.cxx	2020-03-13 20:13:04.021253192 +0100
+@@ -224,8 +224,6 @@
+ 
+ }
+ 
+-#ifdef R__B64
+-
+ TEST(Cache, Regex)
+ {
+ 
+@@ -334,5 +332,3 @@
+ 
+    gSystem->Unlink(fileName);
+ }
+-
+-#endif // R__B64
+diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_arrow.cxx root-6.18.04/tree/dataframe/test/datasource_arrow.cxx
+--- root-6.18.04.orig/tree/dataframe/test/datasource_arrow.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/test/datasource_arrow.cxx	2020-03-13 20:13:04.021253192 +0100
+@@ -163,8 +163,6 @@
+ }
+ #endif
+ 
+-#ifdef R__B64
+-
+ TEST(RArrowDS, FromARDF)
+ {
+    std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
+@@ -236,5 +234,3 @@
+ }
+ 
+ #endif // R__USE_IMT
+-
+-#endif // R__B64
+diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_csv.cxx root-6.18.04/tree/dataframe/test/datasource_csv.cxx
+--- root-6.18.04.orig/tree/dataframe/test/datasource_csv.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/test/datasource_csv.cxx	2020-03-13 20:26:14.841831219 +0100
+@@ -193,8 +193,6 @@
+ }
+ #endif
+ 
+-#ifdef R__B64
+-
+ TEST(RCsvDS, FromARDF)
+ {
+    std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
+@@ -290,5 +288,3 @@
+ }
+ 
+ #endif // R__USE_IMT
+-
+-#endif // R__B64
+diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_root.cxx root-6.18.04/tree/dataframe/test/datasource_root.cxx
+--- root-6.18.04.orig/tree/dataframe/test/datasource_root.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/test/datasource_root.cxx	2020-03-13 20:13:04.021253192 +0100
+@@ -117,8 +117,6 @@
+ }
+ #endif
+ 
+-#ifdef R__B64
+-
+ TEST(TRootTDS, FromARDF)
+ {
+    std::unique_ptr<RDataSource> tds(new RRootDS(treeName, fileGlob));
+@@ -190,5 +188,3 @@
+ }
+ 
+ #endif // R__USE_IMT
+-
+-#endif // R__B64
+diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_trivial.cxx root-6.18.04/tree/dataframe/test/datasource_trivial.cxx
+--- root-6.18.04.orig/tree/dataframe/test/datasource_trivial.cxx	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tree/dataframe/test/datasource_trivial.cxx	2020-03-13 20:13:04.021253192 +0100
+@@ -132,8 +132,6 @@
+    EXPECT_EQ(*tdfAll.Count(), 20ULL);
+ }
+ 
+-#ifdef R__B64
+-
+ TEST(RTrivialDS, FromARDFWithJitting)
+ {
+    std::unique_ptr<RDataSource> tds(new RTrivialDS(32));
+@@ -236,5 +234,3 @@
+ }
+ 
+ #endif // R__USE_IMT
+-
+-#endif // R__B64
+diff -ur root-6.18.04.orig/tutorials/CMakeLists.txt root-6.18.04/tutorials/CMakeLists.txt
+--- root-6.18.04.orig/tutorials/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
++++ root-6.18.04/tutorials/CMakeLists.txt	2020-03-13 19:58:32.333575214 +0100
 @@ -212,10 +212,6 @@
                   v7/ntuple/ntpl004_dimuon.C)
  endif()
