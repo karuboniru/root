@@ -1,0 +1,23 @@
+diff -ur root-6.20.02.orig/bindings/pyroot/src/Cppyy.cxx root-6.20.02/bindings/pyroot/src/Cppyy.cxx
+--- root-6.20.02.orig/bindings/pyroot/src/Cppyy.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/bindings/pyroot/src/Cppyy.cxx	2020-03-21 14:10:09.322489811 +0100
+@@ -74,10 +74,6 @@
+ class ApplicationStarter {
+ public:
+    ApplicationStarter() {
+-      // Insure ROOT's atexit is executed *after* the atexit that calls
+-      // ApplicationStarter's destructor, by forcing the ROOT's atexit
+-      // registration now.
+-      TROOT::Initialize();
+       // setup dummy holders for global and std namespaces
+       assert( g_classrefs.size() == GLOBAL_HANDLE );
+       g_name2classrefidx[ "" ]      = GLOBAL_HANDLE;
+@@ -90,8 +86,6 @@
+    }
+ 
+    ~ApplicationStarter() {
+-      for ( auto ifunc : g_method2callfunc )
+-         gInterpreter->CallFunc_Delete( ifunc.second );
+    }
+ } _applicationStarter;
+ 

@@ -1,0 +1,27 @@
+From 6492170d74f464286de22c40554adbd400ec838b Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 13 Mar 2020 12:53:34 +0100
+Subject: [PATCH] The file was moved - update path
+
+---
+ tutorials/legacy/mlp/mlpHiggs.C | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/tutorials/legacy/mlp/mlpHiggs.C b/tutorials/legacy/mlp/mlpHiggs.C
+index 49d3ca2b30..0516ed7c50 100644
+--- a/tutorials/legacy/mlp/mlpHiggs.C
++++ b/tutorials/legacy/mlp/mlpHiggs.C
+@@ -18,8 +18,8 @@ void mlpHiggs(Int_t ntrain=100) {
+    TFile *input = 0;
+    if (!gSystem->AccessPathName(fname)) {
+       input = TFile::Open(fname);
+-   } else if (!gSystem->AccessPathName(Form("%s/mlp/%s", TROOT::GetTutorialDir().Data(), fname))) {
+-      input = TFile::Open(Form("%s/mlp/%s", TROOT::GetTutorialDir().Data(), fname));
++   } else if (!gSystem->AccessPathName(Form("%s/legacy/mlp/%s", TROOT::GetTutorialDir().Data(), fname))) {
++      input = TFile::Open(Form("%s/legacy/mlp/%s", TROOT::GetTutorialDir().Data(), fname));
+    } else {
+       printf("accessing %s file from http://root.cern.ch/files\n",fname);
+       input = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+-- 
+2.24.1
+

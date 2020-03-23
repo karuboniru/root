@@ -49,9 +49,9 @@
 %global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.18.04
+Version:	6.20.02
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	6%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -103,51 +103,36 @@ Patch10:	%{name}-clang-ignore-gcc-options.patch
 Patch11:	%{name}-doc-no-notebooks.patch
 #		Don't run tutorial requiring firefox during doc generation
 Patch12:	%{name}-v7-line.patch
-#		Install man pages in correct directory
-#		https://github.com/root-project/root/pull/4026
-Patch13:	%{name}-man-install.patch
-#		Use correct library names in plugin definitions
-#		https://github.com/root-project/root/pull/4026
-Patch14:	%{name}-fix-plugin-definition.patch
-#		Don't download test input file if it already exists
-#		https://github.com/root-project/root/pull/4026
-Patch15:	%{name}-dont-download-input-file-if-it-already-exists.patch
-#		Python 3 fixes
-#		https://github.com/root-project/root/pull/4026
-Patch16:	%{name}-python3.patch
-#		Increase test tolerance (aarch64 and ppc64le)
-#		https://github.com/root-project/root/pull/4025
-Patch17:	%{name}-stress-aarch64-ppc64le.patch
-#		Fix GDB pretty printers install name and location
-#		https://github.com/root-project/root/pull/4024
-Patch18:	%{name}-pretty-printers.patch
-#		Missing include - fails with gcc 10
-Patch19:	%{name}-missing-include-string.patch
 #		Fix ppc64le build with gcc 10
 #		https://github.com/root-project/root/pull/5157
-Patch20:	%{name}-clang-altivec-vector.patch
-#		Missing symbol - with gcc 10
-Patch21:	%{name}-static-constexpr.patch
+Patch13:	%{name}-clang-altivec-vector.patch
 #		Fix -Wmissing-field-initializers in python bindings for
 #		Python 3.8 and 3.9
 #		https://github.com/root-project/root/pull/5158
-Patch22:	%{name}-python3.8-object.patch
+Patch14:	%{name}-python3.8-object.patch
 #		Correct broken assert statements
 #		https://github.com/root-project/root/pull/5159
-Patch23:	%{name}-FitData-assert-fix.patch
+Patch15:	%{name}-FitData-assert-fix.patch
 #		The test that creates the file must run before the test that
 #		modifies it
 #		https://github.com/root-project/root/pull/5160
-Patch24:	%{name}-xmlmodify-dep.patch
+Patch16:	%{name}-xmlmodify-dep.patch
 #		Use unique filenames in tutorials so they can be run in
 #		parallel
 #		Backport from upstream's git
-Patch25:	%{name}-tutorials-unique-filenames.patch
+Patch17:	%{name}-tutorials-unique-filenames.patch
 #		Size types should use %z
 #		https://github.com/root-project/root/pull/5161
-Patch26:	%{name}-format-fix.patch
+Patch18:	%{name}-format-fix.patch
 #		Run some test on 32 bit that upstream has disabled
-Patch27:	%{name}-32bit-tests.patch
+Patch19:	%{name}-32bit-tests.patch
+#		The file was moved - update path
+#		https://github.com/root-project/root/pull/5162
+Patch20:	%{name}-moved-file.patch
+#		Workaround for initialization problems for PyROOT on
+#		EPEL7 ppc64le
+#		https://sft.its.cern.ch/jira/browse/ROOT-10622
+Patch21:	%{name}-epel7-ppc64le-pyroot.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -155,9 +140,9 @@ Patch27:	%{name}-32bit-tests.patch
 ExcludeArch:	s390x
 
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
-BuildRequires:	cmake >= 3.4.3
+BuildRequires:	cmake >= 3.9
 %else
-BuildRequires:	cmake3 >= 3.4.3
+BuildRequires:	cmake3 >= 3.9
 %endif
 BuildRequires:	libX11-devel
 BuildRequires:	libXpm-devel
@@ -174,6 +159,7 @@ BuildRequires:	zlib-devel
 BuildRequires:	xz-devel
 BuildRequires:	lz4-devel
 BuildRequires:	xxhash-devel
+BuildRequires:	libzstd-devel
 #		Require a version of libAfterImage that is properly linked to
 #		its dependencies
 BuildRequires:	libAfterImage-devel >= 1.20-21
@@ -888,9 +874,6 @@ Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
-%if %{root7}
-Requires:	%{name}-hist-draw%{?_isa} = %{version}-%{release}
-%endif
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 
@@ -924,6 +907,8 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io-xmlparser%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
 Requires:	%{name}-roofit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roostats%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description hist-factory
@@ -1387,19 +1372,17 @@ This package contains the xproof extension for ROOT. This provides a
 client to be used in a PROOF environment.
 
 %package roofit
-Summary:	ROOT extension for modeling expected distributions
+Summary:	ROOT extension for modeling expected distributions - toolkit
 License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-foam%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
-Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
-Requires:	%{name}-mathmore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
-Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Package split / Library split (from roofit)
+Obsoletes:	%{name}-roofit < 6.20.00
 
 %description roofit
 The RooFit packages provide a toolkit for modeling the expected
@@ -1413,6 +1396,84 @@ physics experiment at the Stanford Linear Accelerator Center, and is
 primarily targeted to the high-energy physicists using the ROOT
 analysis environment, but the general nature of the package make it
 suitable for adoption in different disciplines as well.
+
+This package contains the RooFit toolkit classes.
+
+%package roofit-core
+Summary:	ROOT extension for modeling expected distributions - core
+License:	BSD
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-foam%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Package split / Library split (from roofit)
+Obsoletes:	%{name}-roofit < 6.20.00
+
+%description roofit-core
+The RooFit packages provide a toolkit for modeling the expected
+distribution of events in a physics analysis. Models can be used to
+perform likelihood fits, produce plots, and generate "toy Monte
+Carlo" samples for various studies. The RooFit tools are integrated
+with the object-oriented and interactive ROOT graphical environment.
+
+RooFit has been developed for the BaBar collaboration, a high energy
+physics experiment at the Stanford Linear Accelerator Center, and is
+primarily targeted to the high-energy physicists using the ROOT
+analysis environment, but the general nature of the package make it
+suitable for adoption in different disciplines as well.
+
+This package contains the core RooFit classes.
+
+%package roofit-more
+Summary:	ROOT extension for modeling expected distributions - more
+License:	BSD
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathmore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit-core%{?_isa} = %{version}-%{release}
+#		Package split / Library split (from roofit)
+Obsoletes:	%{name}-roofit < 6.20.00
+
+%description roofit-more
+The RooFit packages provide a toolkit for modeling the expected
+distribution of events in a physics analysis. Models can be used to
+perform likelihood fits, produce plots, and generate "toy Monte
+Carlo" samples for various studies. The RooFit tools are integrated
+with the object-oriented and interactive ROOT graphical environment.
+
+RooFit has been developed for the BaBar collaboration, a high energy
+physics experiment at the Stanford Linear Accelerator Center, and is
+primarily targeted to the high-energy physicists using the ROOT
+analysis environment, but the general nature of the package make it
+suitable for adoption in different disciplines as well.
+
+This package contains RooFit classes that use the mathmore library.
+
+%package roostats
+Summary:	Statistical tools built on top of RooFit
+License:	BSD
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
+Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	%{name}-minuit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit%{?_isa} = %{version}-%{release}
+Requires:	%{name}-roofit-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Package split / Library split (from roofit)
+Obsoletes:	%{name}-roofit < 6.20.00
+
+%description roostats
+RooStats is a package containing statistical tools built on top of
+RooFit.
 
 %package sql-mysql
 Summary:	MySQL client plugin for ROOT
@@ -1550,6 +1611,7 @@ This package contains the Tree library for ROOT.
 Summary:	A high level interface to ROOT trees
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 %if %{root7}
@@ -1637,7 +1699,6 @@ Javascript and style files for the Jupyter ROOT Notebook.
 %package graf-gpadv7
 Summary:	Canvas and pad library for ROOT (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 
 %description graf-gpadv7
 This package contains a library for canvas and pad manipulations.
@@ -1660,6 +1721,7 @@ Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-montecarlo-eg%{?_isa} = %{version}-%{release}
+Requires:	%{name}-net-http%{?_isa} = %{version}-%{release}
 Requires:	%{name}-physics%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
@@ -1670,8 +1732,13 @@ This package contains a library for defining event displays in ROOT 7.
 %package gui-browserv7
 Summary:	Browser (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpadv7%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-webgui6%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description gui-browserv7
 This package contains a file browser for ROOT 7.
@@ -1732,6 +1799,13 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 %description gui-webgui6
 This package provides a Web based GUI for ROOT.
 
+%package histv7
+Summary:	Histogram library for ROOT (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+
+%description histv7
+This package contains a library for histogramming in ROOT 7.
+
 %package hist-draw
 Summary:	Histogram drawing (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
@@ -1773,13 +1847,11 @@ This package contains an ntuple extension for ROOT 7.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%if %{?rhel}%{!?rhel:0} == 7
+%ifarch ppc64le
 %patch21 -p1
-%patch22 -p1
-%patch23 -p1
-%patch24 -p1
-%patch25 -p1
-%patch26 -p1
-%patch27 -p1
+%endif
+%endif
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1790,7 +1862,7 @@ rm -rf graf3d/ftgl/src graf3d/ftgl/inc
 rm -rf graf2d/freetype/src
 #  * glew
 rm -rf graf3d/glew/src graf3d/glew/inc graf3d/glew/isystem
-#  * davix, lz4, openssl, pcre, xxhash, zlib
+#  * davix, lz4, openssl, pcre, xxhash, zlib, zstd
 rm -rf builtins
 #  * lzma
 rm -rf core/lzma/src/*.tar.gz
@@ -1902,14 +1974,13 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dbuiltin_xrootd:BOOL=OFF \
        -Dbuiltin_xxhash:BOOL=OFF \
        -Dbuiltin_zlib:BOOL=OFF \
+       -Dbuiltin_zstd:BOOL=OFF \
        -Dalien:BOOL=OFF \
        -Darrow:BOOL=OFF \
        -Dasimage:BOOL=ON \
-       -Dastiff:BOOL=ON \
        -Dccache:BOOL=OFF \
        -Dcefweb:BOOL=OFF \
        -Dclad:BOOL=OFF \
-       -Dcling:BOOL=ON \
        -Dcocoa:BOOL=OFF \
        -Dcuda:BOOL=OFF \
 %if %{root7}
@@ -1922,10 +1993,11 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dwebgui:BOOL=OFF \
 %endif
        -Dcxxmodules:BOOL=OFF \
+       -Ddataframe:BOOL=ON \
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
        -Dexceptions:BOOL=ON \
-       -Dexplicitlink:BOOL=ON \
+       -Dfcgi:BOOL=ON \
        -Dfftw3:BOOL=ON \
        -DFIREFOX_EXECUTABLE:PATH=/usr/bin/firefox \
        -Dfitsio:BOOL=ON \
@@ -1946,17 +2018,18 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dmemory_termination:BOOL=OFF \
        -Dmemstat:BOOL=ON \
        -Dminuit2:BOOL=ON \
+       -Dmlp:BOOL=ON \
        -Dmonalisa:BOOL=OFF \
+       -Dmpi:BOOL=OFF \
        -Dmysql:BOOL=ON \
        -Dodbc:BOOL=ON \
        -Dopengl:BOOL=ON \
        -Doracle:BOOL=OFF \
-       -Dpch:BOOL=ON \
        -Dpgsql:BOOL=ON \
        -Dpythia6:BOOL=OFF \
        -Dpythia8:BOOL=ON \
-       -Dpython:BOOL=ON \
        -DPYTHON_EXECUTABLE:PATH=%{__pythondef} \
+       -Dpyroot:BOOL=ON \
 %ifarch %{qt5_qtwebengine_arches}
        -Dqt5web:BOOL=ON \
 %else
@@ -1970,10 +2043,10 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dshadowpw:BOOL=ON \
        -Dshared:BOOL=ON \
        -Dsoversion:BOOL=ON \
+       -Dspectrum:BOOL=ON \
        -Dsqlite:BOOL=ON \
        -Dssl:BOOL=ON \
        -Dtcmalloc:BOOL=OFF \
-       -Dthread:BOOL=ON \
        -Dtmva:BOOL=ON \
 %if %{tbb}
        -Dtmva-cpu:BOOL=ON \
@@ -2035,7 +2108,9 @@ else
     py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 fi
 sed -e "s,${py3i},${py2i},g" -e "s,-l${py3l},-l${py2l},g" \
-    -e "s,lib${py3l},lib${py2l},g" -e 's,%{__python3},%{__python2},g' \
+    -e "s,lib${py3l},lib${py2l},g" \
+    -e 's,%{__python}%{python3_version},%{__python2},g' \
+    -e 's,%{__python3},%{__python2},g' \
     -e 's,lib/libPyROOT,python2/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python2/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python2!g' \
@@ -2062,7 +2137,9 @@ else
     py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3},g' \
+    -e "s,lib${py2l},lib${py3l},g" \
+    -e 's,%{__python}%{python2_version},%{__python3},g' \
+    -e 's,%{__python2},%{__python3},g' \
     -e 's,lib/libPyROOT,python3/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python3/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python3!g' \
@@ -2089,7 +2166,9 @@ else
     py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
 fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,lib${py2l},lib${py3l},g" -e 's,%{__python2},%{__python3_other},g' \
+    -e "s,lib${py2l},lib${py3l},g" \
+    -e 's,%{__python}%{python2_version},%{__python3_other},g' \
+    -e 's,%{__python2},%{__python3_other},g' \
     -e 's,lib/libPyROOT,python3oth/libPyROOT,g' \
     -e 's,lib/libJupyROOT,python3oth/libJupyROOT,g' \
     -e 's!bindings/pyroot!bindings/python3oth!g' \
@@ -2135,10 +2214,14 @@ rm %{buildroot}%{_libdir}/%{name}/__pycache__/cmdLineUtils.*
 %endif
 sed -e '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
 
-# Move GDB pretty printers to auto load safe path
+# Install GDB pretty printers to auto load safe path
+# These are installed (in libdir) by "make install" if CMAKE_BUILD_TYPE
+# matches Debug or RelWithDebInfo
 mkdir -p %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}
-mv %{buildroot}%{_libdir}/%{name}/*-gdb.py \
-   %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}
+install -p -m 644 build/gdbPrinters/libCore.so-gdb.py \
+   %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}/libCore.so.%{version}-gdb.py
+install -p -m 644 build/gdbPrinters/libRooFitCore.so-gdb.py \
+   %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}/libRooFitCore.so.%{version}-gdb.py
 
 # Do python byte compilation (for non-standard paths)
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
@@ -2386,10 +2469,6 @@ rm -rf %{buildroot}%{_datadir}/%{name}/proof/utils
 rm %{buildroot}%{_datadir}/%{name}/root.desktop
 rm %{buildroot}%{_bindir}/setxrd*
 rm %{buildroot}%{_bindir}/thisroot*
-rm %{buildroot}%{_mandir}/man1/g2rootold.1
-rm %{buildroot}%{_mandir}/man1/genmap.1
-rm %{buildroot}%{_mandir}/man1/proofserva.1
-rm %{buildroot}%{_mandir}/man1/roota.1
 rm %{buildroot}%{_pkgdocdir}/INSTALL
 rm %{buildroot}%{_pkgdocdir}/README.ALIEN
 rm %{buildroot}%{_pkgdocdir}/README.CXXMODULES.md
@@ -2400,7 +2479,6 @@ rm %{buildroot}%{_datadir}/%{name}/macros/fileopen.C
 
 # Remove plugin definitions for non-built and obsolete plugins
 pushd %{buildroot}%{_datadir}/%{name}/plugins
-rm TDataProgressDialog/P010_TDataProgressDialog.C
 rm TDataSetManager/P020_TDataSetManagerAliEn.C
 rm TFile/P070_TAlienFile.C
 rm TGLManager/P020_TGWin32GLManager.C
@@ -2416,8 +2494,6 @@ rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
 rm TVirtualX/P050_TGQuartz.C
-rm TVirtualX/P060_TWebVirtualX.C
-rmdir TDataProgressDialog
 rmdir TGrid
 rmdir TVirtualGeoConverter
 popd
@@ -2492,7 +2568,6 @@ done
 # ... and merge some of them
 cat includelist-core-{[^mw],m[^au]}* > includelist-core
 cat includelist-geom-geom* > includelist-geom
-cat includelist-roofit-roo* > includelist-roofit
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
 cat includelist-net-netx* > includelist-netx
 
@@ -2558,6 +2633,23 @@ popd
 #
 # - tutorial-v7-line.cxx
 #   requires a web browser (and js-jsroot) to render javascript graphics
+#
+# - gtest-io-io-test-RRawFile (*)
+# - gtest-net-davix-test-RRawFileDavix
+#   reads input file over network
+#   http://root.cern.ch/files/davix.test
+#   (*) one subtest RRawFile.Remote fails, others woud be OK
+#
+# - gtest-tmva-tmva-test-rreader
+# - gtest-tmva-tmva-test-rstandardscaler
+# - tutorial-tmva-tmva003_RReader
+# - tutorial-tmva-tmva004_RStandardScaler
+#   reads input data over network
+#   http://root.cern.ch/files/tmva_class_example.root
+#
+# - tutorial-tmva-tmva103_Application
+#   reads input data over network
+#   http://root.cern/files/tmva101.root
 excluded="\
 test-stressIOPlugins|\
 tutorial-dataframe-df101_h1Analysis|\
@@ -2575,11 +2667,17 @@ tutorial-dataframe-df103_NanoAODHiggsAnalysis|\
 tutorial-v7-ntuple-ntpl003_lhcbOpenData|\
 tutorial-v7-ntuple-ntpl004_dimuon|\
 tutorial-pythia-pythia8|\
-tutorial-v7-line.cxx"
+tutorial-v7-line.cxx|\
+gtest-io-io-test-RRawFile|\
+gtest-net-davix-test-RRawFileDavix|\
+gtest-tmva-tmva-test-rreader|\
+gtest-tmva-tmva-test-rstandardscaler|\
+tutorial-tmva-tmva003_RReader|\
+tutorial-tmva-tmva004_RStandardScaler|\
+tutorial-tmva-tmva103_Application"
 
 %ifarch %{ix86} %{arm}
-%if %{?fedora}%{!?fedora:0} >= 30
-# Tests failing on 32 bit architectures on Fedoea 30+ (gcc 9?)
+# Tests failing on 32 bit architectures (dataframe)
 # A bit random - not all the tests fail every time...
 # - gtest-tree-dataframe-test-dataframe-cache
 # - gtest-tree-dataframe-test-dataframe-callbacks
@@ -2590,6 +2688,7 @@ tutorial-v7-line.cxx"
 # - gtest-tree-dataframe-test-dataframe-simple
 # - gtest-tree-dataframe-test-dataframe-snapshot
 # - gtest-tree-dataframe-test-datasource-root
+# - gtest-tree-dataframe-test-datasource-trivial
 excluded="${excluded}|\
 gtest-tree-dataframe-test-dataframe-cache|\
 gtest-tree-dataframe-test-dataframe-callbacks|\
@@ -2599,23 +2698,14 @@ gtest-tree-dataframe-test-dataframe-helpers|\
 gtest-tree-dataframe-test-dataframe-interface|\
 gtest-tree-dataframe-test-dataframe-simple|\
 gtest-tree-dataframe-test-dataframe-snapshot|\
-gtest-tree-dataframe-test-datasource-root"
-%endif
+gtest-tree-dataframe-test-datasource-root|\
+gtest-tree-dataframe-test-datasource-trivial"
 %endif
 
 %ifarch %{arm}
 # Tests failing on 32 bit arm
 # - gtest-tree-tree-test-testBulkApiSillyStruct
-# - tutorial-v7-draw.cxx
-# - tutorial-v7-draw_mt.cxx
-# - tutorial-v7-draw_rh1.cxx
-# - tutorial-v7-draw_subpads.cxx
-excluded="${excluded}|\
-gtest-tree-tree-test-testBulkApiSillyStruct|\
-tutorial-v7-draw.cxx|\
-tutorial-v7-draw_mt.cxx|\
-tutorial-v7-draw_rh1.cxx|\
-tutorial-v7-draw_subpads.cxx"
+excluded="${excluded}|gtest-tree-tree-test-testBulkApiSillyStruct"
 %endif
 
 %ifarch ppc64le
@@ -2626,17 +2716,6 @@ tutorial-v7-draw_subpads.cxx"
 # Error in <TInterpreter::TCling::AutoLoad>:
 #   failure loading library libRGL.so for TGLHistPainter
 excluded="${excluded}|tutorial-roofit-rf608_fitresultaspdf-py"
-%endif
-%endif
-
-%if %{?fedora}%{!?fedora:0} >= 32
-# New failures with Fedora 32+ (gcc 10)
-excluded="${excluded}|tutorial-v7-markerStyle.cxx"
-%ifarch %{ix86} ppc64le
-excluded="${excluded}|TMVA-DNN-CNN-Reshape-CPU"
-%endif
-%ifarch ppc64le
-excluded="${excluded}|tutorial-v7-lineStyle.cxx|tutorial-v7-lineWidth.cxx"
 %endif
 %endif
 
@@ -2896,6 +2975,9 @@ fi
 %ldconfig_scriptlets proof-sessionviewer
 %ldconfig_scriptlets xproof
 %ldconfig_scriptlets roofit
+%ldconfig_scriptlets roofit-core
+%ldconfig_scriptlets roofit-more
+%ldconfig_scriptlets roostats
 %ldconfig_scriptlets sql-mysql
 %ldconfig_scriptlets sql-odbc
 %ldconfig_scriptlets sql-sqlite
@@ -2921,6 +3003,7 @@ fi
 %endif
 %ldconfig_scriptlets gui-webdisplay
 %ldconfig_scriptlets gui-webgui6
+%ldconfig_scriptlets histv7
 %ldconfig_scriptlets hist-draw
 %ldconfig_scriptlets tree-ntuple
 %endif
@@ -2986,9 +3069,6 @@ fi
 %{_mandir}/man1/system.rootdaemonrc.1*
 %dir %{_datadir}/%{name}/cmake
 %{_datadir}/%{name}/cmake/*.cmake
-%dir %{_datadir}/%{name}/cmake/modules
-%{_datadir}/%{name}/cmake/modules/*.cmake
-%{_datadir}/%{name}/cmake/modules/*.cmake.in
 %dir %{_datadir}/%{name}/macros
 %{_datadir}/%{name}/macros/Dialogs.C
 %dir %{_datadir}/%{name}/plugins
@@ -2998,9 +3078,7 @@ fi
 %{_includedir}/%{name}/RConfigure.h
 %{_includedir}/%{name}/RGitCommit.h
 %{_includedir}/%{name}/compiledata.h
-%{_includedir}/%{name}/libc.modulemap
 %{_includedir}/%{name}/module.modulemap
-%{_includedir}/%{name}/stl.modulemap
 %dir %{_includedir}/%{name}/Math
 %dir %{_includedir}/%{name}/ROOT
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/%{name}-%{_arch}.conf
@@ -3052,6 +3130,7 @@ fi
 %{python2_sitearch}/ROOT-*.egg-info
 %{python2_sitearch}/cppyy.py*
 %{python2_sitearch}/_pythonization.py*
+%{python2_sitearch}/_rdf_utils.py*
 %endif
 
 %if ! %{py3default}
@@ -3080,6 +3159,7 @@ fi
 %{python3_sitearch}/ROOT-*.egg-info
 %{python3_sitearch}/cppyy.py
 %{python3_sitearch}/_pythonization.py
+%{python3_sitearch}/_rdf_utils.py
 %{python3_sitearch}/__pycache__/*
 
 %files -n python%{python3_pkgversion}-jupyroot
@@ -3107,6 +3187,7 @@ fi
 %{python3_other_sitearch}/ROOT-*.egg-info
 %{python3_other_sitearch}/cppyy.py
 %{python3_other_sitearch}/_pythonization.py
+%{python3_other_sitearch}/_rdf_utils.py
 %{python3_other_sitearch}/__pycache__/*
 
 %files -n python%{python3_other_pkgversion}-jupyroot
@@ -3475,6 +3556,7 @@ fi
 %{_libdir}/%{name}/libRDAVIX_rdict.pcm
 %{_datadir}/%{name}/plugins/TFile/P130_TDavixFile.C
 %{_datadir}/%{name}/plugins/TSystem/P045_TDavixSystem.C
+%{_datadir}/%{name}/plugins/ROOT@@Internal@@RRawFile/P010_RRawFileDavix.C
 
 %files net-http -f includelist-net-http
 %{_libdir}/%{name}/libRHTTP.*
@@ -3548,15 +3630,23 @@ fi
 %{_datadir}/%{name}/plugins/TProofServ/P010_TXProofServ.C
 %{_datadir}/%{name}/plugins/TSlave/P010_TXSlave.C
 
-%files roofit -f includelist-roofit
+%files roofit -f includelist-roofit-roofit
 %{_libdir}/%{name}/libRooFit.*
 %{_libdir}/%{name}/libRooFit_rdict.pcm
+
+%files roofit-core -f includelist-roofit-roofitcore
 %{_libdir}/%{name}/libRooFitCore.*
 %{_libdir}/%{name}/libRooFitCore_rdict.pcm
 %{_datadir}/gdb/auto-load%{_libdir}/%{name}/libRooFitCore.*
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
 %{_datadir}/gdb/auto-load%{_libdir}/%{name}/__pycache__/libRooFitCore.*
 %endif
+
+%files roofit-more -f includelist-roofit-roofitmore
+%{_libdir}/%{name}/libRooFitMore.*
+%{_libdir}/%{name}/libRooFitMore_rdict.pcm
+
+%files roostats -f includelist-roofit-roostats
 %{_libdir}/%{name}/libRooStats.*
 %{_libdir}/%{name}/libRooStats_rdict.pcm
 %dir %{_includedir}/%{name}/RooStats
@@ -3652,7 +3742,7 @@ fi
 %{_libdir}/%{name}/libROOTGpadv7.*
 %{_libdir}/%{name}/libROOTGpadv7_rdict.pcm
 
-%files graf-primitives -f includelist-graf2d-primitives
+%files graf-primitives -f includelist-graf2d-primitivesv7
 %{_libdir}/%{name}/libROOTGraphicsPrimitives.*
 %{_libdir}/%{name}/libROOTGraphicsPrimitives_rdict.pcm
 
@@ -3686,7 +3776,11 @@ fi
 %{_libdir}/%{name}/libWebGui6_rdict.pcm
 %{_datadir}/%{name}/plugins/TGuiFactory/P030_TWebGuiFactory.C
 
-%files hist-draw -f includelist-hist-histdraw
+%files histv7 -f includelist-hist-histv7
+%{_libdir}/%{name}/libROOTHist.*
+%{_libdir}/%{name}/libROOTHist_rdict.pcm
+
+%files hist-draw -f includelist-hist-histdrawv7
 %{_libdir}/%{name}/libROOTHistDraw.*
 %{_libdir}/%{name}/libROOTHistDraw_rdict.pcm
 
@@ -3696,6 +3790,28 @@ fi
 %endif
 
 %changelog
+* Sun Mar 22 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.02-1
+- Update to 6.20.02
+- Drop patches accepted upstream
+  - root-dont-download-input-file-if-it-already-exists.patch
+  - root-fix-plugin-definition.patch
+  - root-man-install.patch
+  - root-pretty-printers.patch
+  - root-python3.patch
+  - root-stress-aarch64-ppc64le.patch
+- Drop patches no longer relevant due to changes to the code
+  - root-missing-include-string.patch
+  - root-static-constexpr.patch
+- Add workaround for PyROOT issues on ppc64le in EPEL 7
+  - root-epel7-ppc64le-pyroot.patch (patch conditionally applied)
+- Fix path to moved data file in tutorial
+  - root-moved-file.patch
+- Split the root-roofit subpackage into four different packages
+  - root-roofit, root-roofit-core, root-roofit-more and root-roostats
+  - The root-roofit-more library splits out the part of roofit that depends on
+    the root-mathmore package
+- New subpackage: root-histv7
+
 * Sat Mar 14 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.18.04-6
 - Build for 32 bit ARM again - gcc-10.0.1-0.9 fixes the problem
 

@@ -1,7 +1,7 @@
-diff -ur root-6.18.04.orig/bindings/pyroot/ROOT.py root-6.18.04/bindings/pyroot/ROOT.py
---- root-6.18.04.orig/bindings/pyroot/ROOT.py	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/bindings/pyroot/ROOT.py	2020-03-13 19:58:32.330575246 +0100
-@@ -449,9 +449,7 @@
+diff -ur root-6.20.02.orig/bindings/pyroot/ROOT.py root-6.20.02/bindings/pyroot/ROOT.py
+--- root-6.20.02.orig/bindings/pyroot/ROOT.py	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/bindings/pyroot/ROOT.py	2020-03-15 19:50:25.303179253 +0100
+@@ -438,9 +438,7 @@
  # This function is injected as method to the respective classes in Pythonize.cxx.
  _root._RDataFrameAsNumpy = _RDataFrameAsNumpy
  
@@ -12,26 +12,10 @@ diff -ur root-6.18.04.orig/bindings/pyroot/ROOT.py root-6.18.04/bindings/pyroot/
  
  
  ### RINT command emulation ------------------------------------------------------
-diff -ur root-6.18.04.orig/bindings/pyroot/test/CMakeLists.txt root-6.18.04/bindings/pyroot/test/CMakeLists.txt
---- root-6.18.04.orig/bindings/pyroot/test/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/bindings/pyroot/test/CMakeLists.txt	2020-03-13 19:58:32.330575246 +0100
-@@ -4,10 +4,7 @@
- ROOT_ADD_PYUNITTEST(pyroot_rvec rvec.py)
- if(NUMPY_FOUND)
-   ROOT_ADD_PYUNITTEST(pyroot_array_interface array_interface.py)
--  # this excludes RDF for 32 bits builds because of clang/gcc abi issues
--  if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
--    ROOT_ADD_PYUNITTEST(pyroot_rdataframe_asnumpy rdataframe_asnumpy.py)
--    ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
--  endif()
-+  ROOT_ADD_PYUNITTEST(pyroot_rdataframe_asnumpy rdataframe_asnumpy.py)
-+  ROOT_ADD_PYUNITTEST(pyroot_ttree_asmatrix ttree_asmatrix.py)
- endif()
- 
-diff -ur root-6.18.04.orig/build/unix/makepchinput.py root-6.18.04/build/unix/makepchinput.py
---- root-6.18.04.orig/build/unix/makepchinput.py	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/build/unix/makepchinput.py	2020-03-13 19:58:32.331575236 +0100
-@@ -263,9 +263,6 @@
+diff -ur root-6.20.02.orig/build/unix/makepchinput.py root-6.20.02/build/unix/makepchinput.py
+--- root-6.20.02.orig/build/unix/makepchinput.py	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/build/unix/makepchinput.py	2020-03-15 19:50:25.304179242 +0100
+@@ -252,9 +252,6 @@
                             "math/vdt",
                             "tmva/rmva"]
  
@@ -41,39 +25,9 @@ diff -ur root-6.18.04.orig/build/unix/makepchinput.py root-6.18.04/build/unix/ma
     accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                 not isAnyPatternInString(PCHPatternsBlacklist,dirName)
  
-diff -ur root-6.18.04.orig/config/root-config.in root-6.18.04/config/root-config.in
---- root-6.18.04.orig/config/root-config.in	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/config/root-config.in	2020-03-13 20:06:39.876361426 +0100
-@@ -76,10 +76,7 @@
-           -lRint -lPostscript -lMatrix -lPhysics -lMathCore -lThread\
-           -lMultiProc"
- 
--if [ "@UNIX@" != "1" ] || [ "@CMAKE_SIZEOF_VOID_P@" != "4" ]; then
--   rootlibs="$rootlibs -lROOTDataFrame"
--fi
--
-+rootlibs="$rootlibs -lROOTDataFrame"
- 
- if test "$platform" = "win32"; then
-    rootulibs="-include:_G__cpp_setupG__Net        \
-diff -ur root-6.18.04.orig/tree/dataframe/CMakeLists.txt root-6.18.04/tree/dataframe/CMakeLists.txt
---- root-6.18.04.orig/tree/dataframe/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/CMakeLists.txt	2020-03-13 19:58:32.332575225 +0100
-@@ -3,11 +3,6 @@
- # @author Danilo Piparo CERN, Pere Mato CERN
- ############################################################################
- 
--# Disable RDataFrame on 32-bit UNIX platforms due to ROOT-9236
--if(UNIX AND CMAKE_SIZEOF_VOID_P EQUAL 4)
--  return()
--endif()
--
- if(arrow)
-   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RArrowDS.hxx)
-   list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${ARROW_INCLUDE_DIR})
-diff -ur root-6.18.04.orig/tree/dataframe/test/dataframe_cache.cxx root-6.18.04/tree/dataframe/test/dataframe_cache.cxx
---- root-6.18.04.orig/tree/dataframe/test/dataframe_cache.cxx	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/test/dataframe_cache.cxx	2020-03-13 20:13:04.021253192 +0100
+diff -ur root-6.20.02.orig/tree/dataframe/test/dataframe_cache.cxx root-6.20.02/tree/dataframe/test/dataframe_cache.cxx
+--- root-6.20.02.orig/tree/dataframe/test/dataframe_cache.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tree/dataframe/test/dataframe_cache.cxx	2020-03-15 19:50:09.075351525 +0100
 @@ -224,8 +224,6 @@
  
  }
@@ -89,9 +43,9 @@ diff -ur root-6.18.04.orig/tree/dataframe/test/dataframe_cache.cxx root-6.18.04/
  }
 -
 -#endif // R__B64
-diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_arrow.cxx root-6.18.04/tree/dataframe/test/datasource_arrow.cxx
---- root-6.18.04.orig/tree/dataframe/test/datasource_arrow.cxx	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/test/datasource_arrow.cxx	2020-03-13 20:13:04.021253192 +0100
+diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_arrow.cxx root-6.20.02/tree/dataframe/test/datasource_arrow.cxx
+--- root-6.20.02.orig/tree/dataframe/test/datasource_arrow.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tree/dataframe/test/datasource_arrow.cxx	2020-03-15 19:50:09.075351525 +0100
 @@ -163,8 +163,6 @@
  }
  #endif
@@ -107,10 +61,10 @@ diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_arrow.cxx root-6.18.04
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_csv.cxx root-6.18.04/tree/dataframe/test/datasource_csv.cxx
---- root-6.18.04.orig/tree/dataframe/test/datasource_csv.cxx	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/test/datasource_csv.cxx	2020-03-13 20:26:14.841831219 +0100
-@@ -193,8 +193,6 @@
+diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_csv.cxx root-6.20.02/tree/dataframe/test/datasource_csv.cxx
+--- root-6.20.02.orig/tree/dataframe/test/datasource_csv.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tree/dataframe/test/datasource_csv.cxx	2020-03-15 19:57:05.490930922 +0100
+@@ -195,8 +195,6 @@
  }
  #endif
  
@@ -119,15 +73,15 @@ diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_csv.cxx root-6.18.04/t
  TEST(RCsvDS, FromARDF)
  {
     std::unique_ptr<RDataSource> tds(new RCsvDS(fileName0));
-@@ -290,5 +288,3 @@
+@@ -292,5 +290,3 @@
  }
  
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_root.cxx root-6.18.04/tree/dataframe/test/datasource_root.cxx
---- root-6.18.04.orig/tree/dataframe/test/datasource_root.cxx	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/test/datasource_root.cxx	2020-03-13 20:13:04.021253192 +0100
+diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_root.cxx root-6.20.02/tree/dataframe/test/datasource_root.cxx
+--- root-6.20.02.orig/tree/dataframe/test/datasource_root.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tree/dataframe/test/datasource_root.cxx	2020-03-15 19:50:09.076351514 +0100
 @@ -117,8 +117,6 @@
  }
  #endif
@@ -143,9 +97,9 @@ diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_root.cxx root-6.18.04/
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_trivial.cxx root-6.18.04/tree/dataframe/test/datasource_trivial.cxx
---- root-6.18.04.orig/tree/dataframe/test/datasource_trivial.cxx	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tree/dataframe/test/datasource_trivial.cxx	2020-03-13 20:13:04.021253192 +0100
+diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_trivial.cxx root-6.20.02/tree/dataframe/test/datasource_trivial.cxx
+--- root-6.20.02.orig/tree/dataframe/test/datasource_trivial.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tree/dataframe/test/datasource_trivial.cxx	2020-03-15 19:50:09.076351514 +0100
 @@ -132,8 +132,6 @@
     EXPECT_EQ(*tdfAll.Count(), 20ULL);
  }
@@ -161,11 +115,11 @@ diff -ur root-6.18.04.orig/tree/dataframe/test/datasource_trivial.cxx root-6.18.
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.18.04.orig/tutorials/CMakeLists.txt root-6.18.04/tutorials/CMakeLists.txt
---- root-6.18.04.orig/tutorials/CMakeLists.txt	2019-09-11 15:36:49.000000000 +0200
-+++ root-6.18.04/tutorials/CMakeLists.txt	2020-03-13 19:58:32.333575214 +0100
-@@ -212,10 +212,6 @@
-                  v7/ntuple/ntpl004_dimuon.C)
+diff -ur root-6.20.02.orig/tutorials/CMakeLists.txt root-6.20.02/tutorials/CMakeLists.txt
+--- root-6.20.02.orig/tutorials/CMakeLists.txt	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/tutorials/CMakeLists.txt	2020-03-15 19:59:35.808335176 +0100
+@@ -255,10 +255,6 @@
+   set(root7_veto v7/ntuple/ntpl004_dimuon.C)
  endif()
  
 -if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
@@ -174,26 +128,20 @@ diff -ur root-6.18.04.orig/tutorials/CMakeLists.txt root-6.18.04/tutorials/CMake
 -
  #---These ones are disabled !!! ------------------------------------
  set(extra_veto
-   htmlex.C
-@@ -266,7 +262,6 @@
+   legacy/benchmarks.C
+@@ -311,7 +307,6 @@
               ${classic_veto}
               ${pythia_veto}
               ${root7_veto}
 -             ${bits32_veto}
               ${xrootd_veto}
-              )
- 
-@@ -424,13 +419,6 @@
- 
+              ${mlp_veto}
+              ${spectrum_veto}
+@@ -513,7 +508,6 @@
    list(REMOVE_ITEM pytutorials ${pyveto})
  
--  if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
--    set(bits32_veto_py dataframe/*.py)
--    file(GLOB bits32_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py)
--    list(REMOVE_ITEM pytutorials ${bits32_veto_py})
--    list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
--  endif()
--
-   #---Python tutorials dependencies--------------------------------------
-   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
-   set(pyroot-h1draw-depends tutorial-pyroot-hsimple-py)
+   if(NOT dataframe)
+-    set(dataframe_veto_py dataframe/*.py)
+     file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
+     list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
+     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)

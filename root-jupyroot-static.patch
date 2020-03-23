@@ -1,6 +1,6 @@
-diff -ur root-6.18.00.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.18.00/bindings/pyroot/JsMVA/JPyInterface.py
---- root-6.18.00.orig/bindings/pyroot/JsMVA/JPyInterface.py	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/bindings/pyroot/JsMVA/JPyInterface.py	2019-06-28 22:54:03.937480738 +0200
+diff -ur root-6.20.02.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.20.02/bindings/pyroot/JsMVA/JPyInterface.py
+--- root-6.20.02.orig/bindings/pyroot/JsMVA/JPyInterface.py	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/bindings/pyroot/JsMVA/JPyInterface.py	2020-03-15 20:07:18.921423559 +0100
 @@ -188,7 +188,7 @@
  ## Class for creating the output scripts and inserting them to cell output
  class JsDraw:
@@ -10,21 +10,21 @@ diff -ur root-6.18.00.orig/bindings/pyroot/JsMVA/JPyInterface.py root-6.18.00/bi
   
      ## String containing the link to JavaScript files
      __jsMVASourceDir = __jsMVARepo + "/js"
-diff -ur root-6.18.00.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.18.00/bindings/pyroot/JupyROOT/helpers/utils.py
---- root-6.18.00.orig/bindings/pyroot/JupyROOT/helpers/utils.py	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/bindings/pyroot/JupyROOT/helpers/utils.py	2019-06-28 22:54:03.938480727 +0200
-@@ -39,7 +39,7 @@
- _jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
- 
- 
--_jsROOTSourceDir = "https://root.cern.ch/js/notebook/"
-+_jsROOTSourceDir = "/static/jsroot/"
- _jsCanvasWidth = 800
- _jsCanvasHeight = 600
- 
-diff -ur root-6.18.00.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.18.00/etc/notebook/JsMVA/js/JsMVA.js
---- root-6.18.00.orig/etc/notebook/JsMVA/js/JsMVA.js	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/etc/notebook/JsMVA/js/JsMVA.js	2019-06-28 22:54:03.938480727 +0200
+diff -ur root-6.20.02.orig/bindings/pyroot/JupyROOT/helpers/utils.py root-6.20.02/bindings/pyroot/JupyROOT/helpers/utils.py
+--- root-6.20.02.orig/bindings/pyroot/JupyROOT/helpers/utils.py	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/bindings/pyroot/JupyROOT/helpers/utils.py	2020-03-15 20:07:18.921423559 +0100
+@@ -82,7 +82,7 @@
+ function requirejs_success(base_url) {{
+     return function() {{
+         require.config({{
+-            baseUrl: base_url + 'static/'
++            baseUrl: base_url + 'static/jsroot/'
+         }});
+         display_{jsDivId}();
+     }}
+diff -ur root-6.20.02.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.20.02/etc/notebook/JsMVA/js/JsMVA.js
+--- root-6.20.02.orig/etc/notebook/JsMVA/js/JsMVA.js	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/etc/notebook/JsMVA/js/JsMVA.js	2020-03-15 20:07:18.922423549 +0100
 @@ -16,7 +16,7 @@
  
  (function(factory){
@@ -34,14 +34,14 @@ diff -ur root-6.18.00.orig/etc/notebook/JsMVA/js/JsMVA.js root-6.18.00/etc/noteb
  
      var url = "";
      if (requirejs.s.contexts.hasOwnProperty("_")) {
-diff -ur root-6.18.00.orig/etc/notebook/JsMVA/js/NetworkDesigner.js root-6.18.00/etc/notebook/JsMVA/js/NetworkDesigner.js
---- root-6.18.00.orig/etc/notebook/JsMVA/js/NetworkDesigner.js	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/etc/notebook/JsMVA/js/NetworkDesigner.js	2019-06-29 07:08:46.582682582 +0200
+diff -ur root-6.20.02.orig/etc/notebook/JsMVA/js/NetworkDesigner.js root-6.20.02/etc/notebook/JsMVA/js/NetworkDesigner.js
+--- root-6.20.02.orig/etc/notebook/JsMVA/js/NetworkDesigner.js	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/etc/notebook/JsMVA/js/NetworkDesigner.js	2020-03-15 20:07:18.922423549 +0100
 @@ -19,7 +19,7 @@
          paths: {
              "jquery-connections": baseURL + "jquery.connections.min",
              "jquery-timing": baseURL + "jquery-timing.min",
--            "d3": "https://root.cern.ch/js/notebook/scripts/d3.min"
+-            "d3": "/static/scripts/d3.min"
 +            "d3": "/static/jsroot/scripts/d3.min"
          },
          shim: {

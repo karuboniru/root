@@ -1,7 +1,7 @@
-diff -ur root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.18.00/cmake/modules/SearchInstalledSoftware.cmake
---- root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake	2019-06-25 10:52:11.000000000 +0200
-+++ root-6.18.00/cmake/modules/SearchInstalledSoftware.cmake	2019-06-26 16:00:21.275634375 +0200
-@@ -1380,80 +1380,18 @@
+diff -ur root-6.20.02.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.20.02/cmake/modules/SearchInstalledSoftware.cmake
+--- root-6.20.02.orig/cmake/modules/SearchInstalledSoftware.cmake	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/cmake/modules/SearchInstalledSoftware.cmake	2020-03-15 20:12:34.446078193 +0100
+@@ -1528,83 +1528,18 @@
  
  #---Download googletest--------------------------------------------------------------
  if (testing)
@@ -24,7 +24,9 @@ diff -ur root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.18
 -  if(MSVC)
 -    set(EXTRA_GTEST_OPTS
 -      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
--      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=\\\"\\\"
+-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\"
+-      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=\\\"\\\")
 -  endif()
 -  if(APPLE)
 -    set(EXTRA_GTEST_OPTS
@@ -34,6 +36,7 @@ diff -ur root-6.18.00.orig/cmake/modules/SearchInstalledSoftware.cmake root-6.18
 -  ExternalProject_Add(
 -    googletest
 -    GIT_REPOSITORY https://github.com/google/googletest.git
+-    GIT_SHALLOW 1
 -    GIT_TAG release-1.8.0
 -    UPDATE_COMMAND ""
 -    # TIMEOUT 10

@@ -1,6 +1,7 @@
---- root-6.16.00.orig/documentation/doxygen/filter.cxx	2019-02-14 14:44:47.132678348 +0100
-+++ root-6.16.00/documentation/doxygen/filter.cxx	2019-02-14 14:45:00.596532589 +0100
-@@ -367,16 +367,7 @@
+diff -ur root-6.20.02.orig/documentation/doxygen/filter.cxx root-6.20.02/documentation/doxygen/filter.cxx
+--- root-6.20.02.orig/documentation/doxygen/filter.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/documentation/doxygen/filter.cxx	2020-03-15 20:05:59.047270429 +0100
+@@ -378,16 +378,7 @@
  
        // notebook found
        if (gLineString.find("\\notebook") != string::npos) {
@@ -13,7 +14,7 @@
 -         else{
 -             gLineString = "/// ";
 -         }
--         gLineString += StringFormat( "\\htmlonly <a href=\"http://nbviewer.jupyter.org/url/root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern.ch/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"http://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
+-         gLineString += StringFormat( "\\htmlonly <a href=\"https://nbviewer.jupyter.org/url/root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src= notebook.gif alt=\"View in nbviewer\" style=\"height:1em\" ></a> <a href=\"https://cern.ch/swanserver/cgi-bin/go?projurl=https://root.cern/doc/master/notebooks/%s.nbconvert.ipynb\" target=\"_blank\"><img src=\"https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png\"  alt=\"Open in SWAN\" style=\"height:1em\" ></a> \\endhtmlonly \n", gMacroName.c_str() , gMacroName.c_str());
 +         gLineString = "";
        }
  
