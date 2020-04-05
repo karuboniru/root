@@ -1,6 +1,6 @@
 diff -ur root-6.20.02.orig/bindings/pyroot/src/Cppyy.cxx root-6.20.02/bindings/pyroot/src/Cppyy.cxx
 --- root-6.20.02.orig/bindings/pyroot/src/Cppyy.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/bindings/pyroot/src/Cppyy.cxx	2020-03-21 14:10:09.322489811 +0100
++++ root-6.20.02/bindings/pyroot/src/Cppyy.cxx	2020-03-24 19:26:38.162272398 +0100
 @@ -74,10 +74,6 @@
  class ApplicationStarter {
  public:
@@ -12,12 +12,62 @@ diff -ur root-6.20.02.orig/bindings/pyroot/src/Cppyy.cxx root-6.20.02/bindings/p
        // setup dummy holders for global and std namespaces
        assert( g_classrefs.size() == GLOBAL_HANDLE );
        g_name2classrefidx[ "" ]      = GLOBAL_HANDLE;
-@@ -90,8 +86,6 @@
-    }
+diff -ur root-6.20.02.orig/bindings/pyroot_experimental/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx root-6.20.02/bindings/pyroot_experimental/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
+--- root-6.20.02.orig/bindings/pyroot_experimental/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/bindings/pyroot_experimental/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx	2020-03-24 19:26:38.182272186 +0100
+@@ -109,10 +109,6 @@
+ class ApplicationStarter {
+ public:
+     ApplicationStarter() {
+-     // Insure ROOT's atexit is executed *after* the atexit that calls
+-     // ApplicationStarter's destructor, by forcing the ROOT's atexit
+-     // registration now.
+-        TROOT::Initialize();
+     // setup dummy holders for global and std namespaces
+         assert(g_classrefs.size() == GLOBAL_HANDLE);
+         g_name2classrefidx[""]      = GLOBAL_HANDLE;
+diff -ur root-6.20.02.orig/core/base/inc/TROOT.h root-6.20.02/core/base/inc/TROOT.h
+--- root-6.20.02.orig/core/base/inc/TROOT.h	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/core/base/inc/TROOT.h	2020-03-24 19:26:38.182272186 +0100
+@@ -351,7 +351,6 @@
+    static void        SetMacroPath(const char *newpath);
+    static Int_t       IncreaseDirLevel();
+    static void        IndentLevel();
+-   static void        Initialize();
+    static Bool_t      Initialized();
+    static Bool_t      MemCheck();
+    static void        SetDirLevel(Int_t level = 0);
+diff -ur root-6.20.02.orig/core/base/src/TROOT.cxx root-6.20.02/core/base/src/TROOT.cxx
+--- root-6.20.02.orig/core/base/src/TROOT.cxx	2020-03-15 16:21:25.000000000 +0100
++++ root-6.20.02/core/base/src/TROOT.cxx	2020-03-24 20:10:54.640084486 +0100
+@@ -1022,10 +1022,12 @@
+       SafeDelete(fCleanups);
+ #endif
  
-    ~ApplicationStarter() {
--      for ( auto ifunc : g_method2callfunc )
--         gInterpreter->CallFunc_Delete( ifunc.second );
-    }
- } _applicationStarter;
+-#ifndef _MSC_VER
+-      // deleting the interpreter makes things crash at exit in some cases
+-      delete fInterpreter;
+-#endif
++      // llvm::TimingGroup used for measuring the timing relies the destructors.
++      // In order to make use of this feature we have to call the destructor of
++      // TCling which will shut down clang, cling and llvm.
++      // gSystem->Getenv is not available anymore.
++      if (::getenv("ROOT_CLING_TIMING"))
++         delete fInterpreter;
  
+       // Prints memory stats
+       TStorage::PrintStatistics();
+@@ -2848,13 +2850,6 @@
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Initialize ROOT explicitly.
+-
+-void TROOT::Initialize() {
+-   (void) gROOT;
+-}
+-
+-////////////////////////////////////////////////////////////////////////////////
+ /// Return kTRUE if the TROOT object has been initialized.
+ 
+ Bool_t TROOT::Initialized()

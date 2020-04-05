@@ -49,7 +49,7 @@
 %global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.20.02
+Version:	6.20.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
 Release:	1%{?dist}
 Summary:	Numerical data analysis framework
@@ -117,22 +117,18 @@ Patch15:	%{name}-FitData-assert-fix.patch
 #		modifies it
 #		https://github.com/root-project/root/pull/5160
 Patch16:	%{name}-xmlmodify-dep.patch
-#		Use unique filenames in tutorials so they can be run in
-#		parallel
-#		Backport from upstream's git
-Patch17:	%{name}-tutorials-unique-filenames.patch
 #		Size types should use %z
 #		https://github.com/root-project/root/pull/5161
-Patch18:	%{name}-format-fix.patch
+Patch17:	%{name}-format-fix.patch
 #		Run some test on 32 bit that upstream has disabled
-Patch19:	%{name}-32bit-tests.patch
+Patch18:	%{name}-32bit-tests.patch
 #		The file was moved - update path
 #		https://github.com/root-project/root/pull/5162
-Patch20:	%{name}-moved-file.patch
+Patch19:	%{name}-moved-file.patch
 #		Workaround for initialization problems for PyROOT on
 #		EPEL7 ppc64le
 #		https://sft.its.cern.ch/jira/browse/ROOT-10622
-Patch21:	%{name}-epel7-ppc64le-pyroot.patch
+Patch20:	%{name}-epel7-ppc64le-pyroot.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -1847,11 +1843,6 @@ This package contains an ntuple extension for ROOT 7.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
-%if %{?rhel}%{!?rhel:0} == 7
-%ifarch ppc64le
-%patch21 -p1
-%endif
-%endif
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -3790,6 +3781,11 @@ fi
 %endif
 
 %changelog
+* Wed Apr 01 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.04-1
+- Update to 6.20.04
+- Drop previously backported patch root-tutorials-unique-filenames.patch
+- Improved patch for the PyROOT issue on EPEL 7 ppc64le
+
 * Sun Mar 22 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.02-1
 - Update to 6.20.02
 - Drop patches accepted upstream
