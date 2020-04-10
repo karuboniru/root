@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.20.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -187,7 +187,7 @@ BuildRequires:	python%{python3_other_pkgversion}-devel
 %endif
 %if %{root7}
 %ifarch %{qt5_qtwebengine_arches}
-BuildRequires:	qt5-devel
+BuildRequires:	qt5-qtbase-devel
 BuildRequires:	qt5-qtwebengine-devel
 %endif
 %endif
@@ -3781,6 +3781,9 @@ fi
 %endif
 
 %changelog
+* Fri Apr 10 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.04-2
+- Replace BR qt5-devel with qt5-qtbase-devel
+
 * Wed Apr 01 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.04-1
 - Update to 6.20.04
 - Drop previously backported patch root-tutorials-unique-filenames.patch
