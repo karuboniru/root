@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.20.04
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	3%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -3781,6 +3781,9 @@ fi
 %endif
 
 %changelog
+* Tue May 26 2020 Miro Hrončok <mhroncok@redhat.com> - 6.20.04-3
+- Rebuilt for Python 3.9
+
 * Fri Apr 10 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.04-2
 - Replace BR qt5-devel with qt5-qtbase-devel
 
