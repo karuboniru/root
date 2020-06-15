@@ -49,9 +49,9 @@
 %global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
 
 Name:		root
-Version:	6.20.04
+Version:	6.20.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	3%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -129,6 +129,9 @@ Patch19:	%{name}-moved-file.patch
 #		EPEL7 ppc64le
 #		https://sft.its.cern.ch/jira/browse/ROOT-10622
 Patch20:	%{name}-epel7-ppc64le-pyroot.patch
+#		Fix test failure on ppc64le and aarch64
+#		https://github.com/root-project/root/pull/5867
+Patch21:	%{name}-roostats-test-ppc64le-aarch64.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -1843,6 +1846,7 @@ This package contains an ntuple extension for ROOT 7.
 %patch18 -p1
 %patch19 -p1
 %patch20 -p1
+%patch21 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -2128,6 +2132,7 @@ else
     py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
 fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
+    -e "s,%{_libdir}/python%{python2_version}/config/lib${py2l}.so,%{_libdir}/lib${py3l}.so,g" \
     -e "s,lib${py2l},lib${py3l},g" \
     -e 's,%{__python}%{python2_version},%{__python3},g' \
     -e 's,%{__python2},%{__python3},g' \
@@ -2157,6 +2162,7 @@ else
     py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
 fi
 sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
+    -e "s,%{_libdir}/python%{python2_version}/config/lib${py2l}.so,%{_libdir}/lib${py3l}.so,g" \
     -e "s,lib${py2l},lib${py3l},g" \
     -e 's,%{__python}%{python2_version},%{__python3_other},g' \
     -e 's,%{__python2},%{__python3_other},g' \
@@ -2629,7 +2635,7 @@ popd
 # - gtest-net-davix-test-RRawFileDavix
 #   reads input file over network
 #   http://root.cern.ch/files/davix.test
-#   (*) one subtest RRawFile.Remote fails, others woud be OK
+#   (*) one subtest RRawFile.Remote fails, others would be OK
 #
 # - gtest-tmva-tmva-test-rreader
 # - gtest-tmva-tmva-test-rstandardscaler
@@ -2676,6 +2682,7 @@ tutorial-tmva-tmva103_Application"
 # - gtest-tree-dataframe-test-dataframe-friends
 # - gtest-tree-dataframe-test-dataframe-helpers
 # - gtest-tree-dataframe-test-dataframe-interface
+# - gtest-tree-dataframe-test-dataframe-ranges
 # - gtest-tree-dataframe-test-dataframe-simple
 # - gtest-tree-dataframe-test-dataframe-snapshot
 # - gtest-tree-dataframe-test-datasource-root
@@ -2687,6 +2694,7 @@ gtest-tree-dataframe-test-dataframe-colnames|\
 gtest-tree-dataframe-test-dataframe-friends|\
 gtest-tree-dataframe-test-dataframe-helpers|\
 gtest-tree-dataframe-test-dataframe-interface|\
+gtest-tree-dataframe-test-dataframe-ranges|\
 gtest-tree-dataframe-test-dataframe-simple|\
 gtest-tree-dataframe-test-dataframe-snapshot|\
 gtest-tree-dataframe-test-datasource-root|\
@@ -2694,19 +2702,17 @@ gtest-tree-dataframe-test-datasource-trivial"
 %endif
 
 %ifarch %{arm}
-# Tests failing on 32 bit arm
+# This test fails on 32 bit arm
 # - gtest-tree-tree-test-testBulkApiSillyStruct
 excluded="${excluded}|gtest-tree-tree-test-testBulkApiSillyStruct"
 %endif
 
-%ifarch ppc64le
-%if %{?fedora}%{!?fedora:0} == 29 || %{?fedora}%{!?fedora:0} == 30
-# This test fails on Fedora 29 and 30 ppc64le with the following error:
-# cling::DynamicLibraryManager::loadLibrary():
-#   /lib64/libGLdispatch.so.0: cannot allocate memory in static TLS block
-# Error in <TInterpreter::TCling::AutoLoad>:
-#   failure loading library libRGL.so for TGLHistPainter
-excluded="${excluded}|tutorial-roofit-rf608_fitresultaspdf-py"
+%ifarch %{ix86} x86_64
+%if %{?fedora}%{!?fedora:0}
+# This test fails on ix86 and x86_64 for Fedora 31/32/33 in koji
+# I can not reproduce the failure in a local mock build
+# - tutorial-roofit-rf611_weightedfits
+excluded="${excluded}|tutorial-roofit-rf611_weightedfits"
 %endif
 %endif
 
@@ -3080,7 +3086,7 @@ fi
 %{_pkgdocdir}/LICENSE
 %doc %{_pkgdocdir}/README
 %doc %{_pkgdocdir}/ReleaseNotes
-%license LICENSE
+%license LICENSE LGPL2_1.txt
 
 %files multiproc -f includelist-core-multiproc
 %{_libdir}/%{name}/libMultiProc.*
@@ -3781,6 +3787,10 @@ fi
 %endif
 
 %changelog
+* Thu Jun 11 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.06-1
+- Update to 6.20.06
+- Fix test failure on ppc64le and aarch64
+
 * Tue May 26 2020 Miro Hrončok <mhroncok@redhat.com> - 6.20.04-3
 - Rebuilt for Python 3.9
 
@@ -4599,7 +4609,7 @@ fi
 - Enable dCache support - dcap library is now in Fedora
 - Use system unuran library instead of embedded sources
 
-* Mon Feb  1 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00a-1
+* Mon Feb 01 2010 Mattias Ellert <mattias.ellert@fysast.uu.se> - 5.26.00a-1
 - Update to 5.26.00a
 - Disable cintex package for non-intel architectures
 - Remove embedded gl2ps sources

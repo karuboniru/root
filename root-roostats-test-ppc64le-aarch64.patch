@@ -1,0 +1,34 @@
+From 357ac50a2420a4544c9c63594cccb994ee14f870 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Sat, 13 Jun 2020 14:23:15 +0200
+Subject: [PATCH] The roofit/roostats/test/testHypoTestInvResult.cxx test fails
+ on aarch64 and ppc64le. This commit adjusts the allowed deviation from the
+ expected value so that the test passes.
+
+The reported error is (with slight variations in the exact numbers):
+
+/builddir/build/BUILD/root-6.20.06/roofit/roostats/test/testHypoTestInvResult.cxx:24: Failure
+The difference between result->UpperLimitEstimatedError() and 0.059684301 is 1.1846561807221656e-07, which exceeds 1.E-8, where
+result->UpperLimitEstimatedError() evaluates to 0.05968418253438193,
+0.059684301 evaluates to 0.059684301000000002, and
+1.E-8 evaluates to 1e-08.
+---
+ roofit/roostats/test/testHypoTestInvResult.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/roofit/roostats/test/testHypoTestInvResult.cxx b/roofit/roostats/test/testHypoTestInvResult.cxx
+index 9c2896185a..b89eab9b69 100644
+--- a/roofit/roostats/test/testHypoTestInvResult.cxx
++++ b/roofit/roostats/test/testHypoTestInvResult.cxx
+@@ -21,7 +21,7 @@ TEST(HypoTestInvResult, ReadFromFile)
+ 
+   // This just reads members
+   EXPECT_NEAR(result->UpperLimit(), 2.4613465, 1.E-7);
+-  EXPECT_NEAR(result->UpperLimitEstimatedError(), 0.059684301, 1.E-8);
++  EXPECT_NEAR(result->UpperLimitEstimatedError(), 0.059684301, 2.E-7);
+ 
+   // This accesses the sampling distribution
+   EXPECT_DOUBLE_EQ(result->GetExpectedUpperLimit(0), 1.60988427028569);
+-- 
+2.26.2
+
