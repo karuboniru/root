@@ -51,7 +51,7 @@
 Name:		root
 Version:	6.20.06
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -1917,6 +1917,10 @@ rm etc/notebook/JsMVA/js/*.min.js
 rm etc/notebook/JsMVA/css/*.min.css
 
 %build
+# This package triggers a fault in LLVM when LTO is enabled.  Until LLVM
+# is analyzed and fixed, disable LTO
+%define _lto_cflags %{nil}
+
 unset QTDIR
 unset QTLIB
 unset QTINC
@@ -3787,6 +3791,9 @@ fi
 %endif
 
 %changelog
+* Thu Jul 11 2020 Jeff Law <law@redhat.com> - 6.20.06-2
+- Disable LTO
+
 * Thu Jun 11 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.06-1
 - Update to 6.20.06
 - Fix test failure on ppc64le and aarch64
