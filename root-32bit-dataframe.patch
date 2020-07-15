@@ -1,6 +1,6 @@
-diff -ur root-6.20.02.orig/bindings/pyroot/ROOT.py root-6.20.02/bindings/pyroot/ROOT.py
---- root-6.20.02.orig/bindings/pyroot/ROOT.py	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/bindings/pyroot/ROOT.py	2020-03-15 19:50:25.303179253 +0100
+diff -ur root-6.22.00.orig/bindings/pyroot_legacy/ROOT.py root-6.22.00/bindings/pyroot_legacy/ROOT.py
+--- root-6.22.00.orig/bindings/pyroot_legacy/ROOT.py	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/bindings/pyroot_legacy/ROOT.py	2020-06-29 09:07:41.574798580 +0200
 @@ -438,9 +438,7 @@
  # This function is injected as method to the respective classes in Pythonize.cxx.
  _root._RDataFrameAsNumpy = _RDataFrameAsNumpy
@@ -12,9 +12,9 @@ diff -ur root-6.20.02.orig/bindings/pyroot/ROOT.py root-6.20.02/bindings/pyroot/
  
  
  ### RINT command emulation ------------------------------------------------------
-diff -ur root-6.20.02.orig/build/unix/makepchinput.py root-6.20.02/build/unix/makepchinput.py
---- root-6.20.02.orig/build/unix/makepchinput.py	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/build/unix/makepchinput.py	2020-03-15 19:50:25.304179242 +0100
+diff -ur root-6.22.00.orig/build/unix/makepchinput.py root-6.22.00/build/unix/makepchinput.py
+--- root-6.22.00.orig/build/unix/makepchinput.py	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/build/unix/makepchinput.py	2020-06-29 09:07:41.639798769 +0200
 @@ -252,9 +252,6 @@
                             "math/vdt",
                             "tmva/rmva"]
@@ -25,9 +25,9 @@ diff -ur root-6.20.02.orig/build/unix/makepchinput.py root-6.20.02/build/unix/ma
     accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                 not isAnyPatternInString(PCHPatternsBlacklist,dirName)
  
-diff -ur root-6.20.02.orig/tree/dataframe/test/dataframe_cache.cxx root-6.20.02/tree/dataframe/test/dataframe_cache.cxx
---- root-6.20.02.orig/tree/dataframe/test/dataframe_cache.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tree/dataframe/test/dataframe_cache.cxx	2020-03-15 19:50:09.075351525 +0100
+diff -ur root-6.22.00.orig/tree/dataframe/test/dataframe_cache.cxx root-6.22.00/tree/dataframe/test/dataframe_cache.cxx
+--- root-6.22.00.orig/tree/dataframe/test/dataframe_cache.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/dataframe_cache.cxx	2020-06-29 09:07:41.640798772 +0200
 @@ -224,8 +224,6 @@
  
  }
@@ -37,16 +37,19 @@ diff -ur root-6.20.02.orig/tree/dataframe/test/dataframe_cache.cxx root-6.20.02/
  TEST(Cache, Regex)
  {
  
-@@ -334,5 +332,3 @@
- 
+@@ -335,8 +333,6 @@
     gSystem->Unlink(fileName);
  }
--
+ 
 -#endif // R__B64
-diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_arrow.cxx root-6.20.02/tree/dataframe/test/datasource_arrow.cxx
---- root-6.20.02.orig/tree/dataframe/test/datasource_arrow.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tree/dataframe/test/datasource_arrow.cxx	2020-03-15 19:50:09.075351525 +0100
-@@ -163,8 +163,6 @@
+-
+ // ROOT-10563
+ TEST(Cache, Alias)
+ {
+diff -ur root-6.22.00.orig/tree/dataframe/test/datasource_arrow.cxx root-6.22.00/tree/dataframe/test/datasource_arrow.cxx
+--- root-6.22.00.orig/tree/dataframe/test/datasource_arrow.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/datasource_arrow.cxx	2020-06-29 09:07:41.645798787 +0200
+@@ -177,8 +177,6 @@
  }
  #endif
  
@@ -55,15 +58,15 @@ diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_arrow.cxx root-6.20.02
  TEST(RArrowDS, FromARDF)
  {
     std::unique_ptr<RDataSource> tds(new RArrowDS(createTestTable(), {}));
-@@ -236,5 +234,3 @@
+@@ -250,5 +248,3 @@
  }
  
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_csv.cxx root-6.20.02/tree/dataframe/test/datasource_csv.cxx
---- root-6.20.02.orig/tree/dataframe/test/datasource_csv.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tree/dataframe/test/datasource_csv.cxx	2020-03-15 19:57:05.490930922 +0100
+diff -ur root-6.22.00.orig/tree/dataframe/test/datasource_csv.cxx root-6.22.00/tree/dataframe/test/datasource_csv.cxx
+--- root-6.22.00.orig/tree/dataframe/test/datasource_csv.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/datasource_csv.cxx	2020-06-29 09:07:41.645798787 +0200
 @@ -195,8 +195,6 @@
  }
  #endif
@@ -79,9 +82,9 @@ diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_csv.cxx root-6.20.02/t
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_root.cxx root-6.20.02/tree/dataframe/test/datasource_root.cxx
---- root-6.20.02.orig/tree/dataframe/test/datasource_root.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tree/dataframe/test/datasource_root.cxx	2020-03-15 19:50:09.076351514 +0100
+diff -ur root-6.22.00.orig/tree/dataframe/test/datasource_root.cxx root-6.22.00/tree/dataframe/test/datasource_root.cxx
+--- root-6.22.00.orig/tree/dataframe/test/datasource_root.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/datasource_root.cxx	2020-06-29 09:07:41.649798799 +0200
 @@ -117,8 +117,6 @@
  }
  #endif
@@ -97,9 +100,9 @@ diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_root.cxx root-6.20.02/
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_trivial.cxx root-6.20.02/tree/dataframe/test/datasource_trivial.cxx
---- root-6.20.02.orig/tree/dataframe/test/datasource_trivial.cxx	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tree/dataframe/test/datasource_trivial.cxx	2020-03-15 19:50:09.076351514 +0100
+diff -ur root-6.22.00.orig/tree/dataframe/test/datasource_trivial.cxx root-6.22.00/tree/dataframe/test/datasource_trivial.cxx
+--- root-6.22.00.orig/tree/dataframe/test/datasource_trivial.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/datasource_trivial.cxx	2020-06-29 09:07:41.654798814 +0200
 @@ -132,8 +132,6 @@
     EXPECT_EQ(*tdfAll.Count(), 20ULL);
  }
@@ -115,10 +118,10 @@ diff -ur root-6.20.02.orig/tree/dataframe/test/datasource_trivial.cxx root-6.20.
  #endif // R__USE_IMT
 -
 -#endif // R__B64
-diff -ur root-6.20.02.orig/tutorials/CMakeLists.txt root-6.20.02/tutorials/CMakeLists.txt
---- root-6.20.02.orig/tutorials/CMakeLists.txt	2020-03-15 16:21:25.000000000 +0100
-+++ root-6.20.02/tutorials/CMakeLists.txt	2020-03-15 19:59:35.808335176 +0100
-@@ -255,10 +255,6 @@
+diff -ur root-6.22.00.orig/tutorials/CMakeLists.txt root-6.22.00/tutorials/CMakeLists.txt
+--- root-6.22.00.orig/tutorials/CMakeLists.txt	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tutorials/CMakeLists.txt	2020-06-29 09:07:41.655798816 +0200
+@@ -257,10 +257,6 @@
    set(root7_veto v7/ntuple/ntpl004_dimuon.C)
  endif()
  
@@ -129,7 +132,7 @@ diff -ur root-6.20.02.orig/tutorials/CMakeLists.txt root-6.20.02/tutorials/CMake
  #---These ones are disabled !!! ------------------------------------
  set(extra_veto
    legacy/benchmarks.C
-@@ -311,7 +307,6 @@
+@@ -313,7 +309,6 @@
               ${classic_veto}
               ${pythia_veto}
               ${root7_veto}
@@ -137,11 +140,11 @@ diff -ur root-6.20.02.orig/tutorials/CMakeLists.txt root-6.20.02/tutorials/CMake
               ${xrootd_veto}
               ${mlp_veto}
               ${spectrum_veto}
-@@ -513,7 +508,6 @@
+@@ -526,7 +521,6 @@
    list(REMOVE_ITEM pytutorials ${pyveto})
  
    if(NOT dataframe)
 -    set(dataframe_veto_py dataframe/*.py)
      file(GLOB dataframe_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*.py tmva/tmva*.py)
      list(REMOVE_ITEM pytutorials ${dataframe_veto_py})
-     list(REMOVE_ITEM pytutorials pyroot/pyroot002_TTreeAsMatrix.py)
+     list(REMOVE_ITEM pytutorials

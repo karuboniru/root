@@ -1,0 +1,51 @@
+From af2e5c8b1bf17a0a0e1c1492735395bdd49ffd65 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Mon, 29 Jun 2020 12:57:43 +0200
+Subject: [PATCH] Fix off-by-one error in the histogram v7 bin iterator
+
+The histogram bin iterator should start at 1 and end at N + 1, not
+start at 0 and end at N. (As for all iterators, the end element is the
+invalid element after the last one.)
+
+Fixes an assertion in the histhistv7testUnit test
+
+[----------] 2 tests from BinIterNBins
+[ RUN      ] BinIterNBins.NumBins
+/usr/include/c++/10/bits/stl_vector.h:1045: std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](std::vector<_Tp, _Alloc>::size_type) [with _Tp = float; _Alloc = std::allocator<float>; std::vector<_Tp, _Alloc>::reference = float&; std::vector<_Tp, _Alloc>::size_type = long unsigned int]: Assertion '__builtin_expect(__n < this->size(), true)' failed.
+---
+ hist/histv7/inc/ROOT/RHist.hxx | 4 ++--
+ hist/histv7/test/biniter.cxx   | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/hist/histv7/inc/ROOT/RHist.hxx b/hist/histv7/inc/ROOT/RHist.hxx
+index ebb319f1ef..9521fe182f 100644
+--- a/hist/histv7/inc/ROOT/RHist.hxx
++++ b/hist/histv7/inc/ROOT/RHist.hxx
+@@ -158,9 +158,9 @@ public:
+    /// Get the uncertainty on the content of the bin at `x`.
+    double GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
+ 
+-   const_iterator begin() const { return const_iterator(*fImpl); }
++   const_iterator begin() const { return const_iterator(*fImpl, 1); }
+ 
+-   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver()); }
++   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver() + 1); }
+ 
+    /// Swap *this and other.
+    ///
+diff --git a/hist/histv7/test/biniter.cxx b/hist/histv7/test/biniter.cxx
+index aa1c2dfef9..1f940aa8e7 100644
+--- a/hist/histv7/test/biniter.cxx
++++ b/hist/histv7/test/biniter.cxx
+@@ -45,7 +45,7 @@ TEST(BinIterNBins, BinRef) {
+   double founduncert = -1.;
+   RH2F::CoordArray_t foundcoord{};
+ 
+-  int nBins = 0;
++  int nBins = 1;
+   for (auto bin: h) {
+     auto binCenter = bin.GetCenter();
+     if (std::fabs(binCenter[0] - x) < 0.1 && std::fabs(binCenter[1] - y) < 0.1) {
+-- 
+2.26.2
+

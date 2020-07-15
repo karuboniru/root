@@ -1,0 +1,378 @@
+From 116be70d2786a3fecdfcd6445d06ad6f3768f5a6 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 3 Jul 2020 08:08:33 +0200
+Subject: [PATCH 1/5] Fix \file references in doxygen markup
+
+---
+ core/base/v7/inc/ROOT/RDirectory.hxx         | 2 +-
+ core/base/v7/inc/ROOT/RDirectoryEntry.hxx    | 2 +-
+ core/base/v7/inc/ROOT/RError.hxx             | 2 +-
+ core/base/v7/inc/ROOT/RIndexIter.hxx         | 2 +-
+ core/base/v7/inc/ROOT/RLogger.hxx            | 2 +-
+ core/base/v7/inc/ROOT/RTupleApply.hxx        | 2 +-
+ core/base/v7/inc/ROOT/impl_tuple_apply.hxx   | 2 +-
+ core/base/v7/src/RLogger.cxx                 | 2 +-
+ core/clingutils/test/TClingUtilsTests.cxx    | 2 +-
+ core/foundation/inc/ROOT/RNotFn.hxx          | 2 +-
+ core/foundation/inc/ROOT/RSpan.hxx           | 2 +-
+ core/foundation/inc/ROOT/span.hxx            | 2 +-
+ core/foundation/src/FoundationUtils.cxx      | 2 +-
+ gui/browsable/inc/ROOT/Browsable/RItem.hxx   | 2 +-
+ gui/browsable/src/RHistDraw7Provider.cxx     | 2 +-
+ gui/browsable/src/RSysFile.cxx               | 2 +-
+ gui/browserv7/inc/ROOT/RBrowserReply.hxx     | 2 +-
+ hist/hist/test/TFormulaGradientTests.cxx     | 2 +-
+ hist/histdrawv7/inc/ROOT/RHistDrawable.hxx   | 2 +-
+ hist/histv7/inc/ROOT/RAxis.hxx               | 2 +-
+ hist/histv7/inc/ROOT/RAxisConfig.hxx         | 2 +-
+ hist/histv7/inc/ROOT/RHist.hxx               | 2 +-
+ hist/histv7/inc/ROOT/RHistBinIter.hxx        | 2 +-
+ hist/histv7/inc/ROOT/RHistBufferedFill.hxx   | 2 +-
+ hist/histv7/inc/ROOT/RHistConcurrentFill.hxx | 2 +-
+ hist/histv7/inc/ROOT/RHistData.hxx           | 2 +-
+ hist/histv7/inc/ROOT/RHistImpl.hxx           | 2 +-
+ hist/histv7/inc/ROOT/RHistUtils.hxx          | 2 +-
+ hist/histv7/inc/ROOT/RHistView.hxx           | 2 +-
+ io/io/v7/inc/ROOT/RFile.hxx                  | 2 +-
+ math/mathcore/test/CladDerivatorTests.cxx    | 2 +-
+ math/mathcore/v7/inc/ROOT/RFit.hxx           | 2 +-
+ tmva/tmva/inc/TMVA/NeuralNet.h               | 2 +-
+ 33 files changed, 33 insertions(+), 33 deletions(-)
+
+diff --git a/core/base/v7/inc/ROOT/RDirectory.hxx b/core/base/v7/inc/ROOT/RDirectory.hxx
+index 5331f91144..6d1a4b0541 100644
+--- a/core/base/v7/inc/ROOT/RDirectory.hxx
++++ b/core/base/v7/inc/ROOT/RDirectory.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RDirectory.h
++/// \file ROOT/RDirectory.hxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff --git a/core/base/v7/inc/ROOT/RDirectoryEntry.hxx b/core/base/v7/inc/ROOT/RDirectoryEntry.hxx
+index a7258bc642..1a33e5003a 100644
+--- a/core/base/v7/inc/ROOT/RDirectoryEntry.hxx
++++ b/core/base/v7/inc/ROOT/RDirectoryEntry.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RDirectoryEntry.h
++/// \file ROOT/RDirectoryEntry.hxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff --git a/core/base/v7/inc/ROOT/RError.hxx b/core/base/v7/inc/ROOT/RError.hxx
+index 7a0d363e7f..6af7a38f01 100644
+--- a/core/base/v7/inc/ROOT/RError.hxx
++++ b/core/base/v7/inc/ROOT/RError.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RError.h
++/// \file ROOT/RError.hxx
+ /// \ingroup Base ROOT7
+ /// \author Jakob Blomer <jblomer@cern.ch>
+ /// \date 2019-12-11
+diff --git a/core/base/v7/inc/ROOT/RIndexIter.hxx b/core/base/v7/inc/ROOT/RIndexIter.hxx
+index 1e290d82c8..fc424fdb8d 100644
+--- a/core/base/v7/inc/ROOT/RIndexIter.hxx
++++ b/core/base/v7/inc/ROOT/RIndexIter.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RIndexIter.h
++/// \file ROOT/RIndexIter.hxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2016-01-19
+diff --git a/core/base/v7/inc/ROOT/RLogger.hxx b/core/base/v7/inc/ROOT/RLogger.hxx
+index c1852656ee..d4e3e6e7bd 100644
+--- a/core/base/v7/inc/ROOT/RLogger.hxx
++++ b/core/base/v7/inc/ROOT/RLogger.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/TLogger.h
++/// \file ROOT/RLogger.hxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-03-29
+diff --git a/core/base/v7/inc/ROOT/RTupleApply.hxx b/core/base/v7/inc/ROOT/RTupleApply.hxx
+index 9a80bfcd6f..995246505f 100644
+--- a/core/base/v7/inc/ROOT/RTupleApply.hxx
++++ b/core/base/v7/inc/ROOT/RTupleApply.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RTupleApply.h
++/// \file ROOT/RTupleApply.hxx
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff --git a/core/base/v7/inc/ROOT/impl_tuple_apply.hxx b/core/base/v7/inc/ROOT/impl_tuple_apply.hxx
+index dc12706906..68d6988f97 100644
+--- a/core/base/v7/inc/ROOT/impl_tuple_apply.hxx
++++ b/core/base/v7/inc/ROOT/impl_tuple_apply.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/impl_tuple_apply.h
++/// \file ROOT/impl_tuple_apply.hxx
+ /// \ingroup Base StdExt ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-09
+diff --git a/core/base/v7/src/RLogger.cxx b/core/base/v7/src/RLogger.cxx
+index 69aba0b05c..3ac8bb760f 100644
+--- a/core/base/v7/src/RLogger.cxx
++++ b/core/base/v7/src/RLogger.cxx
+@@ -1,4 +1,4 @@
+-/// \file TLogger.cxx
++/// \file RLogger.cxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-07
+diff --git a/core/clingutils/test/TClingUtilsTests.cxx b/core/clingutils/test/TClingUtilsTests.cxx
+index fca26705c3..fbc12cd352 100644
+--- a/core/clingutils/test/TClingUtilsTests.cxx
++++ b/core/clingutils/test/TClingUtilsTests.cxx
+@@ -1,4 +1,4 @@
+-/// \file TClingUtilsTest.cxx
++/// \file TClingUtilsTests.cxx
+ ///
+ /// \brief The file contain unit tests which test the TClingUtils.h
+ ///
+diff --git a/core/foundation/inc/ROOT/RNotFn.hxx b/core/foundation/inc/ROOT/RNotFn.hxx
+index a6dd13679e..a3877797f3 100644
+--- a/core/foundation/inc/ROOT/RNotFn.hxx
++++ b/core/foundation/inc/ROOT/RNotFn.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RNotFn.h
++/// \file ROOT/RNotFn.hxx
+ /// \ingroup Base StdExt
+ /// \author Danilo Piparo, Enrico Guiraud
+ /// \date 2018-01-19
+diff --git a/core/foundation/inc/ROOT/RSpan.hxx b/core/foundation/inc/ROOT/RSpan.hxx
+index 9e356493e6..b7366d58e7 100644
+--- a/core/foundation/inc/ROOT/RSpan.hxx
++++ b/core/foundation/inc/ROOT/RSpan.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RSpan.h
++/// \file ROOT/RSpan.hxx
+ /// \ingroup Base StdExt
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff --git a/core/foundation/inc/ROOT/span.hxx b/core/foundation/inc/ROOT/span.hxx
+index ce1b0e1d96..185055bbe6 100644
+--- a/core/foundation/inc/ROOT/span.hxx
++++ b/core/foundation/inc/ROOT/span.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/rhysd_span.h
++/// \file ROOT/span.hxx
+ /// \ingroup Base StdExt
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff --git a/core/foundation/src/FoundationUtils.cxx b/core/foundation/src/FoundationUtils.cxx
+index 9de395698b..d70e196130 100644
+--- a/core/foundation/src/FoundationUtils.cxx
++++ b/core/foundation/src/FoundationUtils.cxx
+@@ -1,4 +1,4 @@
+-/// \file FoundationUtils.hxx
++/// \file FoundationUtils.cxx
+ ///
+ /// \brief The file contains utilities which are foundational and could be used
+ /// across the core component of ROOT.
+diff --git a/gui/browsable/inc/ROOT/Browsable/RItem.hxx b/gui/browsable/inc/ROOT/Browsable/RItem.hxx
+index a07870a2cb..290587013e 100644
+--- a/gui/browsable/inc/ROOT/Browsable/RItem.hxx
++++ b/gui/browsable/inc/ROOT/Browsable/RItem.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RBrowser.hxx
++/// \file ROOT/RItem.hxx
+ /// \ingroup WebGui ROOT7
+ /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
+ /// \author Sergey Linev <S.Linev@gsi.de>
+diff --git a/gui/browsable/src/RHistDraw7Provider.cxx b/gui/browsable/src/RHistDraw7Provider.cxx
+index 416db22472..e2e15303c6 100644
+--- a/gui/browsable/src/RHistDraw7Provider.cxx
++++ b/gui/browsable/src/RHistDraw7Provider.cxx
+@@ -1,4 +1,4 @@
+-/// \file RDrawableRHist.cxx
++/// \file RHistDraw7Provider.cxx
+ /// \ingroup rbrowser
+ /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
+ /// \author Sergey Linev <S.Linev@gsi.de>
+diff --git a/gui/browsable/src/RSysFile.cxx b/gui/browsable/src/RSysFile.cxx
+index d5f481cb83..4447164f52 100644
+--- a/gui/browsable/src/RSysFile.cxx
++++ b/gui/browsable/src/RSysFile.cxx
+@@ -6,7 +6,7 @@
+  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+  *************************************************************************/
+ 
+-/// \file ROOT/RFileBrowsable.cxx
++/// \file ROOT/RSysFile.cxx
+ /// \ingroup rbrowser
+ /// \author Sergey Linev <S.Linev@gsi.de>
+ /// \date 2019-10-15
+diff --git a/gui/browserv7/inc/ROOT/RBrowserReply.hxx b/gui/browserv7/inc/ROOT/RBrowserReply.hxx
+index bdb94f60ea..35a2f1f978 100644
+--- a/gui/browserv7/inc/ROOT/RBrowserReply.hxx
++++ b/gui/browserv7/inc/ROOT/RBrowserReply.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RBrowserRequest.hxx
++/// \file ROOT/RBrowserReply.hxx
+ /// \ingroup WebGui ROOT7
+ /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
+ /// \author Sergey Linev <S.Linev@gsi.de>
+diff --git a/hist/hist/test/TFormulaGradientTests.cxx b/hist/hist/test/TFormulaGradientTests.cxx
+index 8c11a56077..74c0930f03 100644
+--- a/hist/hist/test/TFormulaGradientTests.cxx
++++ b/hist/hist/test/TFormulaGradientTests.cxx
+@@ -1,4 +1,4 @@
+-/// \file TFormulaGradientTests.h
++/// \file TFormulaGradientTests.cxx
+ ///
+ /// \brief The file contain unit tests which test the clad-based gradient
+ ///        computations.
+diff --git a/hist/histdrawv7/inc/ROOT/RHistDrawable.hxx b/hist/histdrawv7/inc/ROOT/RHistDrawable.hxx
+index ac56b9c8f3..0b3b635d92 100644
+--- a/hist/histdrawv7/inc/ROOT/RHistDrawable.hxx
++++ b/hist/histdrawv7/inc/ROOT/RHistDrawable.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistDrawable.h
++/// \file ROOT/RHistDrawable.hxx
+ /// \ingroup HistDraw ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-09
+diff --git a/hist/histv7/inc/ROOT/RAxis.hxx b/hist/histv7/inc/ROOT/RAxis.hxx
+index 1d35ed9b93..0371a06f97 100644
+--- a/hist/histv7/inc/ROOT/RAxis.hxx
++++ b/hist/histv7/inc/ROOT/RAxis.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RAxis.h
++/// \file ROOT/RAxis.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-03-23
+diff --git a/hist/histv7/inc/ROOT/RAxisConfig.hxx b/hist/histv7/inc/ROOT/RAxisConfig.hxx
+index 1e100986f0..34bf2f6a4a 100644
+--- a/hist/histv7/inc/ROOT/RAxisConfig.hxx
++++ b/hist/histv7/inc/ROOT/RAxisConfig.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RAxisConfig.h
++/// \file ROOT/RAxisConfig.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2020-02-05
+diff --git a/hist/histv7/inc/ROOT/RHist.hxx b/hist/histv7/inc/ROOT/RHist.hxx
+index ebb319f1ef..5567683b27 100644
+--- a/hist/histv7/inc/ROOT/RHist.hxx
++++ b/hist/histv7/inc/ROOT/RHist.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHist.h
++/// \file ROOT/RHist.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-03-23
+diff --git a/hist/histv7/inc/ROOT/RHistBinIter.hxx b/hist/histv7/inc/ROOT/RHistBinIter.hxx
+index 60f57dd20e..ab77dfbeaa 100644
+--- a/hist/histv7/inc/ROOT/RHistBinIter.hxx
++++ b/hist/histv7/inc/ROOT/RHistBinIter.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistBinIter.h
++/// \file ROOT/RHistBinIter.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-08-07
+diff --git a/hist/histv7/inc/ROOT/RHistBufferedFill.hxx b/hist/histv7/inc/ROOT/RHistBufferedFill.hxx
+index bb1cade29b..8efe00e207 100644
+--- a/hist/histv7/inc/ROOT/RHistBufferedFill.hxx
++++ b/hist/histv7/inc/ROOT/RHistBufferedFill.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistBufferedFill.h
++/// \file ROOT/RHistBufferedFill.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-03
+diff --git a/hist/histv7/inc/ROOT/RHistConcurrentFill.hxx b/hist/histv7/inc/ROOT/RHistConcurrentFill.hxx
+index a6b4b6a8e2..8ff76eb659 100644
+--- a/hist/histv7/inc/ROOT/RHistConcurrentFill.hxx
++++ b/hist/histv7/inc/ROOT/RHistConcurrentFill.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistConcurrentFill.h
++/// \file ROOT/RHistConcurrentFill.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-03
+diff --git a/hist/histv7/inc/ROOT/RHistData.hxx b/hist/histv7/inc/ROOT/RHistData.hxx
+index 901bd5c33a..9757986ff4 100644
+--- a/hist/histv7/inc/ROOT/RHistData.hxx
++++ b/hist/histv7/inc/ROOT/RHistData.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistData.h
++/// \file ROOT/RHistData.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-06-14
+diff --git a/hist/histv7/inc/ROOT/RHistImpl.hxx b/hist/histv7/inc/ROOT/RHistImpl.hxx
+index 483d879f0e..b6d4b2c6b5 100644
+--- a/hist/histv7/inc/ROOT/RHistImpl.hxx
++++ b/hist/histv7/inc/ROOT/RHistImpl.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistImpl.h
++/// \file ROOT/RHistImpl.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-03-23
+diff --git a/hist/histv7/inc/ROOT/RHistUtils.hxx b/hist/histv7/inc/ROOT/RHistUtils.hxx
+index 3733113c2b..08a342bf61 100644
+--- a/hist/histv7/inc/ROOT/RHistUtils.hxx
++++ b/hist/histv7/inc/ROOT/RHistUtils.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistData.h
++/// \file ROOT/RHistUtils.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2016-06-01
+diff --git a/hist/histv7/inc/ROOT/RHistView.hxx b/hist/histv7/inc/ROOT/RHistView.hxx
+index b65d3518dd..d2b40e0f35 100644
+--- a/hist/histv7/inc/ROOT/RHistView.hxx
++++ b/hist/histv7/inc/ROOT/RHistView.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RHistView.h
++/// \file ROOT/RHistView.hxx
+ /// \ingroup Hist ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-08-06
+diff --git a/io/io/v7/inc/ROOT/RFile.hxx b/io/io/v7/inc/ROOT/RFile.hxx
+index 6d3baaec05..c371a25875 100644
+--- a/io/io/v7/inc/ROOT/RFile.hxx
++++ b/io/io/v7/inc/ROOT/RFile.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RFile.h
++/// \file ROOT/RFile.hxx
+ /// \ingroup Base ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-07-31
+diff --git a/math/mathcore/test/CladDerivatorTests.cxx b/math/mathcore/test/CladDerivatorTests.cxx
+index e4289a7286..d1682094e0 100644
+--- a/math/mathcore/test/CladDerivatorTests.cxx
++++ b/math/mathcore/test/CladDerivatorTests.cxx
+@@ -1,4 +1,4 @@
+-/// \file CladDerivator.h
++/// \file CladDerivatorTests.cxx
+ ///
+ /// \brief The file contain unit tests which test the CladDerivator facility.
+ ///
+diff --git a/math/mathcore/v7/inc/ROOT/RFit.hxx b/math/mathcore/v7/inc/ROOT/RFit.hxx
+index 4fae336242..5b92733152 100644
+--- a/math/mathcore/v7/inc/ROOT/RFit.hxx
++++ b/math/mathcore/v7/inc/ROOT/RFit.hxx
+@@ -1,4 +1,4 @@
+-/// \file ROOT/RFit.h
++/// \file ROOT/RFit.hxx
+ /// \ingroup MathCore ROOT7
+ /// \author Axel Naumann <axel@cern.ch>
+ /// \date 2015-09-06
+diff --git a/tmva/tmva/inc/TMVA/NeuralNet.h b/tmva/tmva/inc/TMVA/NeuralNet.h
+index 31229cb1cf..bae98a48b2 100644
+--- a/tmva/tmva/inc/TMVA/NeuralNet.h
++++ b/tmva/tmva/inc/TMVA/NeuralNet.h
+@@ -1,5 +1,5 @@
+ /**
+- * @file NeuralNet
++ * @file TMVA/NeuralNet.h
+  * @author  Peter Speckmayer
+  * @version 1.0
+  *
+-- 
+2.26.2
+

@@ -1,0 +1,139 @@
+diff -ur root-6.22.00.orig/io/io/src/RRawFileUnix.cxx root-6.22.00/io/io/src/RRawFileUnix.cxx
+--- root-6.22.00.orig/io/io/src/RRawFileUnix.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/io/io/src/RRawFileUnix.cxx	2020-07-02 09:02:48.202677798 +0200
+@@ -9,6 +9,8 @@
+  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+  *************************************************************************/
+ 
++#include "ROOT/RConfig.hxx"
++
+ #include "ROOT/RRawFileUnix.hxx"
+ #include "ROOT/RMakeUnique.hxx"
+ 
+@@ -47,8 +49,13 @@
+ 
+ std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
+ {
++#ifdef R__SEEK64
++   struct stat64 info;
++   int res = fstat64(fFileDes, &info);
++#else
+    struct stat info;
+    int res = fstat(fFileDes, &info);
++#endif
+    if (res != 0)
+       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+    return info.st_size;
+@@ -68,7 +75,11 @@
+ 
+ void ROOT::Internal::RRawFileUnix::OpenImpl()
+ {
++#ifdef R__SEEK64
++   fFileDes = open64(GetLocation(fUrl).c_str(), O_RDONLY);
++#else
+    fFileDes = open(GetLocation(fUrl).c_str(), O_RDONLY);
++#endif
+    if (fFileDes < 0) {
+       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
+    }
+@@ -76,8 +87,13 @@
+    if (fOptions.fBlockSize >= 0)
+       return;
+ 
++#ifdef R__SEEK64
++   struct stat64 info;
++   int res = fstat64(fFileDes, &info);
++#else
+    struct stat info;
+    int res = fstat(fFileDes, &info);
++#endif
+    if (res != 0) {
+       throw std::runtime_error("Cannot call fstat on '" + fUrl + "', error: " + std::string(strerror(errno)));
+    }
+@@ -92,7 +108,11 @@
+ {
+    size_t total_bytes = 0;
+    while (nbytes) {
++#ifdef R__SEEK64
++      ssize_t res = pread64(fFileDes, buffer, nbytes, offset);
++#else
+       ssize_t res = pread(fFileDes, buffer, nbytes, offset);
++#endif
+       if (res < 0) {
+          if (errno == EINTR)
+             continue;
+diff -ur root-6.22.00.orig/tree/ntuple/v7/src/RMiniFile.cxx root-6.22.00/tree/ntuple/v7/src/RMiniFile.cxx
+--- root-6.22.00.orig/tree/ntuple/v7/src/RMiniFile.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/ntuple/v7/src/RMiniFile.cxx	2020-07-02 10:06:55.066204147 +0200
+@@ -13,6 +13,8 @@
+  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+  *************************************************************************/
+ 
++#include <ROOT/RConfig.hxx>
++
+ #include "ROOT/RMiniFile.hxx"
+ 
+ #include <ROOT/RRawFile.hxx>
+@@ -999,7 +1001,11 @@
+    R__ASSERT(fFile);
+    size_t retval;
+    if ((offset >= 0) && (static_cast<std::uint64_t>(offset) != fFilePos)) {
++#ifdef R__SEEK64
++      retval = fseeko64(fFile, offset, SEEK_SET);
++#else
+       retval = fseek(fFile, offset, SEEK_SET);
++#endif
+       R__ASSERT(retval == 0);
+       fFilePos = offset;
+    }
+@@ -1099,7 +1105,11 @@
+    if (idxDirSep != std::string::npos) {
+       fileName.erase(0, idxDirSep + 1);
+    }
++#ifdef R__SEEK64
++   FILE *fileStream = fopen64(std::string(path.data(), path.size()).c_str(), "wb");
++#else
+    FILE *fileStream = fopen(std::string(path.data(), path.size()).c_str(), "wb");
++#endif
+    R__ASSERT(fileStream);
+ 
+    auto writer = new RNTupleFileWriter(ntupleName);
+@@ -1319,7 +1329,11 @@
+    fFileSimple.Write(&strEmpty, strEmpty.GetSize());
+    fFileSimple.Write(&fileRoot, fileRoot.GetSize());
+    fFileSimple.fFilePos = tail;
++#ifdef R__SEEK64
++   auto retval = fseeko64(fFileSimple.fFile, tail, SEEK_SET);
++#else
+    auto retval = fseek(fFileSimple.fFile, tail, SEEK_SET);
++#endif
+    R__ASSERT(retval == 0);
+    fFileSimple.fFilePos = tail;
+ }
+diff -ur root-6.22.00.orig/tree/ntuple/v7/test/ntuple.cxx root-6.22.00/tree/ntuple/v7/test/ntuple.cxx
+--- root-6.22.00.orig/tree/ntuple/v7/test/ntuple.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/ntuple/v7/test/ntuple.cxx	2020-07-02 10:10:54.409737807 +0200
+@@ -1,3 +1,5 @@
++#include <ROOT/RConfig.hxx>
++
+ #include <ROOT/RColumnModel.hxx>
+ #include <ROOT/RDataFrame.hxx>
+ #include <ROOT/RNTuple.hxx>
+@@ -891,10 +893,17 @@
+          ntuple->Fill();
+       }
+    }
++#ifdef R__SEEK64
++   FILE *file = fopen64(fileGuard.GetPath().c_str(), "rb");
++   ASSERT_TRUE(file != nullptr);
++   EXPECT_EQ(0, fseeko64(file, 0, SEEK_END));
++   EXPECT_GT(ftello64(file), 2048LL * 1024LL * 1024LL);
++#else
+    FILE *file = fopen(fileGuard.GetPath().c_str(), "rb");
+    ASSERT_TRUE(file != nullptr);
+    EXPECT_EQ(0, fseek(file, 0, SEEK_END));
+    EXPECT_GT(ftell(file), 2048LL * 1024LL * 1024LL);
++#endif
+    fclose(file);
+ 
+    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());

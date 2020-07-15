@@ -1,0 +1,25 @@
+From b7dc989f9a49ad31094331aa272859ff7480f943 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Thu, 9 Jul 2020 21:29:46 +0200
+Subject: [PATCH] Fix bad regex
+
+---
+ proof/proof/src/TProofMgr.cxx | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/proof/proof/src/TProofMgr.cxx b/proof/proof/src/TProofMgr.cxx
+index 2a140e4e7a..35c91b77ac 100644
+--- a/proof/proof/src/TProofMgr.cxx
++++ b/proof/proof/src/TProofMgr.cxx
+@@ -820,7 +820,7 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
+    if (dest && strlen(dest) > 0) {
+       TString dst(dest), dt;
+       Ssiz_t from = 0;
+-      TRegexp re("<d+[0-9]>");
++      TRegexp re("<d[0-9]+>");
+       while (dst.Tokenize(dt, from, "/")) {
+          if (dt.Contains(re)) {
+             TParameter<Int_t> *pi = new TParameter<Int_t>(dt, -1);
+-- 
+2.26.2
+

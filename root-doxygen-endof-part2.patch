@@ -1,0 +1,978 @@
+From 1198ee3e08c46d1edc9258dbe857f66340f53a20 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Wed, 8 Jul 2020 10:39:54 +0200
+Subject: [PATCH 2/5] Fix various "end of ..." warnings from doxygen.
+
+This addresses warnings like:
+
+- end of comment block while expecting command </b>
+- end of comment block while expecting command </em>
+- end of comment block while expecting command </pre>
+- end of comment block while expecting command </s>
+- end of comment block while expecting command </sup>
+- end of comment block while expecting command </tt>
+- end of comment block while expecting command </u>
+- end of list marker found without any preceding list items
+- found </em> tag without matching <em>
+- found </li> tag without matching <li>
+- found </pre> tag without matching <pre>
+- found </sub> tag while expecting </sup>
+- found </sup> tag without matching <sup>
+- found </tt> tag without matching <tt>
+- found </ul> tag without matching <ul>
+- illegal </br> tag found
+- reached end of file while inside a 'code' block!
+- reached end of file while still inside a (nested) comment.
+- unexpected end of comment while inside <a href=...> tag
+- unexpected end of comment while inside <ul> block
+- unexpected html tag <blockquote> found within <h1> context
+- unexpected tag </h2> found
+- unexpected tag </h3> found
+- unsupported xml/html tag <it> found
+- unsupported xml/html tag </it> found
+---
+ bindings/r/inc/TRDataFrame.h                  |   2 +-
+ core/base/src/TEnv.cxx                        |   7 +-
+ core/cont/src/TBits.cxx                       |   2 +-
+ core/dictgen/res/DictSelectionReader.h        | 140 +++++++++---------
+ core/foundation/inc/ROOT/TypeTraits.hxx       |   2 +-
+ core/meta/src/TClass.cxx                      |   6 +-
+ core/metacling/src/TCling.cxx                 |   8 +-
+ graf2d/x11/src/TGX11.cxx                      |   6 +-
+ gui/guihtml/src/TGHtmlSizer.cxx               |   4 +-
+ hist/hist/src/TSVDUnfold.cxx                  |   8 +-
+ hist/histpainter/src/THistPainter.cxx         |   2 +-
+ hist/histv7/speed/histspeedtest.cxx           |   1 -
+ hist/unfold/inc/TUnfold.h                     |   8 +-
+ html/src/TDocDirective.cxx                    |   2 +-
+ math/mathcore/inc/Math/ProbFuncMathCore.h     |   8 +-
+ math/mathcore/inc/Math/QuantFuncMathCore.h    |   4 +-
+ math/mathcore/src/TMath.cxx                   |   2 +-
+ math/mathmore/inc/Math/GSLMultiRootFinder.h   |  16 +-
+ math/matrix/doc/Matrix.md                     |   2 +-
+ math/minuit/src/TMinuit.cxx                   |   4 +-
+ montecarlo/eg/src/TDatabasePDG.cxx            |   2 +-
+ montecarlo/vmc/README.md                      |   2 +-
+ net/http/civetweb/LICENSE.md                  |   4 -
+ proof/proof/src/TProofMgr.cxx                 |  50 ++++---
+ proof/proof/src/TProofServ.cxx                |  10 +-
+ roofit/histfactory/doc/index.md               |  11 +-
+ .../src/MakeModelAndMeasurementsFast.cxx      |  11 +-
+ roofit/roofitcore/inc/RooAbsCategory.h        |   2 +-
+ roofit/roofitcore/src/RooSimPdfBuilder.cxx    |   4 +-
+ tmva/tmva/src/Factory.cxx                     |   6 +-
+ tmva/tmva/src/Reader.cxx                      |   4 +-
+ tree/dataframe/inc/ROOT/RDF/RColumnValue.hxx  |   2 +-
+ tutorials/net/udpserver.c                     |   2 +-
+ tutorials/tmva/TMVA_CNN_Classification.C      |   2 +-
+ 34 files changed, 168 insertions(+), 178 deletions(-)
+
+diff --git a/bindings/r/inc/TRDataFrame.h b/bindings/r/inc/TRDataFrame.h
+index b7bb4ed89d..dbf48e1383 100644
+--- a/bindings/r/inc/TRDataFrame.h
++++ b/bindings/r/inc/TRDataFrame.h
+@@ -136,7 +136,7 @@ namespace ROOT {
+          2 |1
+       \endcode
+ 
+-      </h2>Working with colunms between dataframes</h2><br>
++      <h2>Working with colunms between dataframes</h2><br>
+       \code{.cpp}
+       df2["v3"]<<df1["strings"];
+ 
+diff --git a/core/base/src/TEnv.cxx b/core/base/src/TEnv.cxx
+index 39c07caf21..ab697df7b7 100644
+--- a/core/base/src/TEnv.cxx
++++ b/core/base/src/TEnv.cxx
+@@ -388,10 +388,9 @@ TString TEnvRec::ExpandValue(const char *value)
+ ClassImp(TEnv);
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Create a resource table and read the (possibly) three resource files, i.e
+-/// `$ROOTSYS/etc/system``<name>` (or `ROOTETCDIR/system``<name>`),
+-/// `$HOME/``<name>` and
+-/// `./``<name>`.
++/// Create a resource table and read the (possibly) three resource files,
++/// i.e.\ `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`),
++/// `$HOME/<name>` and `$PWD/<name>`.
+ /// ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+ /// read additional user defined resource files by creating additional TEnv
+ /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
+diff --git a/core/cont/src/TBits.cxx b/core/cont/src/TBits.cxx
+index 155bfd4b4c..95167dd5b1 100644
+--- a/core/cont/src/TBits.cxx
++++ b/core/cont/src/TBits.cxx
+@@ -10,7 +10,7 @@ Container of bits.
+ This class provides a simple container of bits.
+ Each bit can be set and tested via the functions SetBitNumber and
+ TestBitNumber.
+-                                             .
++
+ The default value of all bits is kFALSE.
+ The size of the container is automatically extended when a bit
+ number is either set or tested.  To reduce the memory size of the
+diff --git a/core/dictgen/res/DictSelectionReader.h b/core/dictgen/res/DictSelectionReader.h
+index 52921d6237..b19135badd 100644
+--- a/core/dictgen/res/DictSelectionReader.h
++++ b/core/dictgen/res/DictSelectionReader.h
+@@ -60,34 +60,32 @@ namespace clang {
+  * By default, the Name of the selection class is then
+  * @c ROOT::Meta::Selection::C.  If you have such a class, it will be found
+  * automatically.  If @c C is in a namespace, @c NS::C, then
+- * the selection class should be in the same namespace: @c
+-ROOT::Selection::NS::C.
++ * the selection class should be in the same namespace:
++ * @c ROOT::Meta::Selection::NS::C.
++ *
+  * Examples:
+  *
+-
+-**/
+-
+-/**
+  * The DictSelectionReader is used to create selection rules starting from
+  * C++ the constructs of the @c ROOT::Meta::Selection namespace. All rules
+  * are matching by name.
+  * A brief description of the operations that lead to class selection:
+- *    1. If a class declaration is present in the selection namespace, a class
+- * with the same name is selected outside the selection namespace.
+- *    2. If a template class declaration and a template instantiation is present
+- * in the selection namespace, all the instances of the template are
+- * selected outside the namespace.
++ * 1. If a class declaration is present in the selection namespace, a class
++ *    with the same name is selected outside the selection namespace.
++ * 2. If a template class declaration and a template instantiation is present
++ *    in the selection namespace, all the instances of the template are
++ *    selected outside the namespace.
++ *
+  * For example:
+  * @code
+  * [...]
+  * class classVanilla{};
+  * template <class A> class classTemplateVanilla {};
+  * classTemplateVanilla<char> t0;
+- * namespace ROOT{
++ * namespace ROOT {
+  *    namespace Meta {
+- *       namespace Selection{
+- *          class classVanilla{};
+- *          template <typename A> class classTemplateVanilla{};
++ *       namespace Selection {
++ *          class classVanilla {};
++ *          template <typename A> class classTemplateVanilla {};
+  *          classTemplateVanilla<char> st0;
+  *       }
+  *    }
+@@ -98,14 +96,15 @@ ROOT::Selection::NS::C.
+  *
+  * A brief description of the properties that can be assigned to classes
+  * with the @c ROOT::Meta::Selection::ClassAttributes class.
+- *    1. @c kNonSplittable : Makes the class non splittable
++ * 1. @c kNonSplittable : Makes the class non splittable
++ *
+  * The class properties can be assigned via a traits mechanism. For example:
+  * @code
+  * [...]
+- * class classWithAttributes{};
+- * namespace ROOT{
++ * class classWithAttributes {};
++ * namespace ROOT {
+  *    namespace Meta {
+- *       namespace Selection{
++ *       namespace Selection {
+  *          class classWithAttributes : ClassAttributes <kNonSplittable> {};
+  *       }
+  *    }
+@@ -116,9 +115,9 @@ ROOT::Selection::NS::C.
+  * properties can be assigned to a single class with this syntax:
+  * @code
+  * [...]
+- * namespace ROOT{
++ * namespace ROOT {
+  *    namespace Meta {
+- *       namespace Selection{
++ *       namespace Selection {
+  *          class classWithAttributes :
+  *             ClassAttributes <kProperty1 + kProperty2 + ... + kPropertyN> {};
+  *       }
+@@ -126,7 +125,6 @@ ROOT::Selection::NS::C.
+  * }
+  * @endcode
+  *
+- *
+  * The @c ROOT::Meta::Selection syntax allows to alter the number of template
+  * parameters of a certain template class within the ROOT type system, TClass.
+  * Technically it allows to alter the way in which the "normalized name" (in
+@@ -137,23 +135,21 @@ ROOT::Selection::NS::C.
+  * a long explaination in this case:
+  * @code
+  * [...]
+- * template <class T, class U=int, int V=3> class A{...};
+- * template <class T, class Alloc= myAllocator<T> > class myVector{...};
++ * template <class T, class U = int, int V = 3> class A {...};
++ * template <class T, class Alloc = myAllocator<T> > class myVector {...};
+  * A<char> a1;
+- * A<char,float> a2;
++ * A<char, float> a2;
+  * myVector<float> v1;
+  * myVector<A<char>> v2;
+  *
+- * namespace ROOT{
++ * namespace ROOT {
+  *    namespace Meta {
+- *       namespace Selection{
+- *          template <class T, class U=int, int V=3> class A
+- *            :KeepFirstTemplateArguments<1>{};
+- *
+- *          A<double> ;
+- *          template <class T, class Alloc= myAllocator<T> > class myVector
+- *            :KeepFirstTemplateArguments<1>{};
+- *
++ *       namespace Selection {
++ *          template <class T, class U = int, int V = 3> class A
++ *            : KeepFirstTemplateArguments<1> {};
++ *          A<double> a;
++ *          template <class T, class Alloc = myAllocator<T> > class myVector
++ *            : KeepFirstTemplateArguments<1> {};
+  *          myVector<double> vd;
+  *       }
+  *    }
+@@ -165,53 +161,55 @@ ROOT::Selection::NS::C.
+  * will be kept.
+  * In absence of any @c KeepFirstTemplateArguments trait, the normalization
+  * would be:
+- * @c A<char>           &rarr @c A<char,float,3>
+- * @c A<char,float>     &rarr @c A<char,int,3>
+- * @c myVector<float>   &rarr @c myVector<A<char,int,3>,myAllocator<A<char,int,3>>>
+- * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
++ * - @c A<char>           &rarr; @c A<char,float,3>
++ * - @c A<char,float>     &rarr; @c A<char,int,3>
++ * - @c myVector<float>   &rarr; @c myVector<A<char,int,3>,myAllocator<A<char,int,3>>>
++ * - @c myVector<A<char>> &rarr; @c myVector<float,myAllocator<float>>
+  *
+  * Now, deciding to keep just one argument (@c KeepFirstTemplateArguments<1>):
+- * @c A<char>           &rarr @c A<char,float>
+- * @c A<char,float>     &rarr @c A<char>
+- * @c myVector<float>   &rarr @c myVector<A<char>,myAllocator<A<char>>>
+- * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
++ * - @c A<char>           &rarr; @c A<char,float>
++ * - @c A<char,float>     &rarr; @c A<char>
++ * - @c myVector<float>   &rarr; @c myVector<A<char>,myAllocator<A<char>>>
++ * - @c myVector<A<char>> &rarr; @c myVector<float,myAllocator<float>>
+  *
+  * And deciding to keep two arguments (@c KeepFirstTemplateArguments<2>):
+- * @c A<char>           &rarr @c A<char,float>
+- * @c A<char,float>     &rarr @c A<char,int>
+- * @c myVector<float>   &rarr @c myVector<A<char,int>,myAllocator<A<char,int>>>
+- * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
++ * - @c A<char>           &rarr; @c A<char,float>
++ * - @c A<char,float>     &rarr; @c A<char,int>
++ * - @c myVector<float>   &rarr; @c myVector<A<char,int>,myAllocator<A<char,int>>>
++ * - @c myVector<A<char>> &rarr; @c myVector<float,myAllocator<float>>
+  *
+  * A brief description of the properties that can be assigned to data members
+  * with the @c ROOT::Meta::Selection MemberAttributes class:
+- *    1. @c kTransient : the data member is transient, not persistified by the
+- * ROOT I/O.
+- *    2. @c kAutoSelected : the type of the data member is selected without the
+- * need of specifying its class explicitely.
++ * 1. @c kTransient : the data member is transient, not persistified by the
++ *    ROOT I/O.
++ * 2. @c kAutoSelected : the type of the data member is selected without the
++ *    need of specifying its class explicitely.
++ *
+  * For example:
+  * @code
+  * [...]
+- * class classTransientMember{
++ * class classTransientMember {
+  *  private:
+  *    int transientMember;
+  * };
+- * class classAutoselected{};
+- * class classTestAutoselect{
++ * class classAutoselected {};
++ * class classTestAutoselect {
+  *  private:
+  *    classAutoselected autoselected;
+  * };
+  *
+- * namespace ROOT{
++ * namespace ROOT {
+  *    namespace Meta {
+- *       namespace Selection{
+- *          class classTestAutoselect{
++ *       namespace Selection {
++ *          class classTestAutoselect {
+  *             MemberAttributes<kAutoSelected> autoselected;
+  *          };
+-
+-    class classTransientMember{
+-       MemberAttributes<kTransient> transientMember;
+-       };
+- *
++ *          class classTransientMember {
++ *             MemberAttributes<kTransient> transientMember;
++ *          };
++ *       }
++ *    }
++ * }
+  * @endcode
+  * would lead to the creation of selection rules for @c classTransientMember
+  * specifying that @c transientMember is transient, @c classTestAutoselect and
+@@ -229,10 +227,10 @@ ROOT::Selection::NS::C.
+  * template< class T, class BASE >
+  * class MyDataVector : KeepFirstTemplateArguments< 1 >, SelectNoInstance {
+  *     MemberAttributes< kTransient + kAutoSelected > m_isMostDerived;
+- *     MemberAttributes< kNonSplittable+ kAutoSelected > m_isNonSplit;
+- *  };
++ *     MemberAttributes< kNonSplittable + kAutoSelected > m_isNonSplit;
++ * };
+  * [...]
+- *
++ * @endcode
+  **/
+ namespace ROOT {
+ namespace Internal {
+@@ -265,12 +263,9 @@ private:
+    inline bool
+    InSelectionNamespace(const clang::RecordDecl &,
+                         const std::string &str =
+-                           ""); ///< Check if in the ROOT::Selection namespace
++                           ""); ///< Check if in the ROOT::Meta::Selection namespace
+    inline bool FirstPass(const clang::RecordDecl &); ///< First pass on the AST
+-   inline bool SecondPass(const clang::RecordDecl &); ///< Second pass on the
+-   ///AST, using the
+-   ///information of the first
+-   ///one
++   inline bool SecondPass(const clang::RecordDecl &); ///< Second pass on the AST, using the information of the first one
+    inline void
+    ManageFields(const clang::RecordDecl &,
+                 const std::string &,
+@@ -285,8 +280,7 @@ private:
+    inline const clang::TemplateArgumentList *GetTmplArgList(
+       const clang::CXXRecordDecl &); ///< Get the template arguments list if any
+ 
+-   std::string PatternifyName(const std::string &className); ///< Transform instance
+-   ///< name in pattern for selection
++   std::string PatternifyName(const std::string &className); ///< Transform instance name in pattern for selection
+    void GetPointeeType(std::string &typeName); ///< Get name of the pointee type
+ 
+    SelectionRules &fSelectionRules; ///< The selection rules to be filled
+@@ -300,9 +294,9 @@ private:
+    fNoAutoSelectedClassFieldNames; ///< Collect the autoexcluded classes
+    std::unordered_map<std::string, TemplateInfo> fTemplateInfoMap; ///< List template name - properties map
+    llvm::StringMap<ClassSelectionRule>
+-   fClassNameSelectionRuleMap; /// < Map of the already built sel rules
++   fClassNameSelectionRuleMap; ///< Map of the already built sel rules
+    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST
+-   ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt; /// < The reference to the normalized context
++   ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt; ///< The reference to the normalized context
+ };
+ }
+ }
+diff --git a/core/foundation/inc/ROOT/TypeTraits.hxx b/core/foundation/inc/ROOT/TypeTraits.hxx
+index 1abf64e73a..ab491c2504 100644
+--- a/core/foundation/inc/ROOT/TypeTraits.hxx
++++ b/core/foundation/inc/ROOT/TypeTraits.hxx
+@@ -155,7 +155,7 @@ template <typename T>
+ using TakeFirstParameter_t = typename TakeFirstParameter<T>::type;
+ 
+ /// Remove first of possibly many template parameters.
+-/// e.g. RemoveFirstParameter_t<U<A,B>> is U<B>
++/// e.g. RemoveFirstParameter_t<U<A,B>> is U\<B\>
+ template <typename>
+ struct RemoveFirstParameter {
+ };
+diff --git a/core/meta/src/TClass.cxx b/core/meta/src/TClass.cxx
+index 4eeec81dc1..f29ab7fd85 100644
+--- a/core/meta/src/TClass.cxx
++++ b/core/meta/src/TClass.cxx
+@@ -6780,7 +6780,7 @@ void TClass::SetDestructor(ROOT::DesFunc_t destructorFunc)
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Install a new wrapper around the directory auto add function..
++/// Install a new wrapper around the directory auto add function.
+ /// The function autoAddFunc has the signature void (*)(void *obj, TDirectory dir)
+ /// and should register 'obj' to the directory if dir is not null
+ /// and unregister 'obj' from its current directory if dir is null
+@@ -7120,12 +7120,12 @@ Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
+ /// (public or not), use
+ /// \code{.cpp}
+ ///     cl->GetProperty() & kClassHasDefaultCtor
+-/// \code
++/// \endcode
+ /// To know if the class described by this TClass has a public default
+ /// constructor use:
+ /// \code{.cpp}
+ ///    gInterpreter->ClassInfo_HasDefaultConstructor(aClass->GetClassInfo());
+-/// \code
++/// \endcode
+ 
+ Bool_t TClass::HasDefaultConstructor(Bool_t testio) const
+ {
+diff --git a/core/metacling/src/TCling.cxx b/core/metacling/src/TCling.cxx
+index db0da13620..279744834a 100644
+--- a/core/metacling/src/TCling.cxx
++++ b/core/metacling/src/TCling.cxx
+@@ -5388,10 +5388,10 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Create a resource table and read the (possibly) three resource files, i.e
+-/// $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name> and
+-/// ./<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You can
+-/// read additional user defined resource files by creating additional TEnv
++/// Create a resource table and read the (possibly) three resource files,
++/// i.e.\ $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name>
++/// and $PWD/<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You
++/// can read additional user defined resource files by creating additional TEnv
+ /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
+ /// the $HOME/<name> resource file will be skipped. This might be useful in
+ /// case the home directory resides on an automounted remote file system
+diff --git a/graf2d/x11/src/TGX11.cxx b/graf2d/x11/src/TGX11.cxx
+index 59e5260c92..26f88dd045 100644
+--- a/graf2d/x11/src/TGX11.cxx
++++ b/graf2d/x11/src/TGX11.cxx
+@@ -3599,9 +3599,9 @@ Pixmap_t TGX11::ReadGIF(int x0, int y0, const char *file, Window_t id)
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Returns an array of pixels created from a part of drawable (defined by x, y, w, h)
+-/// in format:
+-/// `b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..`
++/// Returns an array of pixels created from a part of drawable
++/// (defined by x, y, w, h) in format:
++/// `b1, g1, r1, 0,  b2, g2, r2, 0,  ...,  bn, gn, rn, 0`.
+ ///
+ /// Pixels are numbered from left to right and from top to bottom.
+ /// By default all pixels from the whole drawable are returned.
+diff --git a/gui/guihtml/src/TGHtmlSizer.cxx b/gui/guihtml/src/TGHtmlSizer.cxx
+index c73eb581b5..8e6e71dcf7 100644
+--- a/gui/guihtml/src/TGHtmlSizer.cxx
++++ b/gui/guihtml/src/TGHtmlSizer.cxx
+@@ -60,7 +60,7 @@ SHtmlStyle_t TGHtml::GetCurrentStyle()
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Push a new rendering style onto the stack.
+ ///
+-///  tag   - Tag for this style. Normally the end-tag such as </h3> or </em>.
++///  tag   - Tag for this style. Normally the end-tag such as \</h3\> or \</em\>.
+ ///  style - The style to push
+ 
+ void TGHtml::PushStyleStack(int tag, SHtmlStyle_t style)
+@@ -152,7 +152,7 @@ void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// For the markup <a href=XXX>, find out if the URL has been visited
++/// For the markup \<a href=XXX\>, find out if the URL has been visited
+ /// before or not.  Return COLOR_Visited or COLOR_Unvisited, as
+ /// appropriate.
+ 
+diff --git a/hist/hist/src/TSVDUnfold.cxx b/hist/hist/src/TSVDUnfold.cxx
+index 85cfa9f241..2b570bdb22 100644
+--- a/hist/hist/src/TSVDUnfold.cxx
++++ b/hist/hist/src/TSVDUnfold.cxx
+@@ -46,13 +46,11 @@
+  The measured distribution can be unfolded for any combination of resolution, efficiency and acceptance effects, provided an appropriate definition of <tt>xini</tt> and <tt>Adet</tt>.<br><br>
+  <p>
+  The unfolding can be performed by
+- <ul>
+- <pre>
++ \code{.cpp}
+  TSVDUnfold *tsvdunf = new TSVDUnfold( bdat, Bcov, bini, xini, Adet );
+  TH1D* unfresult = tsvdunf->Unfold( kreg );
+- </pre>
+- </ul>
+- where <tt>kreg</tt> determines the regularisation of the unfolding. In general, overregularisation (too small <tt>kreg</tt>) will bias the unfolded spectrum towards the Monte Carlo input, while underregularisation (too large <tt>kreg</tt>) will lead to large fluctuations in the unfolded spectrum. The optimal regularisation can be determined following guidelines in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> using the distribution of the <tt>|d_i|<\tt> that can be obtained by <tt>tsvdunf->GetD()</tt> and/or using pseudo-experiments.
++ \endcode
++ where <tt>kreg</tt> determines the regularisation of the unfolding. In general, overregularisation (too small <tt>kreg</tt>) will bias the unfolded spectrum towards the Monte Carlo input, while underregularisation (too large <tt>kreg</tt>) will lead to large fluctuations in the unfolded spectrum. The optimal regularisation can be determined following guidelines in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> using the distribution of the <tt>|d_i|</tt> that can be obtained by <tt>tsvdunf->GetD()</tt> and/or using pseudo-experiments.
+  <p>
+  Covariance matrices on the measured spectrum (for either the total uncertainties or individual sources of uncertainties) can be propagated to covariance matrices using the <tt>GetUnfoldCovMatrix</tt> method, which uses pseudo experiments for the propagation. In addition, <tt>GetAdetCovMatrix</tt> allows for the propagation of the statistical uncertainties on the response matrix using pseudo experiments. The covariance matrix corresponding to <tt>Bcov</tt> is also computed as described in <a href="http://arXiv.org/abs/hep-ph/9509307">Nucl. Instrum. Meth. A372, 469 (1996) [hep-ph/9509307]</a> and can be obtained from <tt>tsvdunf->GetXtau()</tt> and its (regularisation independent) inverse from  <tt>tsvdunf->GetXinv()</tt>. The distribution of singular values can be retrieved using <tt>tsvdunf->GetSV()</tt>.
+  <p>
+diff --git a/hist/histpainter/src/THistPainter.cxx b/hist/histpainter/src/THistPainter.cxx
+index 0f80505570..20a944a545 100644
+--- a/hist/histpainter/src/THistPainter.cxx
++++ b/hist/histpainter/src/THistPainter.cxx
+@@ -418,7 +418,7 @@ some combinations must be use with care.
+ - It does not work when combined with the `LEGO` and `SURF` options unless the
+   histogram plotted with the option `SAME` has exactly the same
+   ranges on the X, Y and Z axis as the currently drawn histogram. To superimpose
+-  lego plots [histograms' stacks](#HP26) should be used.</li>
++  lego plots [histograms' stacks](#HP26) should be used.
+ 
+ 
+ ### <a name="HP061"></a> Colors automatically picked in palette
+diff --git a/hist/histv7/speed/histspeedtest.cxx b/hist/histv7/speed/histspeedtest.cxx
+index 55c0992bd5..065a10f0d7 100644
+--- a/hist/histv7/speed/histspeedtest.cxx
++++ b/hist/histv7/speed/histspeedtest.cxx
+@@ -35,7 +35,6 @@ and
+  /opt/build/root_builds/rootcling.cmake/include/ROOT/THistBinIter.h:53:50: error: no member named 'GetUncertainty' in
+ 'ROOT::Experimental::THistDataContent<2, double, ROOT::Experimental::THistDataDefaultStorage>::TBinStat<double>' auto
+ GetUncertainty() const { return GetStat().GetUncertainty(); }
+- ~~~~~~~~~ ^
+ 
+  new ones (STATCLASSES)
+ 
+diff --git a/hist/unfold/inc/TUnfold.h b/hist/unfold/inc/TUnfold.h
+index a69da26b4c..ce6e16fb4a 100644
+--- a/hist/unfold/inc/TUnfold.h
++++ b/hist/unfold/inc/TUnfold.h
+@@ -179,15 +179,15 @@ class TUnfold : public TObject {
+    TMatrixD *fX;
+    /// covariance matrix Vxx
+    TMatrixDSparse *fVxx;
+-   /// inverse of covariance matrix Vxx<sup>-1</sub>
++   /// inverse of covariance matrix Vxx<sup>-1</sup>
+    TMatrixDSparse *fVxxInv;
+-   /// inverse of the input covariance matrix Vyy<sup>-1</sub>
++   /// inverse of the input covariance matrix Vyy<sup>-1</sup>
+    TMatrixDSparse *fVyyInv;
+    /// result x folded back A*x
+    TMatrixDSparse *fAx;
+-   /// chi**2 contribution from (y-Ax)Vyy<sup>-1</sub>(y-Ax)
++   /// chi**2 contribution from (y-Ax)Vyy<sup>-1</sup>(y-Ax)
+    Double_t fChi2A;
+-   /// chi**2 contribution from (x-s*x0)<sup>T</sub>L<sup>T</sub>L(x-s*x0)
++   /// chi**2 contribution from (x-s*x0)<sup>T</sup>L<sup>T</sup>L(x-s*x0)
+    Double_t fLXsquared;
+    /// maximum global correlation coefficient
+    Double_t fRhoMax;
+diff --git a/html/src/TDocDirective.cxx b/html/src/TDocDirective.cxx
+index f7ffdc29c3..ab43d1ab38 100644
+--- a/html/src/TDocDirective.cxx
++++ b/html/src/TDocDirective.cxx
+@@ -215,7 +215,7 @@ void TDocHtmlDirective::AddLine(const TSubString& line)
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+ /// Set result to the HTML code that was passed in via AddLine().
+-/// Prepend a closing </pre>, append an opening <pre>
++/// Prepend a closing \</pre\>, append an opening \<pre\>
+ 
+ Bool_t TDocHtmlDirective::GetResult(TString& result)
+ {
+diff --git a/math/mathcore/inc/Math/ProbFuncMathCore.h b/math/mathcore/inc/Math/ProbFuncMathCore.h
+index d751c47a36..16e205347c 100644
+--- a/math/mathcore/inc/Math/ProbFuncMathCore.h
++++ b/math/mathcore/inc/Math/ProbFuncMathCore.h
+@@ -41,8 +41,8 @@ namespace Math {
+    * These names are currently kept for backward compatibility, but
+    * their usage is deprecated.
+    *
+-   *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
+-   *  including all statistical functions <em>Math/DistFunc.h<em>
++   *  These functions are defined in the header file <em>Math/ProbFunc.h</em> or in the global one
++   *  including all statistical functions <em>Math/DistFunc.h</em>
+    *
+    */
+ 
+@@ -727,8 +727,8 @@ namespace Math {
+    first or the second momentum of the truncated distribution.
+    In the case of the Landau, first and second momentum functions are provided for the Landau
+    distribution truncated only on the right side.
+-   These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
+-   including all statistical functions <em>Math/StatFunc.h<em>
++   These functions are defined in the header file <em>Math/ProbFunc.h</em> or in the global one
++   including all statistical functions <em>Math/StatFunc.h</em>
+ 
+    */
+ 
+diff --git a/math/mathcore/inc/Math/QuantFuncMathCore.h b/math/mathcore/inc/Math/QuantFuncMathCore.h
+index 7da5bd1178..1be023b33f 100644
+--- a/math/mathcore/inc/Math/QuantFuncMathCore.h
++++ b/math/mathcore/inc/Math/QuantFuncMathCore.h
+@@ -41,8 +41,8 @@ namespace Math {
+    *
+    *  \f[ D(x) = \int_{x}^{+\infty} p(x') dx' \f]
+    *
+-   *  These functions are defined in the header file <em>Math/ProbFunc.h<em> or in the global one
+-   *  including all statistical functions <em>Math/DistFunc.h<em>
++   *  These functions are defined in the header file <em>Math/ProbFunc.h</em> or in the global one
++   *  including all statistical functions <em>Math/DistFunc.h</em>
+    *
+    *
+    * <strong>NOTE:</strong> In the old releases (< 5.14) the <em>_quantile</em> functions were called
+diff --git a/math/mathcore/src/TMath.cxx b/math/mathcore/src/TMath.cxx
+index 49a81d56f7..ba8799b570 100644
+--- a/math/mathcore/src/TMath.cxx
++++ b/math/mathcore/src/TMath.cxx
+@@ -857,7 +857,7 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
+ /// \f[
+ /// lorentz(xx) = \frac{ \frac{1}{\pi} \frac{lg}{2} }{ (xx^{2} + \frac{lg^{2}}{4}) }
+ /// \f]
+-/// .
++/// \.
+ ///
+ /// The Voigt function is known to be the real part of Faddeeva function also
+ /// called complex error function [2].
+diff --git a/math/mathmore/inc/Math/GSLMultiRootFinder.h b/math/mathmore/inc/Math/GSLMultiRootFinder.h
+index 42069d2387..b7efe4157d 100644
+--- a/math/mathmore/inc/Math/GSLMultiRootFinder.h
++++ b/math/mathmore/inc/Math/GSLMultiRootFinder.h
+@@ -69,23 +69,23 @@ namespace Math {
+      <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-using-Derivatives.html">documentation</A> )
+      are the followings:
+      <ul>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <it>"HybridSJ"</it>: modified Powell's hybrid
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <i>"HybridSJ"</i>: modified Powell's hybrid
+      method as implemented in HYBRJ in MINPACK
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <it>"HybridJ"</it>: unscaled version of the
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <i>"HybridJ"</i>: unscaled version of the
+      previous algorithm</li>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <it>"Newton"</it>: Newton method </li>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <it>"GNewton"</it>: modified Newton method </li>
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <i>"Newton"</i>: Newton method </li>
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <i>"GNewton"</i>: modified Newton method </li>
+      </ul>
+      The algorithms without derivatives (see also the GSL
+      <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-without-Derivatives.html">documentation</A> )
+      are the followings:
+      <ul>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <it>"HybridS"</it>: same as HybridSJ but using
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <i>"HybridS"</i>: same as HybridSJ but using
+      finate difference approximation for the derivatives</li>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <it>"Hybrid"</it>: unscaled version of the
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <i>"Hybrid"</i>: unscaled version of the
+      previous algorithm</li>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <it>"DNewton"</it>: discrete Newton algorithm </li>
+-         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <it>"Broyden"</it>: Broyden algorithm </li>
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <i>"DNewton"</i>: discrete Newton algorithm </li>
++         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <i>"Broyden"</i>: Broyden algorithm </li>
+      </ul>
+ 
+      @ingroup MultiRoot
+diff --git a/math/matrix/doc/Matrix.md b/math/matrix/doc/Matrix.md
+index f53b29ca0b..c484c27c72 100644
+--- a/math/matrix/doc/Matrix.md
++++ b/math/matrix/doc/Matrix.md
+@@ -325,7 +325,7 @@ constructor</td>
+       <td>C=A*B<br>
+ A*=B<br>
+ C.Mult(A,B)<br>TMatrixD(A,TMatrixD::kMult,B)<br>TMatrixD(A, TMatrixD(A, TMatrixD::kTransposeMult,B)<br>TMatrixD(A, TMatrixD::kMultTranspose,B)</td>
+-      <td>overwrites A<br>&nbsp;<br>&nbsp;<br>constructor of A.B<br>constructor of A<sup>T</sup> .B<br>constructor of A.B<sup>T</sup></td>
++      <td>overwrites A<br>&nbsp;<br>&nbsp;<br>constructor of A·B<br>constructor of A<sup>T</sup>·B<br>constructor of A·B<sup>T</sup></td>
+     </tr>
+       <tr>
+       <td>Element wise multiplication</td>
+diff --git a/math/minuit/src/TMinuit.cxx b/math/minuit/src/TMinuit.cxx
+index df3e563a73..18a6437c68 100644
+--- a/math/minuit/src/TMinuit.cxx
++++ b/math/minuit/src/TMinuit.cxx
+@@ -187,11 +187,11 @@ the error matrix, or setting of exact confidence levels see:
+ 
+   1. F.James.
+      Determining the statistical Significance of experimental Results.
+-     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.</li>
++     Technical Report DD/81/02 and CERN Report 81-03, CERN, 1981.
+ 
+   2. W.T.Eadie, D.Drijard, F.James, M.Roos, and B.Sadoulet.
+      Statistical Methods in Experimental Physics.
+-     North-Holland, 1971.</li>
++     North-Holland, 1971.
+ 
+ ### Reliability of MINUIT error estimates.
+ 
+diff --git a/montecarlo/eg/src/TDatabasePDG.cxx b/montecarlo/eg/src/TDatabasePDG.cxx
+index 23c32e9668..85e9fe2a6d 100644
+--- a/montecarlo/eg/src/TDatabasePDG.cxx
++++ b/montecarlo/eg/src/TDatabasePDG.cxx
+@@ -46,7 +46,7 @@ Root.DatabasePDG: $(HOME)/my_pdg_table.txt
+ See TParticlePDG for the description of a static particle properties.
+ See TParticle    for the description of a dynamic particle particle.
+ 
+-<br>The current default pdg_table file displays lifetime 0 for some unstable particles.</br>
++The current default pdg_table file displays lifetime 0 for some unstable particles.
+ 
+ */
+ 
+diff --git a/montecarlo/vmc/README.md b/montecarlo/vmc/README.md
+index dc66ec401f..c731b26e92 100644
+--- a/montecarlo/vmc/README.md
++++ b/montecarlo/vmc/README.md
+@@ -43,7 +43,7 @@ See more detailed description in [the dedicated README](README.multiple.md).
+ ## Authors
+ 
+ The concept of Virtual MonteCarlo has been developed by the [ALICE Software Project](http://aliceinfo.cern.ch/Offline/).<br>
+-Authors: R.Brun<sup>1</sup>, F.Carminati<sup>1</sup>, A. Gheata<sup>1</sup>, I.Hrivnacova<sup>2</sup>, A.Morsch<sup>1</sup>, B.Volkel<sup>1</sup>;<br>
++Authors: R. Brun<sup>1</sup>, F. Carminati<sup>1</sup>, A. Gheata<sup>1</sup>, I. Hrivnacova<sup>2</sup>, A. Morsch<sup>1</sup>, B. Volkel<sup>1</sup>;<br>
+ <sup>1</sup>European Organization for Nuclear Research (CERN), Geneva, Switzerland;<br>
+ <sup>2</sup>Institut de Physique Nucléaire dʼOrsay (IPNO), Université Paris-Sud, CNRS-IN2P3, Orsay, France 
+ 
+diff --git a/net/http/civetweb/LICENSE.md b/net/http/civetweb/LICENSE.md
+index ab049e3e72..b6bb8ff037 100644
+--- a/net/http/civetweb/LICENSE.md
++++ b/net/http/civetweb/LICENSE.md
+@@ -180,10 +180,6 @@ Duktape License
+ 
+ https://github.com/svaarala/duktape/blob/master/LICENSE.txt
+ 
+-> ===============
+-> Duktape license
+-> ===============
+-> 
+ > (http://opensource.org/licenses/MIT)
+ > 
+ > Copyright (c) 2013-2017 by Duktape authors (see AUTHORS.rst)
+diff --git a/proof/proof/src/TProofMgr.cxx b/proof/proof/src/TProofMgr.cxx
+index 2a140e4e7a..e41b637a15 100644
+--- a/proof/proof/src/TProofMgr.cxx
++++ b/proof/proof/src/TProofMgr.cxx
+@@ -775,26 +775,29 @@ void TProofMgr::ReplaceSubdirs(const char *fn, TString &fdst, TList &dirph)
+ /// Upload files provided via the list 'src' (as TFileInfo or TObjString)
+ /// to 'mss'. The path under 'mss' is determined by 'dest'; the following
+ /// place-holders can be used in 'dest':
+-///      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
+-///                                    of the src path
+-///      <bn>                          basename in the source path
+-///      <bs>                          basename sans extension
+-///      <ex>                          Extension
+-///      <sn>                          serial number of file in the list
+-///      <s0>                          as <sn> but zero padded
+-///      <fn>                          the full file path
+-///      <us>, <gr>                    the local user and group names.
+-///      <pg>                          the users PROOF group
+-///      <pa>                          immediate parent directory
+-///      <gp>                          next-to immediate parent directory
++///
++/// Place-holder                | Meaning          |
++/// ----------------------------|------------------------------------
++/// \<d0\>, \<d1\>, \<d2\>, ... | referring to the n-th sub-component of the src path
++/// \<bn\>                      | basename in the source path
++/// \<bs\>                      | basename sans extension
++/// \<ex\>                      | Extension
++/// \<sn\>                      | serial number of file in the list
++/// \<s0\>                      | as \<sn\> but zero padded
++/// \<fn\>                      | the full file path
++/// \<us\>, \<gr\>              | the local user and group names.
++/// \<pg\>                      | the users PROOF group
++/// \<pa\>                      | immediate parent directory
++/// \<gp\>                      | next-to immediate parent directory
++///
+ /// So, for example, if the source filename for the 99-th file is
+ ///               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
+-/// then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
++/// then with dest = '/pool/user/\<d3\>/\<d4\>/\<d5\>/\<sn\>/\<bn\>' and
+ ///           mss = 'protodst://hostdst//nm/
+ /// the corresponding destination path is
+ ///           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
+ ///
+-/// If 'dest' is empty, <fn> is used.
++/// If 'dest' is empty, \<fn\> is used.
+ ///
+ /// Returns a TFileCollection with the destination files created; this
+ /// TFileCollection is, for example, ready to be registered as dataset.
+@@ -966,20 +969,23 @@ TFileCollection *TProofMgr::UploadFiles(TList *src,
+ /// line, with line beginning by '#' ignored (i.e. considered comments).
+ /// The path under 'mss' is defined by 'dest'; the following
+ /// place-holders can be used in 'dest':
+-///      <d0>, <d1>, <d2>, ...         referring to the n-th sub-component
+-///                                    of the src path
+-///      <bn>                          basename in the source path
+-///      <sn>                          serial number of file in the list
+-///      <fn>                          the full file path
+-///      <us>, <gr>                    the local user and group names.
++///
++/// Place-holder                | Meaning          |
++/// ----------------------------|------------------------------------
++/// \<d0\>, \<d1\>, \<d2\>, ... | referring to the n-th sub-component of the src path
++/// \<bn\>                      | basename in the source path
++/// \<sn\>                      | serial number of file in the list
++/// \<fn\>                      | the full file path
++/// \<us\>, \<gr\>              | the local user and group names.
++///
+ /// So, for example, if the source filename for the 99-th file is
+ ///               protosrc://host//d0/d1/d2/d3/d4/d5/myfile
+-/// then with dest = '/pool/user/<d3>/<d4>/<d5>/<s>/<bn>' and
++/// then with dest = '/pool/user/\<d3\>/\<d4\>/\<d5\>/\<sn\>/\<bn\>' and
+ ///           mss = 'protodst://hostdst//nm/
+ /// the corresponding destination path is
+ ///           protodst://hostdst//nm/pool/user/d3/d4/d5/99/myfile
+ ///
+-/// If 'dest' is empty, <fn> is used.
++/// If 'dest' is empty, \<fn\> is used.
+ ///
+ /// Returns a TFileCollection with the destination files created; this
+ /// TFileCollection is, for example, ready to be registered as dataset.
+diff --git a/proof/proof/src/TProofServ.cxx b/proof/proof/src/TProofServ.cxx
+index 24c521743d..3697f257a0 100644
+--- a/proof/proof/src/TProofServ.cxx
++++ b/proof/proof/src/TProofServ.cxx
+@@ -6696,11 +6696,11 @@ Int_t TProofServ::Fork()
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Replace <ord>, <user>, <u>, <group>, <stag>, <qnum>, <file>, <rver> and
+-/// <build> placeholders in fname.
+-/// Here, <rver> is the root version in integer form, e.g. 53403, and <build> a
+-/// string includign version, architecture and compiler version, e.g.
+-/// '53403_linuxx8664gcc_gcc46' .
++/// Replace \<ord\>, \<user\>, \<u\>, \<group\>, \<stag\>, \<qnum\>, \<file\>,
++/// \<rver\> and \<build\> placeholders in fname.
++/// Here, \<rver\> is the root version in integer form, e.g. 53403, and
++/// \<build\> a string includign version, architecture and compiler version,
++/// e.g. '53403_linuxx8664gcc_gcc46' .
+ 
+ void TProofServ::ResolveKeywords(TString &fname, const char *path)
+ {
+diff --git a/roofit/histfactory/doc/index.md b/roofit/histfactory/doc/index.md
+index 32f1c551a4..9256a9cf11 100644
+--- a/roofit/histfactory/doc/index.md
++++ b/roofit/histfactory/doc/index.md
+@@ -41,12 +41,11 @@ it is organized as follows (see the examples in `${ROOTSYS}/tutorials/histfactor
+ <li> several 'Measurements' (corresponding to a full fit of the model) each of which specifies</li>
+ <ul>
+ <li> a name for this fit to be used in tables and files</li>
+-<ul>
+-<li>      what is the luminosity associated to the measurement in picobarns</li>
+-<li>      which bins of the histogram should be used</li>
+-<li>      what is the relative uncertainty on the luminosity </li>
+-<li>      what is (are) the parameter(s) of interest that will be measured</li>
+-<li>      which parameters should be fixed/floating (eg. nuisance parameters)</li>
++<li> what is the luminosity associated to the measurement in picobarns</li>
++<li> which bins of the histogram should be used</li>
++<li> what is the relative uncertainty on the luminosity </li>
++<li> what is (are) the parameter(s) of interest that will be measured</li>
++<li> which parameters should be fixed/floating (eg. nuisance parameters)</li>
+ </ul>
+ </ul>
+ </ul>
+diff --git a/roofit/histfactory/src/MakeModelAndMeasurementsFast.cxx b/roofit/histfactory/src/MakeModelAndMeasurementsFast.cxx
+index e14e63ec89..73a3f627ba 100644
+--- a/roofit/histfactory/src/MakeModelAndMeasurementsFast.cxx
++++ b/roofit/histfactory/src/MakeModelAndMeasurementsFast.cxx
+@@ -92,12 +92,11 @@ using namespace RooFit;
+   <li> several 'Measurements' (corresponding to a full fit of the model) each of which specifies</li>
+   <ul>
+   <li> a name for this fit to be used in tables and files</li>
+-  <ul>
+-  <li>      what is the luminosity associated to the measurement in picobarns</li>
+-  <li>      which bins of the histogram should be used</li>
+-  <li>      what is the relative uncertainty on the luminosity </li>
+-  <li>      what is (are) the parameter(s) of interest that will be measured</li>
+-  <li>      which parameters should be fixed/floating (eg. nuisance parameters)</li>
++  <li> what is the luminosity associated to the measurement in picobarns</li>
++  <li> which bins of the histogram should be used</li>
++  <li> what is the relative uncertainty on the luminosity </li>
++  <li> what is (are) the parameter(s) of interest that will be measured</li>
++  <li> which parameters should be fixed/floating (eg. nuisance parameters)</li>
+   </ul>
+   </ul>
+   </ul>
+diff --git a/roofit/roofitcore/inc/RooAbsCategory.h b/roofit/roofitcore/inc/RooAbsCategory.h
+index a7eaf8772a..4f0937a99d 100644
+--- a/roofit/roofitcore/inc/RooAbsCategory.h
++++ b/roofit/roofitcore/inc/RooAbsCategory.h
+@@ -199,7 +199,7 @@ protected:
+     return hasIndex(_currentIndex);
+   }
+ 
+-  /// If a category depends on the shape of others, *i.e.*, its state numbers or names depend
++  /// If a category depends on the shape of others, i.e.\ its state numbers or names depend
+   /// on the states of other categories, this function has to be implemented to recompute
+   /// _stateNames and _insertionOrder.
+   /// If one of these two changes, setShapeDirty() has to be called to propagate this information
+diff --git a/roofit/roofitcore/src/RooSimPdfBuilder.cxx b/roofit/roofitcore/src/RooSimPdfBuilder.cxx
+index 4c8289523d..57ea1e9196 100644
+--- a/roofit/roofitcore/src/RooSimPdfBuilder.cxx
++++ b/roofit/roofitcore/src/RooSimPdfBuilder.cxx
+@@ -99,7 +99,7 @@
+ ///    PDF for each state of the C index category.
+ ///  </p>
+ ///  <p>
+-///    In the above example </tt>RooSimPdfBuilder</tt>
++///    In the above example <tt>RooSimPdfBuilder</tt>
+ ///    will first replicate <tt>k</tt> and <tt>s</tt> into
+ ///    <tt>k_C1,k_C2</tt> and <tt>s_C1,s_C2</tt>, as prescribed in the
+ ///    configuration. Then it will recursively replicate all PDF nodes that depend on
+@@ -383,7 +383,7 @@
+ ///    <tt>pdfA(x;p,q)</tt> and <tt>pdfB(x;p,r)</tt> that have a common parameter <tt>p</tt>.
+ ///    We want to build a <tt>RooSimultaneous</tt> for both <tt>pdfA</tt> and <tt>B</tt>,
+ ///    which involves a split of parameter <tt>p</tt> and we would like to build the
+-///    simultaneous pdfs </tt>simA</tt> and <tt>simB</tt> such that still share their (now split) parameters
++///    simultaneous pdfs <tt>simA</tt> and <tt>simB</tt> such that still share their (now split) parameters
+ ///    <tt>p_XXX</tt>. This is accomplished by letting a single instance of <tt>RooSimPdfBuilder</tt> handle
+ ///    the builds of both <tt>pdfA</tt> and <tt>pdfB</tt>, as illustrated in this example:
+ ///  </p>
+diff --git a/tmva/tmva/src/Factory.cxx b/tmva/tmva/src/Factory.cxx
+index eda1b9ca1a..866aad0e18 100644
+--- a/tmva/tmva/src/Factory.cxx
++++ b/tmva/tmva/src/Factory.cxx
+@@ -683,9 +683,9 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
+ }
+ 
+ ////////////////////////////////////////////////////////////////////////////////
+-/// Iterates through all booked methods and sees if they use parameter tuning and if so..
+-/// does just that  i.e. calls "Method::Train()" for different parameter settings and
+-/// keeps in mind the "optimal one"... and that's the one that will later on be used
++/// Iterates through all booked methods and sees if they use parameter tuning and if so
++/// does just that, i.e.\ calls "Method::Train()" for different parameter settings and
++/// keeps in mind the "optimal one"...\ and that's the one that will later on be used
+ /// in the main training loop.
+ 
+ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TString fitType)
+diff --git a/tmva/tmva/src/Reader.cxx b/tmva/tmva/src/Reader.cxx
+index 56d65bb9bf..b34ee9f1de 100644
+--- a/tmva/tmva/src/Reader.cxx
++++ b/tmva/tmva/src/Reader.cxx
+@@ -594,7 +594,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
+ ////////////////////////////////////////////////////////////////////////////////
+ /// evaluates the regression MVA
+ /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
+-/// it is not again checked in each of these subsequent calls..
++/// it is not again checked in each of these subsequent calls.
+ 
+ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( MethodBase* method, Double_t /*aux*/ )
+ {
+@@ -660,7 +660,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( const TString& m
+ ////////////////////////////////////////////////////////////////////////////////
+ /// evaluates the multiclass MVA
+ /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
+-/// it is not again checked in each of these subsequent calls..
++/// it is not again checked in each of these subsequent calls.
+ 
+ const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( MethodBase* method, Double_t /*aux*/ )
+ {
+diff --git a/tree/dataframe/inc/ROOT/RDF/RColumnValue.hxx b/tree/dataframe/inc/ROOT/RDF/RColumnValue.hxx
+index 17527ac16d..497dd3d5c6 100644
+--- a/tree/dataframe/inc/ROOT/RDF/RColumnValue.hxx
++++ b/tree/dataframe/inc/ROOT/RDF/RColumnValue.hxx
+@@ -93,7 +93,7 @@ class R__CLING_PTRCHECK(off) RColumnValue {
+    /// Enumerator for the different properties of the branch storage in memory
+    enum class EStorageType : char { kContiguous, kUnknown, kSparse };
+    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
+-   /// in contiguous memory. Only used when T == RVec<U>.
++   /// in contiguous memory. Only used when T == RVec\<U\>.
+    EStorageType fStorageType = EStorageType::kUnknown;
+    /// If MustUseRVec, i.e. we are reading an array, we return a reference to this RVec to clients
+    RVec<ColumnValue_t> fRVec;
+diff --git a/tutorials/net/udpserver.c b/tutorials/net/udpserver.c
+index c54685400e..a74f6f0a85 100644
+--- a/tutorials/net/udpserver.c
++++ b/tutorials/net/udpserver.c
+@@ -4,7 +4,7 @@
+ 
+ /* Converted to echo client/server with select() (timeout option).
+    See testTUDPSocket.C */
+-/* Compile with: gcc udpserver.c -o udpserver
++/* Compile with: gcc udpserver.c -o udpserver */
+ /* on Windows: cl -nologo -Z7 -MD -GR -EHsc udpserver.c */
+ /* 3/30/05 John Schultz */
+ 
+diff --git a/tutorials/tmva/TMVA_CNN_Classification.C b/tutorials/tmva/TMVA_CNN_Classification.C
+index 47f26368d9..89373a8887 100644
+--- a/tutorials/tmva/TMVA_CNN_Classification.C
++++ b/tutorials/tmva/TMVA_CNN_Classification.C
+@@ -22,7 +22,7 @@
+ /// Helper function to create input images data
+ /// we create a signal and background 2D histograms from 2d gaussians
+ /// with a location (means in X and Y)  different for each event
+-/// The difference between signal and background is in the gaussian width..
++/// The difference between signal and background is in the gaussian width.
+ /// The width for the bakground gaussian is slightly larger than the signal width by few % values
+ ///
+ ///
+-- 
+2.26.2
+

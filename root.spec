@@ -1,19 +1,8 @@
-%if %{?fedora}%{!?fedora:0} >= 29 || %{?rhel}%{!?rhel:0} >= 8
-# Use Python 3 as the default python for Fedora >= 29
-# - Give python3 libPyROOT higher priority than python2 libPyROOT
-# - The python scripts in root-cli use python3-root
-# - Let root-tmva-python use python3-numpy
-# - Don't build python2-jupyroot/jsmva packages
-# - Use Python 3 during testing and documentation build
-%global py3default 1
-%global py2prio 10
-%global py3prio 20
-%global __pythondef %{__python3}
+%if %{?fedora}%{!?fedora:0} >= 32 || %{?rhel}%{!?rhel:0} >= 9
+%undefine __cmake_in_source_build
+%global oldcmakemacro 0
 %else
-%global py3default 0
-%global py2prio 20
-%global py3prio 10
-%global __pythondef %{__python2}
+%global oldcmakemacro 1
 %endif
 
 %if %{?fedora}%{!?fedora:0} >= 31 || %{?rhel}%{!?rhel:0} >= 8
@@ -23,8 +12,12 @@
 %global buildpy2 1
 %endif
 
+%if %{buildpy2}
+%global python2_version_uscore %(tr . _ <<< "%{python2_version}")
+%endif
+%global python3_version_uscore %(tr . _ <<< "%{python3_version}")
+
 %global py3_soabi %([ -x %{__python3} ] && %{__python3} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
-%global py3_other_soabi %([ -x %{__python3_other} ] && %{__python3_other} -c "from distutils import sysconfig; print(sysconfig.get_config_vars().get('SOABI'))")
 
 %if %{?fedora}%{!?fedora:0} >= 24 || %{?rhel}%{!?rhel:0} >= 8
 # Building the experimental ROOT 7 classes requires c++-14.
@@ -44,14 +37,13 @@
 # Do not create .orig files when patching source
 %global _default_patch_flags --no-backup-if-mismatch
 
-# Do not generate autoprovides for libJupyROOT.so
-# Note: the ones from libPyROOT.so we do want though
-%global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch}%{?python3_other_sitearch:|%{python3_other_sitearch}})/libJupyROOT\\.so$
+# Do not generate autoprovides for Python modules
+%global __provides_exclude_from ^(%{?python2_sitearch:%{python2_sitearch}|}%{python3_sitearch})/lib.*\\.so$
 
 Name:		root
-Version:	6.20.06
+Version:	6.22.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	2%{?dist}
+Release:	1%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -101,37 +93,56 @@ Patch9:		%{name}-dont-install-minicern.patch
 Patch10:	%{name}-clang-ignore-gcc-options.patch
 #		Don't create documentation notebooks
 Patch11:	%{name}-doc-no-notebooks.patch
-#		Don't run tutorial requiring firefox during doc generation
-Patch12:	%{name}-v7-line.patch
-#		Fix ppc64le build with gcc 10
-#		https://github.com/root-project/root/pull/5157
-Patch13:	%{name}-clang-altivec-vector.patch
+#		Don't run tutorials that crash during doc generation
+Patch12:	%{name}-doxygen-crash.patch
+#		Compatibility with older gtest
+Patch13:	%{name}-old-gtest-compat.patch
 #		Fix -Wmissing-field-initializers in python bindings for
 #		Python 3.8 and 3.9
 #		https://github.com/root-project/root/pull/5158
 Patch14:	%{name}-python3.8-object.patch
-#		Correct broken assert statements
-#		https://github.com/root-project/root/pull/5159
-Patch15:	%{name}-FitData-assert-fix.patch
-#		The test that creates the file must run before the test that
-#		modifies it
-#		https://github.com/root-project/root/pull/5160
-Patch16:	%{name}-xmlmodify-dep.patch
-#		Size types should use %z
-#		https://github.com/root-project/root/pull/5161
-Patch17:	%{name}-format-fix.patch
 #		Run some test on 32 bit that upstream has disabled
-Patch18:	%{name}-32bit-tests.patch
-#		The file was moved - update path
-#		https://github.com/root-project/root/pull/5162
-Patch19:	%{name}-moved-file.patch
+Patch15:	%{name}-32bit-tests.patch
 #		Workaround for initialization problems for PyROOT on
 #		EPEL7 ppc64le
 #		https://sft.its.cern.ch/jira/browse/ROOT-10622
-Patch20:	%{name}-epel7-ppc64le-pyroot.patch
+Patch16:	%{name}-epel7-ppc64le-pyroot.patch
 #		Fix test failure on ppc64le and aarch64
 #		https://github.com/root-project/root/pull/5867
-Patch21:	%{name}-roostats-test-ppc64le-aarch64.patch
+Patch17:	%{name}-roostats-test-ppc64le-aarch64.patch
+#		Fix too aggressive -Werror replacements
+#		https://github.com/root-project/root/pull/5902
+Patch18:	%{name}-werror-fix.patch
+#		Add missing call to TFile::SetCacheFileDir in a TMVA tutorial
+#		https://github.com/root-project/root/pull/5944
+Patch19:	%{name}-setcachefiledir.patch
+#		Adjust stressGraphics.ref
+#		https://github.com/root-project/root/pull/5957
+Patch20:	%{name}-stressGraphics.patch
+#		Fix off-by-one error in histogram v7 bin iterator
+#		https://github.com/root-project/root/pull/5958
+Patch21:	%{name}-histv7-bin-iterator.patch
+#		Compatibility with python 2.7 versions before 2.7.9
+#		https://github.com/root-project/root/pull/5960
+Patch22:	%{name}-python2-compat.patch
+#		Fix the RNTuple.LargeFile test on 32bit (i386 and armv7hf)
+#		https://github.com/root-project/root/pull/5977
+Patch23:	%{name}-ntuple-largefile.patch
+#		Fix doxygen issues
+#		https://github.com/root-project/root/pull/6029
+Patch24:	%{name}-doxygen-filenames.patch
+Patch25:	%{name}-doxygen-endof-part1.patch
+Patch26:	%{name}-doxygen-endof-part2.patch
+Patch27:	%{name}-doxygen-parameter-names.patch
+Patch28:	%{name}-doxygen-macro-name.patch
+Patch29:	%{name}-doxygen-missing-underscore.patch
+Patch30:	%{name}-doxygen-md-comments.patch
+#		Fix bad regex in TProofMgr
+#		https://github.com/root-project/root/pull/6030
+Patch31:	%{name}-fix-bad-regex.patch
+#		Compatibility with xrootd 5
+#		https://github.com/root-project/root/pull/6031
+Patch32:	%{name}-xrootd5-compat.patch
 
 #		s390x suffers from endian issues resulting in failing tests
 #		and broken documentation generation
@@ -185,9 +196,6 @@ BuildRequires:	postgresql-devel
 BuildRequires:	python2-devel
 %endif
 BuildRequires:	python%{python3_pkgversion}-devel
-%if %{?rhel}%{!?rhel:0} == 7
-BuildRequires:	python%{python3_other_pkgversion}-devel
-%endif
 %if %{root7}
 %ifarch %{qt5_qtwebengine_arches}
 BuildRequires:	qt5-qtbase-devel
@@ -218,11 +226,7 @@ BuildRequires:	graphviz-devel
 BuildRequires:	expat-devel
 BuildRequires:	pythia8-devel >= 8.1.80
 BuildRequires:	blas-devel
-%if %{py3default}
 BuildRequires:	python%{python3_pkgversion}-numpy
-%else
-BuildRequires:	python2-numpy
-%endif
 BuildRequires:	doxygen
 BuildRequires:	graphviz
 BuildRequires:	yuicompressor
@@ -372,11 +376,14 @@ Obsoletes:	%{name}-net-krb5 < 6.18.00
 Obsoletes:	%{name}-table < 6.18.00
 %if ! %{buildpy2}
 Obsoletes:	python2-%{name} < %{version}-%{release}
-%endif
-%if %{py3default}
 Obsoletes:	python2-jupyroot < %{version}-%{release}
 Obsoletes:	python2-jsmva < %{version}-%{release}
 Obsoletes:	%{name}-rootaas < 6.08.00
+%endif
+%if %{?rhel}%{!?rhel:0} == 7
+Obsoletes:	python%{python3_other_pkgversion}-%{name} < 6.22.00
+Obsoletes:	python%{python3_other_pkgversion}-jupyroot < 6.22.00
+Obsoletes:	python%{python3_other_pkgversion}-jsmva < 6.22.00
 %endif
 
 %description core
@@ -415,6 +422,17 @@ Obsoletes:	%{name}-reflex < 6.00.00
 Cling is an interactive C++ interpreter, built on top of Clang and
 LLVM compiler infrastructure.
 
+%package tpython
+Summary:	ROOT's TPython interface
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	python%{python3_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
+#		Package split (tpython from Python bindings)
+Obsoletes:	python%{python3_pkgversion}-%{name} < 6.22.00
+
+%description tpython
+This package contains ROOT's TPython interface. It makes it possible
+to call Python from ROOT.
+
 %if %{buildpy2}
 %package -n python2-%{name}
 Summary:	Python extension for ROOT
@@ -426,11 +444,9 @@ Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description -n python2-%{name}
-This package contains the Python extension for ROOT. This package
-provide a Python interface to ROOT, and a ROOT interface to Python.
-%endif
+This package contains the Python extension for ROOT. It makes it
+possible to use ROOT classes in Python.
 
-%if ! %{py3default}
 %package -n python2-jupyroot
 Summary:	ROOT Jupyter kernel
 %{?python_provide:%python_provide python2-jupyroot}
@@ -470,10 +486,12 @@ Obsoletes:	%{name}-python%{python3_pkgversion} < 6.08.00
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+#		Package split (tpython from Python bindings)
+Obsoletes:	python%{python3_pkgversion}-%{name} < 6.22.00
 
 %description -n python%{python3_pkgversion}-%{name}
-This package contains the Python extension for ROOT. This package
-provide a Python interface to ROOT, and a ROOT interface to Python.
+This package contains the Python extension for ROOT. It makes it
+possible to use ROOT classes in Python.
 
 %package -n python%{python3_pkgversion}-jupyroot
 Summary:	ROOT Jupyter kernel
@@ -504,44 +522,12 @@ Requires:	%{name}-tmva = %{version}-%{release}
 %description -n python%{python3_pkgversion}-jsmva
 TMVA interface used by JupyROOT.
 
-%if %{?rhel}%{!?rhel:0} == 7
-%package -n python%{python3_other_pkgversion}-%{name}
-Summary:	Python extension for ROOT
-%{?python_provide:%python_provide python%{?python3_other_pkgversion}-%{name}}
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
-
-%description -n python%{python3_other_pkgversion}-%{name}
-This package contains the Python extension for ROOT. This package
-provide a Python interface to ROOT, and a ROOT interface to Python.
-
-%package -n python%{python3_other_pkgversion}-jupyroot
-Summary:	ROOT Jupyter kernel
-%{?python_provide:%python_provide python%{?python3_other_pkgversion}-jupyroot}
-Requires:	python%{python3_other_pkgversion}-%{name}%{?_isa} = %{version}-%{release}
-Requires:	python%{python3_other_pkgversion}-jsmva = %{version}-%{release}
-Requires:	%{name}-core%{?_isa} = %{version}-%{release}
-Requires:	%{name}-notebook = %{version}-%{release}
-#		python-metakernel not available - some functionality missing
-
-%description -n python%{python3_other_pkgversion}-jupyroot
-The Jupyter kernel for the ROOT notebook.
-
-%package -n python%{python3_other_pkgversion}-jsmva
-Summary:	TMVA interface used by JupyROOT
-BuildArch:	noarch
-%{?python_provide:%python_provide python%{?python3_other_pkgversion}-jsmva}
-Requires:	%{name}-tmva = %{version}-%{release}
-
-%description -n python%{python3_other_pkgversion}-jsmva
-TMVA interface used by JupyROOT.
-%endif
-
 %package r
 Summary:	R interface for ROOT
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-matrix%{?_isa} = %{version}-%{release}
+Requires:	R-Rcpp-devel
+Requires:	R-RInside-devel
 
 %description r
 ROOT R is an interface in ROOT to call R functions using an R C++
@@ -794,6 +780,7 @@ Requires:	%{name}-gui%{?_isa} = %{version}-%{release}
 Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-mathcore%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 
 %description gui-fitpanel
 This package contains a library to show a pop-up dialog when fitting
@@ -1560,11 +1547,7 @@ Summary:	Toolkit for multivariate data analysis (Python)
 License:	BSD
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-tmva%{?_isa} = %{version}-%{release}
-%if %{py3default}
 Requires:	python%{python3_pkgversion}-numpy
-%else
-Requires:	python2-numpy
-%endif
 
 %description tmva-python
 Python integration with TMVA.
@@ -1670,11 +1653,7 @@ An algorithm to unfold distributions from detector to truth level.
 %package cli
 Summary:	ROOT command line utilities
 BuildArch:	noarch
-%if %{py3default}
 Requires:	python%{python3_pkgversion}-%{name} = %{version}-%{release}
-%else
-Requires:	python2-%{name} = %{version}-%{release}
-%endif
 
 %description cli
 The ROOT command line utilities is a set of scripts for common tasks
@@ -1728,16 +1707,26 @@ Requires:	%{name}-tree-player%{?_isa} = %{version}-%{release}
 %description graf3d-eve7
 This package contains a library for defining event displays in ROOT 7.
 
+%package gui-browsable
+Summary:	GUI browsable (ROOT 7)
+Requires:	%{name}-core%{?_isa} = %{version}-%{release}
+Requires:	%{name}-graf-gpadv7%{?_isa} = %{version}-%{release}
+Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
+Requires:	%{name}-io%{?_isa} = %{version}-%{release}
+Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
+
+%description gui-browsable
+This package contains GUI browsable components for ROOT 7.
+
 %package gui-browserv7
 Summary:	Browser (ROOT 7)
 Requires:	%{name}-core%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpad%{?_isa} = %{version}-%{release}
 Requires:	%{name}-graf-gpadv7%{?_isa} = %{version}-%{release}
+Requires:	%{name}-gui-browsable%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui-webdisplay%{?_isa} = %{version}-%{release}
 Requires:	%{name}-gui-webgui6%{?_isa} = %{version}-%{release}
-Requires:	%{name}-hist%{?_isa} = %{version}-%{release}
 Requires:	%{name}-io%{?_isa} = %{version}-%{release}
-Requires:	%{name}-tree%{?_isa} = %{version}-%{release}
 
 %description gui-browserv7
 This package contains a file browser for ROOT 7.
@@ -1847,6 +1836,17 @@ This package contains an ntuple extension for ROOT 7.
 %patch19 -p1
 %patch20 -p1
 %patch21 -p1
+%patch22 -p1
+%patch23 -p1
+%patch24 -p1
+%patch25 -p1
+%patch26 -p1
+%patch27 -p1
+%patch28 -p1
+%patch29 -p1
+%patch30 -p1
+%patch31 -p1
+%patch32 -p1
 
 # Remove bundled sources in order to be sure they are not used
 #  * afterimage
@@ -1855,9 +1855,7 @@ rm -rf graf2d/asimage/src/libAfterImage
 rm -rf graf3d/ftgl/src graf3d/ftgl/inc
 #  * freetype
 rm -rf graf2d/freetype/src
-#  * glew
-rm -rf graf3d/glew/src graf3d/glew/inc graf3d/glew/isystem
-#  * davix, lz4, openssl, pcre, xxhash, zlib, zstd
+#  * davix, glew, lz4, openssl, pcre, xxhash, zlib, zstd
 rm -rf builtins
 #  * lzma
 rm -rf core/lzma/src/*.tar.gz
@@ -1886,20 +1884,6 @@ chmod -x interpreter/llvm/src/lib/Target/X86/X86EvexToVex.cpp
 
 # Remove unsupported man page macros
 sed -e '/^\.UR/d' -e '/^\.UE/d' -i man/man1/*
-
-%if %{py3default}
-%if %{buildpy2}
-# Build PyROOT for python 2
-cp -pr bindings/pyroot bindings/python2
-%endif
-%else
-# Build PyROOT for python 3
-cp -pr bindings/pyroot bindings/python3
-%endif
-%if %{?rhel}%{!?rhel:0} == 7
-# Build PyROOT for python 3 (other)
-cp -pr bindings/pyroot bindings/python3oth
-%endif
 
 # Work around missing libraries in Fedora's gmock packaging < 1.8.0
 if [ ! -r %{_libdir}/libgmock.so ] ; then
@@ -1933,12 +1917,13 @@ for s in etc/notebook/JsMVA/css/*.css ; do
     yuicompressor ${s} -o ${s%.css}.min.css
 done
 
-mkdir builddir
-pushd builddir
-
 # Avoid overlinking (this used to be the default with the old configure script)
 LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
 
+%if %{oldcmakemacro}
+mkdir %{_vpath_builddir}
+pushd %{_vpath_builddir}
+%endif
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
 %cmake \
 %else
@@ -1995,6 +1980,7 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Ddataframe:BOOL=ON \
        -Ddavix:BOOL=ON \
        -Ddcache:BOOL=ON \
+       -Ddev:BOOL=OFF \
        -Dexceptions:BOOL=ON \
        -Dfcgi:BOOL=ON \
        -Dfftw3:BOOL=ON \
@@ -2027,8 +2013,8 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dpgsql:BOOL=ON \
        -Dpythia6:BOOL=OFF \
        -Dpythia8:BOOL=ON \
-       -DPYTHON_EXECUTABLE:PATH=%{__pythondef} \
        -Dpyroot:BOOL=ON \
+       -Dpyroot_legacy:BOOL=OFF \
 %ifarch %{qt5_qtwebengine_arches}
        -Dqt5web:BOOL=ON \
 %else
@@ -2064,127 +2050,23 @@ LDFLAGS="-Wl,--as-needed %{?__global_ldflags}"
        -Dx11:BOOL=ON \
        -Dxml:BOOL=ON \
        -Dxrootd:BOOL=ON \
+       -Dxproofd:BOOL=ON \
        -Dfail-on-missing:BOOL=ON \
        -Dtesting:BOOL=ON \
        -Dclingtest:BOOL=OFF \
        -Dcoverage:BOOL=OFF \
        -Droottest:BOOL=OFF \
        -Drootbench:BOOL=OFF \
+       -Dasan:BOOL=OFF \
+%if %{oldcmakemacro}
        ..
-
-%if %{py3default}
-%if %{buildpy2}
-# Build PyROOT for python 2 (prep)
-cp -pr bindings/pyroot bindings/python2
-%endif
-%else
-# Build PyROOT for python 3 (prep)
-cp -pr bindings/pyroot bindings/python3
-%endif
-%if %{?rhel}%{!?rhel:0} == 7
-# Build PyROOT for python 3 (other) (prep)
-cp -pr bindings/pyroot bindings/python3oth
-%endif
-
-make %{?_smp_mflags}
-
-%if %{py3default}
-
-%if %{buildpy2}
-
-# Build PyROOT for python 2
-mkdir python2
-mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
-sed 's!bindings/pyroot!bindings/python2!g' CMakeFiles/Makefile2.save \
-    > CMakeFiles/Makefile2
-py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
-py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-if pkg-config --exists python3-embed ; then
-    py3i=`pkg-config --cflags-only-I python3-embed | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python3-embed | sed -e 's/-l//' -e 's/\s*$//'`
-else
-    py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
-fi
-sed -e "s,${py3i},${py2i},g" -e "s,-l${py3l},-l${py2l},g" \
-    -e "s,lib${py3l},lib${py2l},g" \
-    -e 's,%{__python}%{python3_version},%{__python2},g' \
-    -e 's,%{__python3},%{__python2},g' \
-    -e 's,lib/libPyROOT,python2/libPyROOT,g' \
-    -e 's,lib/libJupyROOT,python2/libJupyROOT,g' \
-    -e 's!bindings/pyroot!bindings/python2!g' \
-    -i `find bindings/python2 -type f`
-make %{?_smp_mflags} -f bindings/python2/Makefile PyROOT JupyROOT
-mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
-
-%endif
-
-%else
-
-# Build PyROOT for python 3
-mkdir python3
-mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
-sed 's!bindings/pyroot!bindings/python3!g' CMakeFiles/Makefile2.save \
-    > CMakeFiles/Makefile2
-py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
-py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-if pkg-config --exists python3-embed ; then
-    py3i=`pkg-config --cflags-only-I python3-embed | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python3-embed | sed -e 's/-l//' -e 's/\s*$//'`
-else
-    py3i=`pkg-config --cflags-only-I python3 | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python3 | sed -e 's/-l//' -e 's/\s*$//'`
-fi
-sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,%{_libdir}/python%{python2_version}/config/lib${py2l}.so,%{_libdir}/lib${py3l}.so,g" \
-    -e "s,lib${py2l},lib${py3l},g" \
-    -e 's,%{__python}%{python2_version},%{__python3},g' \
-    -e 's,%{__python2},%{__python3},g' \
-    -e 's,lib/libPyROOT,python3/libPyROOT,g' \
-    -e 's,lib/libJupyROOT,python3/libJupyROOT,g' \
-    -e 's!bindings/pyroot!bindings/python3!g' \
-    -i `find bindings/python3 -type f`
-make %{?_smp_mflags} -f bindings/python3/Makefile PyROOT JupyROOT
-mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
-
-%endif
-
-%if %{?rhel}%{!?rhel:0} == 7
-
-# Build PyROOT for python 3 (other)
-mkdir python3oth
-mv CMakeFiles/Makefile2 CMakeFiles/Makefile2.save
-sed 's!bindings/pyroot!bindings/python3oth!g' CMakeFiles/Makefile2.save \
-    > CMakeFiles/Makefile2
-py2i=`pkg-config --cflags-only-I python2 | sed -e 's/-I//' -e 's/\s*$//'`
-py2l=`pkg-config --libs-only-l python2 | sed -e 's/-l//' -e 's/\s*$//'`
-if pkg-config --exists python-%{python3_other_version}-embed ; then
-    py3i=`pkg-config --cflags-only-I python-%{python3_other_version}-embed | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python-%{python3_other_version}-embed | sed -e 's/-l//' -e 's/\s*$//'`
-else
-    py3i=`pkg-config --cflags-only-I python-%{python3_other_version} | sed -e 's/-I//' -e 's/\s*$//'`
-    py3l=`pkg-config --libs-only-l python-%{python3_other_version} | sed -e 's/-l//' -e 's/\s*$//'`
-fi
-sed -e "s,${py2i},${py3i},g" -e "s,-l${py2l},-l${py3l},g" \
-    -e "s,%{_libdir}/python%{python2_version}/config/lib${py2l}.so,%{_libdir}/lib${py3l}.so,g" \
-    -e "s,lib${py2l},lib${py3l},g" \
-    -e 's,%{__python}%{python2_version},%{__python3_other},g' \
-    -e 's,%{__python2},%{__python3_other},g' \
-    -e 's,lib/libPyROOT,python3oth/libPyROOT,g' \
-    -e 's,lib/libJupyROOT,python3oth/libJupyROOT,g' \
-    -e 's!bindings/pyroot!bindings/python3oth!g' \
-    -i `find bindings/python3oth -type f`
-make %{?_smp_mflags} -f bindings/python3oth/Makefile PyROOT JupyROOT
-mv CMakeFiles/Makefile2.save CMakeFiles/Makefile2
-
-%endif
-
 popd
+%endif
+
+%make_build -C %{_vpath_builddir}
 
 %install
-pushd builddir
-make %{?_smp_mflags} install DESTDIR=%{buildroot}
-popd
+%make_install -C %{_vpath_builddir}
 
 # Do emacs byte compilation
 emacs -batch -no-site-file -f batch-byte-compile \
@@ -2210,9 +2092,7 @@ install -p -m 644 %{SOURCE7} %{buildroot}%{_pkgdocdir}
 mkdir -p %{buildroot}%{_datadir}/%{name}/cli
 mv %{buildroot}%{_libdir}/%{name}/cmdLineUtils.py* \
    %{buildroot}%{_datadir}/%{name}/cli
-%if %{py3default}
 rm %{buildroot}%{_libdir}/%{name}/__pycache__/cmdLineUtils.*
-%endif
 sed -e '/^\#!/d' -i %{buildroot}%{_datadir}/%{name}/cli/cmdLineUtils.py
 
 # Install GDB pretty printers to auto load safe path
@@ -2228,29 +2108,67 @@ install -p -m 644 build/gdbPrinters/libRooFitCore.so-gdb.py \
 %if %{?fedora}%{!?fedora:0} >= 28 || %{?rhel}%{!?rhel:0} >= 8
 # This is the default for Fedora 30+, set it for Fedora 28-29
 %global _python_bytecompile_extra 0
-%py_byte_compile %{__pythondef} %{buildroot}%{_datadir}/%{name}/cli
+%py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/cli
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/gdb/auto-load%{_libdir}/%{name}
 %endif
 
-%if %{py3default}
+%if %{buildpy2}
+
+# Move the python modules to sitearch/sitelib
+mkdir -p %{buildroot}%{python2_sitearch}
+
+cp -pr %{buildroot}%{_libdir}/%{name}/cppyy %{buildroot}%{python2_sitearch}
+ln -s ../../root/libcppyy%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libcppyy%{python2_version_uscore}.so
+
+cp -pr %{buildroot}%{_libdir}/%{name}/cppyy_backend %{buildroot}%{python2_sitearch}
+ln -s ../../root/libcppyy_backend%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libcppyy_backend%{python2_version_uscore}.so
+
+cp -pr %{buildroot}%{_libdir}/%{name}/ROOT %{buildroot}%{python2_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python2_version_uscore}.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libROOTPythonizations%{python2_version_uscore}.so
+rm %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python2_version_uscore}.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python2_version_uscore}.so
+
+cp -pr %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python2_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python2_version_uscore}.so.%{version} \
+   %{buildroot}%{python2_sitearch}/libJupyROOT%{python2_version_uscore}.so
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python2_version_uscore}.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python2_version_uscore}.so
+
+mkdir -p %{buildroot}%{python2_sitelib}
+cp -pr %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
+
+# Create empty .egg-info files so that rpm auto-generates provides
+touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.egg-info
+touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.egg-info
+
+%endif
 
 # Move the python modules to sitearch/sitelib
 mkdir -p %{buildroot}%{python3_sitearch}
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT.rootmap \
-   %{buildroot}%{python3_sitearch}/libPyROOT.rootmap
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT_rdict.pcm \
-   %{buildroot}%{python3_sitearch}/libPyROOT_rdict.pcm
-mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libJupyROOT.so
-mv %{buildroot}%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
-mv %{buildroot}%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
-rm %{buildroot}%{_libdir}/%{name}/JupyROOT/README.md
-rm -rf %{buildroot}%{_libdir}/%{name}/JupyROOT/src
+
+mv %{buildroot}%{_libdir}/%{name}/cppyy %{buildroot}%{python3_sitearch}
+ln -s ../../root/libcppyy%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libcppyy%{python3_version_uscore}.%{py3_soabi}.so
+
+mv %{buildroot}%{_libdir}/%{name}/cppyy_backend %{buildroot}%{python3_sitearch}
+ln -s ../../root/libcppyy_backend%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libcppyy_backend%{python3_version_uscore}.so
+
+mv %{buildroot}%{_libdir}/%{name}/ROOT %{buildroot}%{python3_sitearch}
+mv %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libROOTPythonizations%{python3_version_uscore}.%{py3_soabi}.so
+rm %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python3_version_uscore}.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libROOTPythonizations%{python3_version_uscore}.so
+
 mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_sitearch}
-rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
-rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
+mv %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python3_version_uscore}.so.%{version} \
+   %{buildroot}%{python3_sitearch}/libJupyROOT%{python3_version_uscore}.%{py3_soabi}.so
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python3_version_uscore}.so.%{libversion}
+rm %{buildroot}%{_libdir}/%{name}/libJupyROOT%{python3_version_uscore}.so
 
 mkdir -p %{buildroot}%{python3_sitelib}
 mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
@@ -2260,135 +2178,10 @@ touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.egg-info
 touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.egg-info
 touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.egg-info
 
-%if %{buildpy2}
-
-tmpdir=`mktemp -d`
-
-%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
-DESTDIR=$tmpdir cmake -P builddir/bindings/python2/cmake_install.cmake
-%else
-DESTDIR=$tmpdir cmake3 -P builddir/bindings/python2/cmake_install.cmake
-%endif
-
-mkdir -p %{buildroot}%{python2_sitearch}
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python2_sitearch}/libPyROOT.so
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
-   %{buildroot}%{python2_sitearch}/libPyROOT.rootmap
-mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
-   %{buildroot}%{python2_sitearch}/libPyROOT_rdict.pcm
-mv $tmpdir%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
-
-rm -rf $tmpdir
-
-# Create empty .egg-info files so that rpm auto-generates provides
-touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
-
-%endif
-
-%else
-
-# Move the python modules to sitearch/sitelib
-mkdir -p %{buildroot}%{python2_sitearch}
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python2_sitearch}/libPyROOT.so
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT.rootmap \
-   %{buildroot}%{python2_sitearch}/libPyROOT.rootmap
-mv %{buildroot}%{_libdir}/%{name}/libPyROOT_rdict.pcm \
-   %{buildroot}%{python2_sitearch}/libPyROOT_rdict.pcm
-mv %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python2_sitearch}/libJupyROOT.so
-mv %{buildroot}%{_libdir}/%{name}/*.py* %{buildroot}%{python2_sitearch}
-rm %{buildroot}%{_libdir}/%{name}/JupyROOT/README.md
-rm -rf %{buildroot}%{_libdir}/%{name}/JupyROOT/src
-mv %{buildroot}%{_libdir}/%{name}/JupyROOT %{buildroot}%{python2_sitearch}
-rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
-rm %{buildroot}%{_libdir}/%{name}/libJupyROOT.so
-
-mkdir -p %{buildroot}%{python2_sitelib}
-mv %{buildroot}%{_libdir}/%{name}/JsMVA %{buildroot}%{python2_sitelib}
-
-# Create empty .egg-info files so that rpm auto-generates provides
-touch %{buildroot}%{python2_sitearch}/ROOT-%{version}.egg-info
-touch %{buildroot}%{python2_sitearch}/JupyROOT-%{version}.egg-info
-touch %{buildroot}%{python2_sitelib}/JsMVA-%{version}.egg-info
-
-tmpdir=`mktemp -d`
-
-%if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
-DESTDIR=$tmpdir cmake -P builddir/bindings/python3/cmake_install.cmake
-%else
-DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3/cmake_install.cmake
-%endif
-
-mkdir -p %{buildroot}%{python3_sitearch}
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
-   %{buildroot}%{python3_sitearch}/libPyROOT.rootmap
-mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
-   %{buildroot}%{python3_sitearch}/libPyROOT_rdict.pcm
-mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python3_sitearch}/libJupyROOT.so
-mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_sitearch}
-mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_sitearch}
-rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
-rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
-mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_sitearch}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
-
-mkdir -p %{buildroot}%{python3_sitelib}
-mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_sitelib}
-
-rm -rf $tmpdir
-
-# Create empty .egg-info files so that rpm auto-generates provides
-touch %{buildroot}%{python3_sitearch}/ROOT-%{version}.egg-info
-touch %{buildroot}%{python3_sitearch}/JupyROOT-%{version}.egg-info
-touch %{buildroot}%{python3_sitelib}/JsMVA-%{version}.egg-info
-
-%endif
-
-%if %{?rhel}%{!?rhel:0} == 7
-
-tmpdir=`mktemp -d`
-
-DESTDIR=$tmpdir cmake3 -P builddir/bindings/python3oth/cmake_install.cmake
-
-mkdir -p %{buildroot}%{python3_other_sitearch}
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.so.%{version} \
-   %{buildroot}%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
-mv $tmpdir%{_libdir}/%{name}/libPyROOT.rootmap \
-   %{buildroot}%{python3_other_sitearch}/libPyROOT.rootmap
-mv $tmpdir%{_libdir}/%{name}/libPyROOT_rdict.pcm \
-   %{buildroot}%{python3_other_sitearch}/libPyROOT_rdict.pcm
-mv $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{version} \
-   %{buildroot}%{python3_other_sitearch}/libJupyROOT.so
-mv $tmpdir%{_libdir}/%{name}/*.py %{buildroot}%{python3_other_sitearch}
-mv $tmpdir%{_libdir}/%{name}/__pycache__ %{buildroot}%{python3_other_sitearch}
-rm $tmpdir%{_libdir}/%{name}/JupyROOT/README.md
-rm -rf $tmpdir%{_libdir}/%{name}/JupyROOT/src
-mv $tmpdir%{_libdir}/%{name}/JupyROOT %{buildroot}%{python3_other_sitearch}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so.%{libversion}
-rm $tmpdir%{_libdir}/%{name}/libJupyROOT.so
-
-mkdir -p %{buildroot}%{python3_other_sitelib}
-mv $tmpdir%{_libdir}/%{name}/JsMVA %{buildroot}%{python3_other_sitelib}
-
-rm -rf $tmpdir
-
-# Create empty .egg-info files so that rpm auto-generates provides
-touch %{buildroot}%{python3_other_sitearch}/ROOT-%{version}.egg-info
-touch %{buildroot}%{python3_other_sitearch}/JupyROOT-%{version}.egg-info
-touch %{buildroot}%{python3_other_sitelib}/JsMVA-%{version}.egg-info
-
-%endif
-
 # Put jupyter stuff in the right places
 mkdir -p %{buildroot}%{_datadir}/jupyter/kernels
 
-%if ! %{py3default}
+%if %{buildpy2}
 cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
    %{buildroot}%{_datadir}/jupyter/kernels/python2-jupyroot
 sed -e 's/ROOT C++/& (Python 2)/' \
@@ -2405,16 +2198,6 @@ sed -e 's/ROOT C++/& (Python 3)/' \
     -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot/kernel.json
 sed -e '/^\#!/d' \
     -i %{buildroot}%{python3_sitearch}/JupyROOT/kernel/rootkernel.py
-
-%if %{?rhel}%{!?rhel:0} == 7
-cp -pr %{buildroot}%{_datadir}/%{name}/notebook/kernels/root \
-   %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
-sed -e 's/ROOT C++/& (Python %{python3_other_version})/' \
-    -e 's!python[0-9]*\.[0-9]*!%{__python3_other}!' \
-    -i %{buildroot}%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot/kernel.json
-sed -e '/^\#!/d' \
-    -i %{buildroot}%{python3_other_sitearch}/JupyROOT/kernel/rootkernel.py
-%endif
 
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/custom
 rm -rf %{buildroot}%{_datadir}/%{name}/notebook/html
@@ -2438,7 +2221,7 @@ EOF
 
 # Avoid /usr/bin/env shebangs (and adapt cli to cmdLineUtils location)
 sed -e 's!/usr/bin/env bash!/bin/bash!' -i %{buildroot}%{_bindir}/root-config
-sed -e 's!/usr/bin/env python.*!%{__pythondef}!' \
+sed -e 's!/usr/bin/env python.*!%{__python3}!' \
     -e '/import sys/d' \
     -e '/import cmdLineUtils/iimport sys' \
     -e '/import cmdLineUtils/isys.path.insert(0, "%{_datadir}/%{name}/cli")' \
@@ -2451,9 +2234,9 @@ sed -e 's!/usr/bin/env python.*!%{__pythondef}!' \
        %{buildroot}%{_bindir}/rootprint \
        %{buildroot}%{_bindir}/rootrm \
        %{buildroot}%{_bindir}/rootslimtree
-sed -e 's!/usr/bin/env python.*!%{__pythondef}!' \
+sed -e 's!/usr/bin/env python.*!%{__python3}!' \
     -i %{buildroot}%{_bindir}/rootdrawtree
-sed -e 's!/usr/bin/env python!%{__pythondef}!' \
+sed -e 's!/usr/bin/env python!%{__python3}!' \
     -i %{buildroot}%{_datadir}/%{name}/dictpch/makepch.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/example.py \
        %{buildroot}%{_pkgdocdir}/tutorials/histfactory/makeQuickModel.py \
@@ -2491,6 +2274,9 @@ rm TGuiFactory/P030_TWebGuiFactory.C
 rm TSQLServer/P040_TOracleServer.C
 rm TSystem/P030_TAlienSystem.C
 rm TVirtualGeoConverter/P010_TGeoVGConverter.C
+%if %{root7} == 0
+rm TVirtualGeoPainter/P020_REveGeoPainter.C
+%endif
 rm TVirtualGLImp/P020_TGWin32GL.C
 rm TVirtualMonitoringWriter/P010_TMonaLisaWriter.C
 rm TVirtualX/P030_TGWin32.C
@@ -2539,22 +2325,53 @@ for x in df014_CsvDataSource_MuRun2010B_cpp.csv \
     ln -sf ../../files/tutorials/df014_CsvDataSource_MuRun2010B.csv $x
 done
 # Create the py-hsimple.root file in advance (needed as input)
-ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
-    ROOTSYS=${PWD}/../../builddir \
-    LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
-    PYTHONPATH=${PWD}/../../builddir/lib \
-    %{__pythondef} ../../tutorials/pyroot/hsimple.py
-ROOTIGNOREPREFIX=1 PATH=${PWD}/../../builddir/bin:${PATH} \
-    ROOTSYS=${PWD}/../../builddir \
-    LD_LIBRARY_PATH=${PWD}/../../builddir/lib \
-    PYTHONPATH=${PWD}/../../builddir/lib \
-    make DOXYGEN_OUTPUT_DIRECTORY=${PWD}/doc PYTHON_EXECUTABLE=%{__pythondef}
+ROOTIGNOREPREFIX=1 PATH=${PWD}/../../%{_vpath_builddir}/bin:${PATH} \
+    ROOTSYS=${PWD}/../../%{_vpath_builddir} \
+    LD_LIBRARY_PATH=${PWD}/../../%{_vpath_builddir}/lib \
+    PYTHONPATH=${PWD}/../../%{_vpath_builddir}/lib \
+    %{__python3} ../../tutorials/pyroot/hsimple.py
+ROOTIGNOREPREFIX=1 PATH=${PWD}/../../%{_vpath_builddir}/bin:${PATH} \
+    ROOTSYS=${PWD}/../../%{_vpath_builddir} \
+    LD_LIBRARY_PATH=${PWD}/../../%{_vpath_builddir}/lib \
+    PYTHONPATH=${PWD}/../../%{_vpath_builddir}/lib \
+    make DOXYGEN_OUTPUT_DIRECTORY=${PWD}/doc PYTHON_EXECUTABLE=%{__python3}
 mv doc/html %{buildroot}%{_pkgdocdir}/html
 popd
 
+# Workaround for doxygen 1.8.17 and 1.8.18 doing slightly different things
+# on 32 and 64 bit
+doxver=$(doxygen -v)
+if [ "$doxver" = "1.8.17" -o "$doxver" = "1.8.18" ] ; then
+    for f in \
+	classDouble__t.html \
+	classPdfCacheElem.html \
+	classPdfCacheElem__inherit__graph.map \
+	classPdfCacheElem__inherit__graph.md5 \
+	classPdfCacheElem__inherit__graph.svg \
+	classROOT_1_1Experimental_1_1REveMagFieldDuo__coll__graph_org.svg \
+	classROOT_1_1Fit_1_1BasicFCN__coll__graph_org.svg \
+	classROOT_1_1Math_1_1MemGradFunHandler__coll__graph_org.svg \
+	classTAttImage__coll__graph_org.svg \
+	classTImagePalette__coll__graph_org.svg \
+	inherit_graph_1796.map \
+	inherit_graph_1796.md5 \
+	inherit_graph_1796.svg \
+	structEvent__t__coll__graph_org.svg \
+	structGLUvertex__coll__graph_org.svg \
+	structROOT_1_1Experimental_1_1REveBoxSet_1_1BEllipticCone__t__coll__graph_org.svg \
+	structROOT_1_1Internal_1_1RootCling_1_1DriverConfig__coll__graph_org.svg \
+	structTEveDigitSet_1_1DigitBase__t__inherit__graph.map \
+	structTEveDigitSet_1_1DigitBase__t__inherit__graph.md5 \
+	structTEveDigitSet_1_1DigitBase__t__inherit__graph.svg \
+	structTGL5DPainter_1_1Surf__t__coll__graph_org.svg ; do
+	[ -r %{buildroot}%{_pkgdocdir}/html/${f} ] || \
+	    touch %{buildroot}%{_pkgdocdir}/html/${f}
+    done
+fi
+
 # Create includelist files ...
-for f in `find builddir -name cmake_install.cmake -a '!' -path '*/llvm/*'` ; do
-    l=`sed 's!builddir/\(.*\)/cmake_install.cmake!includelist-\1!' <<< $f`
+for f in `find %{_vpath_builddir} -name cmake_install.cmake -a '!' -path '*/llvm/*'` ; do
+    l=`sed 's!%{_vpath_builddir}/\(.*\)/cmake_install.cmake!includelist-\1!' <<< $f`
     l=`tr / - <<< $l`
     tmpdir=`mktemp -d`
 %if %{?fedora}%{!?fedora:0} || %{?rhel}%{!?rhel:0} >= 8
@@ -2570,10 +2387,11 @@ done
 cat includelist-core-{[^mw],m[^au]}* > includelist-core
 cat includelist-geom-geom* > includelist-geom
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
+cat includelist-graf3d-rglew >> includelist-graf3d-gl
 cat includelist-net-netx* > includelist-netx
 
 %check
-pushd builddir
+pushd %{_vpath_builddir}
 pushd test
 ln -s ../../files files
 popd
@@ -2651,6 +2469,10 @@ popd
 # - tutorial-tmva-tmva103_Application
 #   reads input data over network
 #   http://root.cern/files/tmva101.root
+#
+# - pyunittests-pyroot-numbadeclare
+# - tutorial-pyroot-pyroot004_NumbaDeclare-py
+#   these tests require the numba python module which is not available
 excluded="\
 test-stressIOPlugins|\
 tutorial-dataframe-df101_h1Analysis|\
@@ -2675,7 +2497,9 @@ gtest-tmva-tmva-test-rreader|\
 gtest-tmva-tmva-test-rstandardscaler|\
 tutorial-tmva-tmva003_RReader|\
 tutorial-tmva-tmva004_RStandardScaler|\
-tutorial-tmva-tmva103_Application"
+tutorial-tmva-tmva103_Application|\
+pyunittests-pyroot-numbadeclare|\
+tutorial-pyroot-pyroot004_NumbaDeclare-py"
 
 %ifarch %{ix86} %{arm}
 # Tests failing on 32 bit architectures (dataframe)
@@ -2683,6 +2507,7 @@ tutorial-tmva-tmva103_Application"
 # - gtest-tree-dataframe-test-dataframe-cache
 # - gtest-tree-dataframe-test-dataframe-callbacks
 # - gtest-tree-dataframe-test-dataframe-colnames
+# - gtest-tree-dataframe-test-dataframe-display
 # - gtest-tree-dataframe-test-dataframe-friends
 # - gtest-tree-dataframe-test-dataframe-helpers
 # - gtest-tree-dataframe-test-dataframe-interface
@@ -2695,6 +2520,7 @@ excluded="${excluded}|\
 gtest-tree-dataframe-test-dataframe-cache|\
 gtest-tree-dataframe-test-dataframe-callbacks|\
 gtest-tree-dataframe-test-dataframe-colnames|\
+gtest-tree-dataframe-test-dataframe-display|\
 gtest-tree-dataframe-test-dataframe-friends|\
 gtest-tree-dataframe-test-dataframe-helpers|\
 gtest-tree-dataframe-test-dataframe-interface|\
@@ -2720,6 +2546,13 @@ excluded="${excluded}|tutorial-roofit-rf611_weightedfits"
 %endif
 %endif
 
+%ifarch %{power64} aarch64
+# This test fails on ppc64le and aarch64 (but not on x86_64)
+# The interpreted version works though, only compiled version fails
+# - test-stresshistofit
+excluded="${excluded}|test-stresshistofit"
+%endif
+
 make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
 popd
 
@@ -2742,142 +2575,20 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor >/dev/null 2>&1 || :
 %endif
 
 %if %{buildpy2}
-
-%post -n python2-%{name}
+%pre -n python2-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
-    grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
-	/var/lib/alternatives/libPyROOT.so || \
-    sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
-	-i /var/lib/alternatives/libPyROOT.so
-    for alt in `grep python2 /var/lib/alternatives/libPyROOT.so` ; do
-	if [ "$alt" != "%{python2_sitearch}/libPyROOT.so" ] ; then
-	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
-	fi
+    for alt in `grep python2.*/.*.so /var/lib/alternatives/libPyROOT.so` ; do
+	%{_sbindir}/update-alternatives --remove libPyROOT.so $alt
     done
 fi
-for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
-    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
-	rm %{_libdir}/%{name}/$f
-    fi
-done
-%{_sbindir}/update-alternatives \
-    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
-    %{python2_sitearch}/libPyROOT.so %{py2prio} \
-    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
-    %{python2_sitearch}/libPyROOT.rootmap \
-    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
-    %{python2_sitearch}/libPyROOT_rdict.pcm
-%{?ldconfig}
-
-%preun -n python2-%{name}
-if [ $1 = 0 ] ; then
-    %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python2_sitearch}/libPyROOT.so
-fi
-
-%ldconfig_postun -n python2-%{name}
-
-%triggerpostun -n python2-%{name} -- %{name}-python
-# Uninstalling the old %{name}-python will remove the alternatives
-# for python2-%{name} - put them back in this triggerpostun script
-%{_sbindir}/update-alternatives \
-    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
-    %{python2_sitearch}/libPyROOT.so %{py2prio} \
-    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
-    %{python2_sitearch}/libPyROOT.rootmap \
-    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
-    %{python2_sitearch}/libPyROOT_rdict.pcm
-%{?ldconfig}
-
 %endif
 
-%post -n python%{python3_pkgversion}-%{name}
+%pre -n python%{python3_pkgversion}-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
-    grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
-	/var/lib/alternatives/libPyROOT.so || \
-    sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
-	-i /var/lib/alternatives/libPyROOT.so
-    for alt in `grep python3 /var/lib/alternatives/libPyROOT.so` ; do
-%if %{?rhel}%{!?rhel:0} == 7
-	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] && \
-	   [ "$alt" != "%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so" ] ; then
-%else
-	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] ; then
-%endif
-	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
-	fi
+    for alt in `grep python3.*/.*.so /var/lib/alternatives/libPyROOT.so` ; do
+	%{_sbindir}/update-alternatives --remove libPyROOT.so $alt
     done
 fi
-for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
-    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
-	rm %{_libdir}/%{name}/$f
-    fi
-done
-%{_sbindir}/update-alternatives \
-    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
-    %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio} \
-    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
-    %{python3_sitearch}/libPyROOT.rootmap \
-    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
-    %{python3_sitearch}/libPyROOT_rdict.pcm
-%{?ldconfig}
-
-%preun -n python%{python3_pkgversion}-%{name}
-if [ $1 = 0 ] ; then
-    %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python3_sitearch}/libPyROOT.%{py3_soabi}.so
-fi
-
-%ldconfig_postun -n python%{python3_pkgversion}-%{name}
-
-%triggerpostun -n python%{python3_pkgversion}-%{name} -- %{name}-python%{python3_pkgversion}
-# Uninstalling the old %{name}-python%{python3_pkgversion} will remove the alternatives
-# for python%{python3_pkgversion}-%{name} - put them back in this triggerpostun script
-%{_sbindir}/update-alternatives \
-    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
-    %{python3_sitearch}/libPyROOT.%{py3_soabi}.so %{py3prio} \
-    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
-    %{python3_sitearch}/libPyROOT.rootmap \
-    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
-    %{python3_sitearch}/libPyROOT_rdict.pcm
-%{?ldconfig}
-
-%if %{?rhel}%{!?rhel:0} == 7
-%post -n python%{python3_other_pkgversion}-%{name}
-if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
-    grep -q %{_libdir}/%{name}/libPyROOT.so.%{version} \
-	/var/lib/alternatives/libPyROOT.so || \
-    sed 's!\(%{_libdir}/%{name}/libPyROOT\.so\.\).*!\1%{version}!' \
-	-i /var/lib/alternatives/libPyROOT.so
-    for alt in `grep python3 /var/lib/alternatives/libPyROOT.so` ; do
-	if [ "$alt" != "%{python3_sitearch}/libPyROOT.%{py3_soabi}.so" ] && \
-	   [ "$alt" != "%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so" ] ; then
-	    %{_sbindir}/update-alternatives --remove libPyROOT.so $alt
-	fi
-    done
-fi
-for f in libPyROOT.rootmap libPyROOT_rdict.pcm ; do
-    if [ -r %{_libdir}/%{name}/$f -a ! -h %{_libdir}/%{name}/$f ]; then
-	rm %{_libdir}/%{name}/$f
-    fi
-done
-%{_sbindir}/update-alternatives \
-    --install %{_libdir}/%{name}/libPyROOT.so.%{version} libPyROOT.so \
-    %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so 5 \
-    --slave %{_libdir}/%{name}/libPyROOT.rootmap libPyROOT.rootmap \
-    %{python3_other_sitearch}/libPyROOT.rootmap \
-    --slave %{_libdir}/%{name}/libPyROOT_rdict.pcm libPyROOT_rdict.pcm \
-    %{python3_other_sitearch}/libPyROOT_rdict.pcm
-%{?ldconfig}
-
-%preun -n python%{python3_other_pkgversion}-%{name}
-if [ $1 = 0 ] ; then
-    %{_sbindir}/update-alternatives --remove \
-	libPyROOT.so %{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
-fi
-
-%ldconfig_postun -n python%{python3_other_pkgversion}-%{name}
-%endif
 
 %post notebook
 mkdir -p /etc/jupyter
@@ -2906,6 +2617,11 @@ fi
 
 %ldconfig_scriptlets multiproc
 %ldconfig_scriptlets cling
+%ldconfig_scriptlets tpython
+%if %{buildpy2}
+%ldconfig_scriptlets -n python2-%{name}
+%endif
+%ldconfig_scriptlets -n python%{python3_pkgversion}-%{name}
 %ldconfig_scriptlets r
 %ldconfig_scriptlets r-tools
 %ldconfig_scriptlets genetic
@@ -2996,6 +2712,7 @@ fi
 %ldconfig_scriptlets graf-gpadv7
 %ldconfig_scriptlets graf-primitives
 %ldconfig_scriptlets graf3d-eve7
+%ldconfig_scriptlets gui-browsable
 %ldconfig_scriptlets gui-browserv7
 %ldconfig_scriptlets gui-canvaspainter
 %ldconfig_scriptlets gui-fitpanelv7
@@ -3035,6 +2752,12 @@ fi
 %files fonts
 %{_datadir}/%{name}/fonts
 
+%files doc
+%doc %{_pkgdocdir}/html
+
+%files tutorial
+%doc %{_pkgdocdir}/tutorials
+
 %files core -f includelist-core
 %{_bindir}/memprobe
 %{_bindir}/rmkdepend
@@ -3061,6 +2784,7 @@ fi
 %{_datadir}/%{name}/gdb-backtrace.sh
 %{_datadir}/%{name}/gitinfo.txt
 %{_datadir}/%{name}/helgrind-root.supp
+%{_datadir}/%{name}/lsan-root.supp
 %{_datadir}/%{name}/Makefile.arch
 %{_datadir}/%{name}/root.mimes
 %{_datadir}/%{name}/system.rootauthrc
@@ -3111,97 +2835,57 @@ fi
 %doc interpreter/llvm/src/llvm-README.txt
 %license interpreter/llvm/src/llvm-LICENSE.TXT
 
-%files doc
-%doc %{_pkgdocdir}/html
-
-%files tutorial
-%doc %{_pkgdocdir}/tutorials
+%files tpython -f includelist-bindings-tpython
+%{_libdir}/%{name}/libROOTTPython.*
+%{_libdir}/%{name}/libROOTTPython_rdict.pcm
 
 %if %{buildpy2}
-%files -n python2-%{name} -f includelist-bindings-pyroot
-%ghost %{_libdir}/%{name}/libPyROOT.rootmap
-%{_libdir}/%{name}/libPyROOT.so
-%{_libdir}/%{name}/libPyROOT.so.%{libversion}
-%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python2_sitearch}/libPyROOT.rootmap
-%{python2_sitearch}/libPyROOT.so
-%{python2_sitearch}/libPyROOT_rdict.pcm
-%{python2_sitearch}/ROOT.py*
+%files -n python2-%{name}
+%{python2_sitearch}/cppyy
+%{python2_sitearch}/cppyy_backend
+%{python2_sitearch}/ROOT
 %{python2_sitearch}/ROOT-*.egg-info
-%{python2_sitearch}/cppyy.py*
-%{python2_sitearch}/_pythonization.py*
-%{python2_sitearch}/_rdf_utils.py*
-%endif
+%{python2_sitearch}/libcppyy%{python2_version_uscore}.so
+%{python2_sitearch}/libcppyy_backend%{python2_version_uscore}.so
+%{python2_sitearch}/libROOTPythonizations%{python2_version_uscore}.so
+%{_libdir}/%{name}/libcppyy%{python2_version_uscore}.*
+%{_libdir}/%{name}/libcppyy_backend%{python2_version_uscore}.*
+%{_includedir}/%{name}/CPyCppyy
 
-%if ! %{py3default}
 %files -n python2-jupyroot
 %{python2_sitearch}/JupyROOT
 %{python2_sitearch}/JupyROOT-*.egg-info
-%{python2_sitearch}/libJupyROOT.so
+%{python2_sitearch}/libJupyROOT%{python2_version_uscore}.so
 %{_datadir}/jupyter/kernels/python2-jupyroot
-%doc bindings/pyroot/JupyROOT/README.md
+%doc bindings/jupyroot/README.md
 
 %files -n python2-jsmva
 %{python2_sitelib}/JsMVA
 %{python2_sitelib}/JsMVA-*.egg-info
 %endif
 
-%files -n python%{python3_pkgversion}-%{name} -f includelist-bindings-pyroot
-%ghost %{_libdir}/%{name}/libPyROOT.rootmap
-%{_libdir}/%{name}/libPyROOT.so
-%{_libdir}/%{name}/libPyROOT.so.%{libversion}
-%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python3_sitearch}/libPyROOT.rootmap
-%{python3_sitearch}/libPyROOT.%{py3_soabi}.so
-%{python3_sitearch}/libPyROOT_rdict.pcm
-%{python3_sitearch}/ROOT.py
+%files -n python%{python3_pkgversion}-%{name}
+%{python3_sitearch}/cppyy
+%{python3_sitearch}/cppyy_backend
+%{python3_sitearch}/ROOT
 %{python3_sitearch}/ROOT-*.egg-info
-%{python3_sitearch}/cppyy.py
-%{python3_sitearch}/_pythonization.py
-%{python3_sitearch}/_rdf_utils.py
-%{python3_sitearch}/__pycache__/*
+%{python3_sitearch}/libcppyy%{python3_version_uscore}.%{py3_soabi}.so
+%{python3_sitearch}/libcppyy_backend%{python3_version_uscore}.so
+%{python3_sitearch}/libROOTPythonizations%{python3_version_uscore}.%{py3_soabi}.so
+%{_libdir}/%{name}/libcppyy%{python3_version_uscore}.*
+%{_libdir}/%{name}/libcppyy_backend%{python3_version_uscore}.*
+%{_includedir}/%{name}/CPyCppyy
 
 %files -n python%{python3_pkgversion}-jupyroot
 %{python3_sitearch}/JupyROOT
 %{python3_sitearch}/JupyROOT-*.egg-info
-%{python3_sitearch}/libJupyROOT.so
+%{python3_sitearch}/libJupyROOT%{python3_version_uscore}.%{py3_soabi}.so
 %{_datadir}/jupyter/kernels/python%{python3_pkgversion}-jupyroot
-%doc bindings/pyroot/JupyROOT/README.md
+%doc bindings/jupyroot/README.md
 
 %files -n python%{python3_pkgversion}-jsmva
 %{python3_sitelib}/JsMVA
 %{python3_sitelib}/JsMVA-*.egg-info
-
-%if %{?rhel}%{!?rhel:0} == 7
-%files -n python%{python3_other_pkgversion}-%{name} -f includelist-bindings-pyroot
-%ghost %{_libdir}/%{name}/libPyROOT.rootmap
-%{_libdir}/%{name}/libPyROOT.so
-%{_libdir}/%{name}/libPyROOT.so.%{libversion}
-%ghost %{_libdir}/%{name}/libPyROOT.so.%{version}
-%ghost %{_libdir}/%{name}/libPyROOT_rdict.pcm
-%{python3_other_sitearch}/libPyROOT.rootmap
-%{python3_other_sitearch}/libPyROOT.%{py3_other_soabi}.so
-%{python3_other_sitearch}/libPyROOT_rdict.pcm
-%{python3_other_sitearch}/ROOT.py
-%{python3_other_sitearch}/ROOT-*.egg-info
-%{python3_other_sitearch}/cppyy.py
-%{python3_other_sitearch}/_pythonization.py
-%{python3_other_sitearch}/_rdf_utils.py
-%{python3_other_sitearch}/__pycache__/*
-
-%files -n python%{python3_other_pkgversion}-jupyroot
-%{python3_other_sitearch}/JupyROOT
-%{python3_other_sitearch}/JupyROOT-*.egg-info
-%{python3_other_sitearch}/libJupyROOT.so
-%{_datadir}/jupyter/kernels/python%{python3_other_pkgversion}-jupyroot
-%doc bindings/pyroot/JupyROOT/README.md
-
-%files -n python%{python3_other_pkgversion}-jsmva
-%{python3_other_sitelib}/JsMVA
-%{python3_other_sitelib}/JsMVA-*.egg-info
-%endif
 
 %files r -f includelist-bindings-r
 %{_libdir}/%{name}/libRInterface.*
@@ -3750,6 +3434,16 @@ fi
 %files graf3d-eve7 -f includelist-graf3d-eve7
 %{_libdir}/%{name}/libROOTEve.*
 %{_libdir}/%{name}/libROOTEve_rdict.pcm
+%{_datadir}/%{name}/plugins/TVirtualGeoPainter/P020_REveGeoPainter.C
+
+%files gui-browsable -f includelist-gui-browsable
+%{_libdir}/%{name}/libROOTBrowsable.*
+%{_libdir}/%{name}/libROOTBrowsable_rdict.pcm
+%{_libdir}/%{name}/libROOTHistDrawProvider.*
+%{_libdir}/%{name}/libROOTLeafDraw6Provider.*
+%{_libdir}/%{name}/libROOTLeafDraw7Provider.*
+%{_libdir}/%{name}/libROOTObjectDraw6Provider.*
+%{_libdir}/%{name}/libROOTObjectDraw7Provider.*
 
 %files gui-browserv7 -f includelist-gui-browserv7
 %{_libdir}/%{name}/libROOTBrowserv7.*
@@ -3791,7 +3485,34 @@ fi
 %endif
 
 %changelog
-* Thu Jul 11 2020 Jeff Law <law@redhat.com> - 6.20.06-2
+* Tue Jul 14 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.22.00-1
+- Update to 6.22.00
+- Drop patches accepted upstream
+  - root-FitData-assert-fix.patch
+  - root-clang-altivec-vector.patch
+  - root-format-fix.patch
+  - root-moved-file.patch
+  - root-xmlmodify-dep.patch
+- New and improved Python bindings
+- The new Python bindings can be built for both Python 2 and Python 3
+  out of the box. Dropped the workaround in specfile for this (EPEL 7)
+- Dropped the python3-other packages (EPEL 7)
+- The new Python bindings has split the TPython interface to a separate
+  library. Now in a separate root-tpython package
+- root-tpython and root-tmva-python are now using Python 3 on EPEL 7
+- New subpackage root-gui-browsable
+- New patches (submitted upstream)
+  - Fix too aggressive -Werror replacements
+  - Add missing call to TFile::SetCacheFileDir in a TMVA tutorial
+  - Adjust stressGraphics.ref
+  - Fix off-by-one error in histogram v7 bin iterator
+  - Compatibility with python 2.7 versions before 2.7.9
+  - Fix the RNTuple.LargeFile test on 32bit (i386 and armv7hf)
+  - Fix doxygen issues
+  - Fix bad regex in TProofMgr
+  - Compatibility with xrootd 5
+
+* Sat Jul 11 2020 Jeff Law <law@redhat.com> - 6.20.06-2
 - Disable LTO
 
 * Thu Jun 11 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.20.06-1

@@ -1,0 +1,29 @@
+From 8266262f76eaef4dc72ffda38e1d315be2ce3ff0 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Wed, 8 Jul 2020 19:41:34 +0200
+Subject: [PATCH 5/5] Make the name of macro match the filename
+
+Fixes:
+
+warning: Failed to call `rs302_JeffreysPriorDemo()` to execute the macro.
+Add this function or rename the macro. Falling back to `.L`.
+---
+ tutorials/roostats/rs302_JeffreysPriorDemo.C | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tutorials/roostats/rs302_JeffreysPriorDemo.C b/tutorials/roostats/rs302_JeffreysPriorDemo.C
+index c2f720a5f9..1c52e5dd83 100644
+--- a/tutorials/roostats/rs302_JeffreysPriorDemo.C
++++ b/tutorials/roostats/rs302_JeffreysPriorDemo.C
+@@ -49,7 +49,7 @@
+ 
+ using namespace RooFit;
+ 
+-void JeffreysPriorDemo()
++void rs302_JeffreysPriorDemo()
+ {
+    RooWorkspace w("w");
+    w.factory("Uniform::u(x[0,1])");
+-- 
+2.26.2
+

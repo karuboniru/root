@@ -74,9 +74,11 @@ wget -N ${SITE}/wa91.root
 
 wget -N ${SITE}/AtlasGraphs.root
 wget -N ${SITE}/europe.root
+wget -N ${SITE}/Higgs_data.root
 wget -N ${SITE}/linearIO.root
 wget -N ${SITE}/stressHistogram.5.18.00.root
 wget -N ${SITE}/tmva_class_example.root
+wget -N ${SITE}/tmva_multiclass_example.root
 wget -N ${SITE}/tmva_reg_example.root
 wget -N ${SITE}/usa.root
 

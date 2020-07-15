@@ -1,0 +1,33 @@
+diff -ur root-6.22.00.orig/tutorials/tmva/tmva003_RReader.C root-6.22.00/tutorials/tmva/tmva003_RReader.C
+--- root-6.22.00.orig/tutorials/tmva/tmva003_RReader.C	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tutorials/tmva/tmva003_RReader.C	2020-07-09 18:58:36.854733120 +0200
+@@ -5,7 +5,6 @@
+ /// TMVA XML files.
+ ///
+ /// \macro_code
+-/// \macro_output
+ ///
+ /// \date July 2019
+ /// \author Stefan Wunsch
+diff -ur root-6.22.00.orig/tutorials/tmva/tmva103_Application.C root-6.22.00/tutorials/tmva/tmva103_Application.C
+--- root-6.22.00.orig/tutorials/tmva/tmva103_Application.C	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tutorials/tmva/tmva103_Application.C	2020-07-09 18:58:36.855733122 +0200
+@@ -6,7 +6,6 @@
+ /// event-by-event inference, batch inference and pipelines with RDataFrame.
+ ///
+ /// \macro_code
+-/// \macro_output
+ ///
+ /// \date December 2018
+ /// \author Stefan Wunsch
+diff -ur root-6.22.00.orig/tutorials/v7/line.cxx root-6.22.00/tutorials/v7/line.cxx
+--- root-6.22.00.orig/tutorials/v7/line.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tutorials/v7/line.cxx	2020-07-09 18:58:42.202745047 +0200
+@@ -6,7 +6,6 @@
+ /// "normal" coordinates' system and changing the line color linearly from black
+ /// to red.
+ ///
+-/// \macro_image (line.png)
+ /// \macro_code
+ ///
+ /// \date 2018-03-18

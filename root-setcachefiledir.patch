@@ -1,0 +1,30 @@
+From 0bf4cdfee3f2189f4d43f7cde9ba114ce682cac5 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Mon, 29 Jun 2020 12:08:15 +0200
+Subject: [PATCH] Add missing call to TFile::SetCacheFileDir(".")
+
+Without it the following TFile::Open call using the CACHEREAD option
+will as work as intrnded:
+inputFile = TFile::Open(inputFileLink, "CACHEREAD");
+---
+ tutorials/tmva/TMVA_Higgs_Classification.C | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/tutorials/tmva/TMVA_Higgs_Classification.C b/tutorials/tmva/TMVA_Higgs_Classification.C
+index 6b4a8ed028..85dffc2790 100644
+--- a/tutorials/tmva/TMVA_Higgs_Classification.C
++++ b/tutorials/tmva/TMVA_Higgs_Classification.C
+@@ -72,9 +72,8 @@ Define now input data file and signal and background trees
+    if (!inputFile) {
+       // download file from Cernbox location
+       Info("TMVA_Higgs_Classification","Download Higgs_data.root file");
++      TFile::SetCacheFileDir(".");
+       inputFile = TFile::Open(inputFileLink, "CACHEREAD");
+-      //gSystem->Exec( TString::Format("wget -O %s %s",inputFileName.Data(), downloadLinkFile.Data() ) );
+-      //inputFile = TFile::Open( inputFileName);
+       if (!inputFile) {
+          Error("TMVA_Higgs_Classification","Input file cannot be downloaded - exit");
+          return;
+-- 
+2.26.2
+

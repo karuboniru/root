@@ -1,0 +1,57 @@
+From a5185f2cdf509314970c1b332c5926283f6962e2 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Mon, 22 Jun 2020 09:21:23 +0200
+Subject: [PATCH] Fix too aggressive -Werror replacements
+
+The replacements removes the -Werror option for externals, which is
+intended. However, it also replaces e.g. -Werror=format-security with
+=format-security, which results in compilation failures due to the
+unknown option =format-security.
+---
+ builtins/davix/CMakeLists.txt               | 2 +-
+ cmake/modules/SearchInstalledSoftware.cmake | 2 +-
+ interpreter/CMakeLists.txt                  | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/builtins/davix/CMakeLists.txt b/builtins/davix/CMakeLists.txt
+index 52614ae2e0..c9b291ec45 100644
+--- a/builtins/davix/CMakeLists.txt
++++ b/builtins/davix/CMakeLists.txt
+@@ -21,7 +21,7 @@ foreach(lib davix neon)
+   list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${libname})
+ endforeach()
+ 
+-string(REPLACE "-Werror" "" DAVIX_CXX_FLAGS ${CMAKE_CXX_FLAGS})
++string(REPLACE "-Werror " "" DAVIX_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+ 
+ ExternalProject_Add(DAVIX
+   URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
+diff --git a/cmake/modules/SearchInstalledSoftware.cmake b/cmake/modules/SearchInstalledSoftware.cmake
+index ad63f08cd0..36aa88d8cf 100644
+--- a/cmake/modules/SearchInstalledSoftware.cmake
++++ b/cmake/modules/SearchInstalledSoftware.cmake
+@@ -9,7 +9,7 @@ include(ExternalProject)
+ include(FindPackageHandleStandardArgs)
+ 
+ set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+-string(REPLACE "-Werror" "" ROOT_EXTERNAL_CXX_FLAGS ${CMAKE_CXX_FLAGS})
++string(REPLACE "-Werror " "" ROOT_EXTERNAL_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+ 
+ macro(find_package)
+   if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
+diff --git a/interpreter/CMakeLists.txt b/interpreter/CMakeLists.txt
+index 0f43893443..1274758410 100644
+--- a/interpreter/CMakeLists.txt
++++ b/interpreter/CMakeLists.txt
+@@ -140,7 +140,7 @@ if(gcctoolchain)
+ endif()
+ 
+ # We will not fix llvm or clang.
+-string(REPLACE "-Werror" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
++string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+ 
+ if(LLVM_SHARED_LINKER_FLAGS)
+   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${LLVM_SHARED_LINKER_FLAGS}")
+-- 
+2.26.2
+

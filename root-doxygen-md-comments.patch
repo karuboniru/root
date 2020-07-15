@@ -1,0 +1,214 @@
+From 7336caccd3288a9164c82b78053e8f4f59eb1a9c Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Sun, 12 Jul 2020 12:12:15 +0200
+Subject: [PATCH] Remove /** comments */ from md files
+
+---
+ math/genvector/doc/Genvector.md      | 7 -------
+ math/genvector/doc/LorentzVector.md  | 6 +-----
+ math/genvector/doc/Point3D.md        | 6 ------
+ math/genvector/doc/Transformation.md | 6 ------
+ math/genvector/doc/Vector3D.md       | 4 ----
+ math/genvector/doc/VectorPoint2D.md  | 6 ------
+ math/genvector/doc/externalUsage.md  | 6 ------
+ math/mathcore/doc/MathCore.md        | 5 -----
+ math/mathmore/doc/MathMore.md        | 5 -----
+ math/matrix/doc/Matrix.md            | 3 ---
+ math/unuran/doc/Unuran.md            | 8 ++------
+ 11 files changed, 3 insertions(+), 59 deletions(-)
+
+diff --git a/math/genvector/doc/Genvector.md b/math/genvector/doc/Genvector.md
+index 12e4e47a93..50dc61b2ce 100644
+--- a/math/genvector/doc/Genvector.md
++++ b/math/genvector/doc/Genvector.md
+@@ -1,5 +1,3 @@
+-/**
+-
+   \page Vector  Generic Vector for 2, 3 and 4 Dimensions
+ 
+ 
+@@ -113,8 +111,3 @@ A more detailed description of all the GenVector classes is available in this [d
+ 2.  [CLHEP Geometry package](http://www.hep.phy.cam.ac.uk/lhcb/doc/CLHEP/1.9.1.2/html/namespaceH)
+ 3.  [%ROOT Physics Vector classes](http://root.cern.ch/root/html/PHYSICS_Index.html)
+ 4.  [CMS Vector package](http://lcgapp.cern.ch/doxygen/SEAL/snapshot/html/dir_000007.html)
+-
+-* * *
+-
+-*/
+-
+diff --git a/math/genvector/doc/LorentzVector.md b/math/genvector/doc/LorentzVector.md
+index b40ea8c69c..e01ed4a8ca 100644
+--- a/math/genvector/doc/LorentzVector.md
++++ b/math/genvector/doc/LorentzVector.md
+@@ -1,6 +1,4 @@
+-// LorentzVector doxygen page
+-
+-/** \page LorentzVectorPage LorentzVector Classes
++\page LorentzVectorPage LorentzVector Classes
+ 
+ To avoid exposing templated parameter to the users, typedefs are defined for all types of vectors based an double's and float's. To use them, one must include the header file _Math/Vector4D.h_. The following typedef's, defined in the header file _Math/Vector4Dfwd.h_, are available for the different instantiations of the template class ROOT::Math::LorentzVector:
+ 
+@@ -110,5 +108,3 @@ v.Beta();                                // return beta and gamma value
+ v.Gamma()                                // (vector must be time-like otherwise result is meaningless)
+ XYZVector b = v.BoostToCM()              // return boost vector which will bring the Vector in its mas frame (P=0)
+ </pre>
+-
+-*/
+diff --git a/math/genvector/doc/Point3D.md b/math/genvector/doc/Point3D.md
+index a273b182d4..db55c68752 100644
+--- a/math/genvector/doc/Point3D.md
++++ b/math/genvector/doc/Point3D.md
+@@ -1,7 +1,3 @@
+-// Point3d doxygen page
+-
+-/**
+-
+ \page Point3DPage Point3D Classes
+ 
+ To avoid exposing templated parameter to the users, typedefs are defined for all types of vectors based an double's and float's. To use them, one must include the header file _Math/Point3D.h_. The following typedef's, defined in the header file _Math/Point3Dfwd.h_, are available for the different instantiations of the template class ROOT::Math::PositionVector3D:
+@@ -61,5 +57,3 @@ Exactly as for the 3D Vectors, the following operations are allowed:
+ *   comparison of points
+ *   scaling and division of points with a scalar
+ *   dot and cross product with any type of vector
+-
+-*/
+diff --git a/math/genvector/doc/Transformation.md b/math/genvector/doc/Transformation.md
+index 7e66107f55..edc36778ed 100644
+--- a/math/genvector/doc/Transformation.md
++++ b/math/genvector/doc/Transformation.md
+@@ -1,7 +1,3 @@
+-// Rotation and transformation doxygen page
+-
+-/**
+-
+ \page TransformPage Vector Transformations
+ 
+ Transformations classes are grouped in Rotations (in 3 dimensions), Lorentz transformations and Poincarre transformations, which are Translation/Rotation combinations. Each group has several members which may model physically equivalent trasformations but with different internal representations.   
+@@ -114,5 +110,3 @@ Transform3D t;  t.GetComponens(m);             // fill matrix of size 3x4 with c
+ </pre>
+ 
+ For more detailed documentation on all methods see the reference doc for the specific transformation class.
+-
+-*/
+diff --git a/math/genvector/doc/Vector3D.md b/math/genvector/doc/Vector3D.md
+index 4f65f6b603..9d10ce7db2 100644
+--- a/math/genvector/doc/Vector3D.md
++++ b/math/genvector/doc/Vector3D.md
+@@ -1,5 +1,3 @@
+-/**
+-
+   \page Vector3DPage  Vector3D Classes
+ 
+ 
+@@ -120,5 +118,3 @@ Note that the multiplication between two vectors using the operator * is not sup
+ 
+ <pre>XYZVector u = v1.Unit();               //  return unit vector parallel to v1
+ </pre>
+-
+-*/
+diff --git a/math/genvector/doc/VectorPoint2D.md b/math/genvector/doc/VectorPoint2D.md
+index 5c5e665088..287f3f8b73 100644
+--- a/math/genvector/doc/VectorPoint2D.md
++++ b/math/genvector/doc/VectorPoint2D.md
+@@ -1,7 +1,3 @@
+-// Vector2d doxygen page
+-
+-/**
+-
+ \page Vector2DPage 2D Point and Vector Classes
+ 
+ Similar to the \ref Vector3DPage and \ref Point3DPage , typedefs are defined to avoid exposing templated parameter to the users, for all 2D vectors based an double's and float's. To use them, one must include the header file _Math/Vector2D.h_ or _Math/Point2D.h_. The following typedef's, defined in the header file _Math/Vector2Dfwd.h_, are available for the different instantiations of the template class ROOT::Math::DisplacementVector2D:
+@@ -19,5 +15,3 @@ The typedef's, defined in the header file _Math/Point2Dfwd.h_, available for the
+ *   ROOT::Math::Polar2DPointF vector based on r,phi coordinates (polar) in float precision
+ 
+ Similar constructs, functions and operations available for the 3D vectors and points (see \ref Vector3DPage and \ref Point3DPage ) are available also for the 2D vector and points. No transformations or rotation classes are available for the 2D vectors.
+-
+-*/
+diff --git a/math/genvector/doc/externalUsage.md b/math/genvector/doc/externalUsage.md
+index f8580225a5..4413bbafca 100644
+--- a/math/genvector/doc/externalUsage.md
++++ b/math/genvector/doc/externalUsage.md
+@@ -1,7 +1,3 @@
+-// example on using with exteral classes (doxygen page)
+-
+-/**
+-
+   \page ExtUsagePage Examples with External Packages
+ 
+ ### Connection to Linear Algebra classes
+@@ -48,5 +44,3 @@ XYZPoint p1(hp);                            // create a 3D Point from CLHEP geom
+ 
+ CLHEP::HepLorentzVector  hq;
+ XYZTVector    q(hq);                        // create a LorentzVector  from CLHEP L.V.</double> </pre>
+-
+-*/
+diff --git a/math/mathcore/doc/MathCore.md b/math/mathcore/doc/MathCore.md
+index 4efc043cab..8d38b4ae19 100644
+--- a/math/mathcore/doc/MathCore.md
++++ b/math/mathcore/doc/MathCore.md
+@@ -1,5 +1,3 @@
+-/**
+-
+ \defgroup MathCore  MathCore
+ 
+ \brief The Core Mathematical Library of %ROOT. See the \ref MathCorePage "MathCore" description page.
+@@ -32,6 +30,3 @@ MathCore contains instead now classes which were originally part of _libCore_. T
+ *   Other classes, such as
+ 	*   TKDTree for partitioning the data using a kd-Tree and TKDTreeBinning for binning data using a kdTree
+ 	*   ROOT::Math::GoFTest for goodness of fit tests
+-
+-
+-*/
+diff --git a/math/mathmore/doc/MathMore.md b/math/mathmore/doc/MathMore.md
+index 28b3528a68..f30ef6d0be 100644
+--- a/math/mathmore/doc/MathMore.md
++++ b/math/mathmore/doc/MathMore.md
+@@ -1,6 +1,3 @@
+-
+-/** 
+-
+   \defgroup MathMore  MathMore
+ 
+     \brief The Mathematical library providing some advanced functionality and based on GSL. See the \ref MathMorePage "MathMore" Library page. 
+@@ -32,5 +29,3 @@ To build MathMore you need to have first GSL installed somewhere in your system.
+ MathMore (and its %ROOT CINT dictionary) can be built within %ROOT whenever a GSL library is found in the system. Optionally the GSL library and header file location can be specified in the %ROOT configure script with _configure --with-gsl-incdir=... --with-gsl-libdir=..._
+ MathMore links with the GSL static libraries. On some platform (like Linux x86-64)  GSL needs to be compiled with the option _--with-pic_.
+ The source code of MathMore is distributed under the GNU General Public License
+-
+-*/
+diff --git a/math/matrix/doc/Matrix.md b/math/matrix/doc/Matrix.md
+index ed0d9fffe8..f0b9d7a06a 100644
+--- a/math/matrix/doc/Matrix.md
++++ b/math/matrix/doc/Matrix.md
+@@ -1,6 +1,3 @@
+-/**
+-
+-
+ \page MatrixPage The ROOT Matrix Linear Algebra classes.
+ 
+ 
+diff --git a/math/unuran/doc/Unuran.md b/math/unuran/doc/Unuran.md
+index d807c4e807..4c64e0d214 100644
+--- a/math/unuran/doc/Unuran.md
++++ b/math/unuran/doc/Unuran.md
+@@ -1,9 +1,7 @@
+-/**
+-
+-Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers
+-
+ \defgroup Unuran Unuran
+ 
++\brief Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers.
++
+ \ingroup Math
+ 
+ UNU.RAN, (Universal Non Uniform Random number generator for generating non uniform pseudo-random numbers)
+@@ -120,5 +118,3 @@ TRandom pointer when constructing the TUnuran class (by default the ROOT gRandom
+ 
+ The (UNU.RAN documentation)[http://statistik.wu-wien.ac.at/unuran/doc/unuran.html#Top] provides a detailed
+ description of all the available methods and the possible options which one can pass to UNU.RAN for the various distributions.
+-*/
+-
+-- 
+2.26.2
+

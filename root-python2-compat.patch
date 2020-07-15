@@ -1,0 +1,41 @@
+From 056b67d05c950cf04a8290dcdf376078ee92b449 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Mon, 29 Jun 2020 17:01:03 +0200
+Subject: [PATCH] Compatibility with python 2.7 versions before 2.7.9
+
+This is a workaround for https://bugs.python.org/issue21591 which
+affect Python 2 versions before 2.7.9. This includes Python 2.7.5
+which is the Python 2 version on RHEL/CentOS 7.
+---
+ .../pyroot/pythonizations/python/ROOT/_numbadeclare.py    | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py b/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
+index 1bef862af5..9aa893b8f0 100644
+--- a/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
++++ b/bindings/pyroot/pythonizations/python/ROOT/_numbadeclare.py
+@@ -32,7 +32,7 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
+         import cffi
+     except:
+         raise Exception('Failed to import cffi')
+-    import re
++    import re, sys
+ 
+     # Normalize input types by stripping ROOT and VecOps namespaces from input types
+     def normalize_typename(t):
+@@ -195,7 +195,11 @@ def pywrapper({SIGNATURE}):
+         if 'RVec' in return_type:
+             glob['dtype_r'] = get_numba_type(get_inner_type(return_type))
+ 
+-        exec(pywrappercode, glob, locals())
++        if sys.version_info[0] >= 3:
++            exec(pywrappercode, glob, locals()) in {}
++        else:
++            exec(pywrappercode) in glob, locals()
++
+         if not 'pywrapper' in locals():
+             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))
+ 
+-- 
+2.26.2
+

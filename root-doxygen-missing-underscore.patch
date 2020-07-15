@@ -1,0 +1,25 @@
+From e6e6715a73fb8b65ee24c11ff08ca34e25db9ef1 Mon Sep 17 00:00:00 2001
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Wed, 8 Jul 2020 19:41:10 +0200
+Subject: [PATCH 4/5] Add missing underscore
+
+---
+ tutorials/fit/vectorizedFit.C | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tutorials/fit/vectorizedFit.C b/tutorials/fit/vectorizedFit.C
+index d6b13e2fa7..1f6e317aa6 100644
+--- a/tutorials/fit/vectorizedFit.C
++++ b/tutorials/fit/vectorizedFit.C
+@@ -8,7 +8,7 @@
+ /// TF1::SetVectorized
+ ///
+ /// \macro_image
+-/// \macro output
++/// \macro_output
+ /// \macro_code
+ ///
+ /// \author Lorenzo Moneta
+-- 
+2.26.2
+

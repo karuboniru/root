@@ -1,0 +1,161 @@
+diff -ur root-6.22.00.orig/math/mathcore/test/stress/testGenVector.cxx root-6.22.00/math/mathcore/test/stress/testGenVector.cxx
+--- root-6.22.00.orig/math/mathcore/test/stress/testGenVector.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/stress/testGenVector.cxx	2020-06-29 19:38:08.524050438 +0200
+@@ -4,6 +4,16 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ #include "StatFunction.h"
+ #include "TestHelper.h"
+ #include "VectorTest.h"
+diff -ur root-6.22.00.orig/math/mathcore/test/stress/testSMatrix.cxx root-6.22.00/math/mathcore/test/stress/testSMatrix.cxx
+--- root-6.22.00.orig/math/mathcore/test/stress/testSMatrix.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/stress/testSMatrix.cxx	2020-06-29 19:38:08.524050438 +0200
+@@ -7,6 +7,16 @@
+ #include "TestHelper.h"
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ #include "VectorTest.h"
+ #include "TROOT.h"
+ #include "TSystem.h"
+diff -ur root-6.22.00.orig/math/mathcore/test/stress/testVector34.cxx root-6.22.00/math/mathcore/test/stress/testVector34.cxx
+--- root-6.22.00.orig/math/mathcore/test/stress/testVector34.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/stress/testVector34.cxx	2020-06-29 19:38:08.525050440 +0200
+@@ -4,6 +4,16 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ #include "StatFunction.h"
+ #include "VectorTest.h"
+ 
+diff -ur root-6.22.00.orig/math/mathcore/test/stress/testVector.cxx root-6.22.00/math/mathcore/test/stress/testVector.cxx
+--- root-6.22.00.orig/math/mathcore/test/stress/testVector.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/stress/testVector.cxx	2020-06-29 19:38:08.525050440 +0200
+@@ -4,6 +4,16 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ #include "StatFunction.h"
+ #include "TestHelper.h"
+ #include "VectorTest.h"
+diff -ur root-6.22.00.orig/math/mathcore/test/testGradient.cxx root-6.22.00/math/mathcore/test/testGradient.cxx
+--- root-6.22.00.orig/math/mathcore/test/testGradient.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/testGradient.cxx	2020-06-29 19:38:08.525050440 +0200
+@@ -22,6 +22,10 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE
++#define TYPED_TEST_SUITE TYPED_TEST_CASE
++#endif
++
+ #include <chrono>
+ #include <iostream>
+ #include <string>
+diff -ur root-6.22.00.orig/math/mathcore/test/testGradientFitting.cxx root-6.22.00/math/mathcore/test/testGradientFitting.cxx
+--- root-6.22.00.orig/math/mathcore/test/testGradientFitting.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathcore/test/testGradientFitting.cxx	2020-06-29 19:38:08.525050440 +0200
+@@ -12,6 +12,16 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ #include <iostream>
+ #include <string>
+ 
+diff -ur root-6.22.00.orig/math/mathmore/test/testStress.cxx root-6.22.00/math/mathmore/test/testStress.cxx
+--- root-6.22.00.orig/math/mathmore/test/testStress.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/math/mathmore/test/testStress.cxx	2020-06-29 19:38:08.526050443 +0200
+@@ -28,6 +28,16 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef TYPED_TEST_SUITE_P
++#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
++#endif
++#ifndef REGISTER_TYPED_TEST_SUITE_P
++#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
++#endif
++#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
++#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
++#endif
++
+ using ::testing::TestWithParam;
+ using ::testing::Values;
+ 
+diff -ur root-6.22.00.orig/roofit/roofitcore/test/testProxiesAndCategories.cxx root-6.22.00/roofit/roofitcore/test/testProxiesAndCategories.cxx
+--- root-6.22.00.orig/roofit/roofitcore/test/testProxiesAndCategories.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/roofit/roofitcore/test/testProxiesAndCategories.cxx	2020-06-29 19:38:08.526050443 +0200
+@@ -16,6 +16,9 @@
+ 
+ #include "gtest/gtest.h"
+ 
++#ifndef INSTANTIATE_TEST_SUITE_P
++#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
++#endif
+ 
+ TEST(RooCategory, CategoryDefineMultiState) {
+   RooCategory myCat("myCat", "A category", { {"0Lep", 0}, {"1Lep", 1}, {"2Lep", 2}, {"3Lep", 3} });
+diff -ur root-6.22.00.orig/tree/dataframe/test/dataframe_simple.cxx root-6.22.00/tree/dataframe/test/dataframe_simple.cxx
+--- root-6.22.00.orig/tree/dataframe/test/dataframe_simple.cxx	2020-06-14 17:51:48.000000000 +0200
++++ root-6.22.00/tree/dataframe/test/dataframe_simple.cxx	2020-06-29 19:38:45.667130468 +0200
+@@ -1,5 +1,10 @@
+ /****** Run RDataFrame tests both with and without IMT enabled *******/
+ #include <gtest/gtest.h>
++
++#ifndef INSTANTIATE_TEST_SUITE_P
++#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
++#endif
++
+ #include <ROOT/RDataFrame.hxx>
+ #include <ROOT/TSeq.hxx>
+ #include <TChain.h>
