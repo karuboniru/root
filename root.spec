@@ -43,7 +43,7 @@
 Name:		root
 Version:	6.22.00
 %global libversion %(cut -d. -f 1-2 <<< %{version})
-Release:	1%{?dist}
+Release:	2%{?dist}
 Summary:	Numerical data analysis framework
 
 License:	LGPLv2+
@@ -2585,7 +2585,11 @@ fi
 
 %pre -n python%{python3_pkgversion}-%{name}
 if [ -r /var/lib/alternatives/libPyROOT.so ] ; then
+%if %{?rhel}%{!?rhel:0} == 7
+    for alt in `grep python%{python3_version}/.*.so /var/lib/alternatives/libPyROOT.so` ; do
+%else
     for alt in `grep python3.*/.*.so /var/lib/alternatives/libPyROOT.so` ; do
+%endif
 	%{_sbindir}/update-alternatives --remove libPyROOT.so $alt
     done
 fi
@@ -3485,6 +3489,9 @@ fi
 %endif
 
 %changelog
+* Wed Jul 15 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.22.00-2
+- Fix broken update on EPEL 7 with python34-root installed
+
 * Tue Jul 14 2020 Mattias Ellert <mattias.ellert@physics.uu.se> - 6.22.00-1
 - Update to 6.22.00
 - Drop patches accepted upstream
