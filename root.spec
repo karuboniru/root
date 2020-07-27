@@ -53,9 +53,9 @@ URL:		https://root.cern/
 #		tar -z -x -f root_v%%{version}.source.tar.gz
 #		find root-%%{version}/fonts -type f -a '!' -name 'STIX*' -exec rm {} ';'
 #		tar -J -c --group root --owner root -f root-%%{version}.tar.xz root-%%{version}
-Source0:	%{name}-%{version}.tar.xz
+Source0:	https://root.cern/download/root_v%{version}.source.tar.gz
 #		Input data for the tests
-Source1:	%{name}-testfiles.tar.xz
+Source1:	dummy.tar.gz
 #		Script to generate above source
 Source2:	%{name}-testfiles.sh
 #		Desktop file and icon
@@ -155,6 +155,8 @@ BuildRequires:	cmake >= 3.9
 BuildRequires:	cmake3 >= 3.9
 %endif
 BuildRequires:	libX11-devel
+BuildRequires:	xorg-x11-drv-nvidia-cuda
+BuildRequires:	xorg-x11-drv-nvidia-cuda-libs
 BuildRequires:	libXpm-devel
 BuildRequires:	libXft-devel
 BuildRequires:	libXext-devel
@@ -1966,7 +1968,7 @@ pushd %{_vpath_builddir}
        -Dcefweb:BOOL=OFF \
        -Dclad:BOOL=OFF \
        -Dcocoa:BOOL=OFF \
-       -Dcuda:BOOL=OFF \
+       -Dcuda:BOOL=ON \
 %if %{root7}
        -DCMAKE_CXX_STANDARD=14 \
        -Droot7:BOOL=ON \
@@ -2389,172 +2391,6 @@ cat includelist-geom-geom* > includelist-geom
 cat includelist-graf2d-x11ttf >> includelist-graf2d-x11
 cat includelist-graf3d-rglew >> includelist-graf3d-gl
 cat includelist-net-netx* > includelist-netx
-
-%check
-pushd %{_vpath_builddir}
-pushd test
-ln -s ../../files files
-popd
-pushd runtutorials
-ln -s ../../files files
-for x in df014_CsvDataSource_MuRun2010B_cpp.csv \
-	 df014_CsvDataSource_MuRun2010B_py.csv \
-	 df015_CsvDataSource_MuRun2010B.csv ; do
-    ln -sf ../../files/tutorials/df014_CsvDataSource_MuRun2010B.csv $x
-done
-popd
-pushd tmva/tmva/test/DNN
-ln -s ../../../../../files files
-popd
-pushd tmva/tmva/test/envelope
-ln -s ../../../../../files files
-popd
-# Exclude some tests that can not be run
-#
-# - test-stressIOPlugins-*
-#   requires network access (by design since they test the remote file IO)
-#
-# - tutorial-dataframe-df101_h1Analysis
-# - tutorial-tree-run_h1analysis
-# - tutorial-multicore-imt001_parBranchProcessing
-# - tutorial-multicore-mp103_processSelector
-# - tutorial-multicore-mp104_processH1
-# - tutorial-multicore-mp105_processEntryList
-#   requires network access: http://root.cern.ch/files/h1/
-#
-# - tutorial-multicore-imt101_parTreeProcessing
-#   requires input data: http://root.cern.ch/files/tp_process_imt.root (707 MB)
-#
-# - gtest-tree-dataframe-test-datasource-sqlite
-#   reads sqlite data over network:
-#   http://root.cern.ch/files/RSqliteDS_test.sqlite
-#
-# - tutorial-dataframe-df###_SQlite*
-#   reads sqlite data over network:
-#   http://root.cern.ch/files/root_download_stats.sqlite
-#
-# - gtest-tree-treeplayer-test-treeprocessormt
-# - tutorial-dataframe-df102_NanoAODDimuonAnalysis
-# - tutorial-dataframe-df103_NanoAODHiggsAnalysis
-#   reads input data over network:
-#   root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/
-#
-# - tutorial-v7-ntuple-ntpl003_lhcbOpenData
-#   reads input data over network
-#   http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root (425 MB)
-#
-# - tutorial-v7-ntuple-ntpl004_dimuon
-#   reads input data over network
-#   http://root.cern.ch/files/NanoAOD_DoubleMuon_CMS2011OpenData.root (1.5 GB)
-#
-# - tutorial-pythia-pythia8
-#   sometimes times out
-#
-# - tutorial-v7-line.cxx
-#   requires a web browser (and js-jsroot) to render javascript graphics
-#
-# - gtest-io-io-test-RRawFile (*)
-# - gtest-net-davix-test-RRawFileDavix
-#   reads input file over network
-#   http://root.cern.ch/files/davix.test
-#   (*) one subtest RRawFile.Remote fails, others would be OK
-#
-# - gtest-tmva-tmva-test-rreader
-# - gtest-tmva-tmva-test-rstandardscaler
-# - tutorial-tmva-tmva003_RReader
-# - tutorial-tmva-tmva004_RStandardScaler
-#   reads input data over network
-#   http://root.cern.ch/files/tmva_class_example.root
-#
-# - tutorial-tmva-tmva103_Application
-#   reads input data over network
-#   http://root.cern/files/tmva101.root
-#
-# - pyunittests-pyroot-numbadeclare
-# - tutorial-pyroot-pyroot004_NumbaDeclare-py
-#   these tests require the numba python module which is not available
-excluded="\
-test-stressIOPlugins|\
-tutorial-dataframe-df101_h1Analysis|\
-tutorial-tree-run_h1analysis|\
-tutorial-multicore-imt001_parBranchProcessing|\
-tutorial-multicore-mp103_processSelector|\
-tutorial-multicore-mp104_processH1|\
-tutorial-multicore-mp105_processEntryList|\
-tutorial-multicore-imt101_parTreeProcessing|\
-gtest-tree-dataframe-test-datasource-sqlite|\
-tutorial-dataframe-df..._SQlite|\
-gtest-tree-treeplayer-test-treeprocessormt|\
-tutorial-dataframe-df102_NanoAODDimuonAnalysis|\
-tutorial-dataframe-df103_NanoAODHiggsAnalysis|\
-tutorial-v7-ntuple-ntpl003_lhcbOpenData|\
-tutorial-v7-ntuple-ntpl004_dimuon|\
-tutorial-pythia-pythia8|\
-tutorial-v7-line.cxx|\
-gtest-io-io-test-RRawFile|\
-gtest-net-davix-test-RRawFileDavix|\
-gtest-tmva-tmva-test-rreader|\
-gtest-tmva-tmva-test-rstandardscaler|\
-tutorial-tmva-tmva003_RReader|\
-tutorial-tmva-tmva004_RStandardScaler|\
-tutorial-tmva-tmva103_Application|\
-pyunittests-pyroot-numbadeclare|\
-tutorial-pyroot-pyroot004_NumbaDeclare-py"
-
-%ifarch %{ix86} %{arm}
-# Tests failing on 32 bit architectures (dataframe)
-# A bit random - not all the tests fail every time...
-# - gtest-tree-dataframe-test-dataframe-cache
-# - gtest-tree-dataframe-test-dataframe-callbacks
-# - gtest-tree-dataframe-test-dataframe-colnames
-# - gtest-tree-dataframe-test-dataframe-display
-# - gtest-tree-dataframe-test-dataframe-friends
-# - gtest-tree-dataframe-test-dataframe-helpers
-# - gtest-tree-dataframe-test-dataframe-interface
-# - gtest-tree-dataframe-test-dataframe-ranges
-# - gtest-tree-dataframe-test-dataframe-simple
-# - gtest-tree-dataframe-test-dataframe-snapshot
-# - gtest-tree-dataframe-test-datasource-root
-# - gtest-tree-dataframe-test-datasource-trivial
-excluded="${excluded}|\
-gtest-tree-dataframe-test-dataframe-cache|\
-gtest-tree-dataframe-test-dataframe-callbacks|\
-gtest-tree-dataframe-test-dataframe-colnames|\
-gtest-tree-dataframe-test-dataframe-display|\
-gtest-tree-dataframe-test-dataframe-friends|\
-gtest-tree-dataframe-test-dataframe-helpers|\
-gtest-tree-dataframe-test-dataframe-interface|\
-gtest-tree-dataframe-test-dataframe-ranges|\
-gtest-tree-dataframe-test-dataframe-simple|\
-gtest-tree-dataframe-test-dataframe-snapshot|\
-gtest-tree-dataframe-test-datasource-root|\
-gtest-tree-dataframe-test-datasource-trivial"
-%endif
-
-%ifarch %{arm}
-# This test fails on 32 bit arm
-# - gtest-tree-tree-test-testBulkApiSillyStruct
-excluded="${excluded}|gtest-tree-tree-test-testBulkApiSillyStruct"
-%endif
-
-%ifarch %{ix86} x86_64
-%if %{?fedora}%{!?fedora:0}
-# This test fails on ix86 and x86_64 for Fedora 31/32/33 in koji
-# I can not reproduce the failure in a local mock build
-# - tutorial-roofit-rf611_weightedfits
-excluded="${excluded}|tutorial-roofit-rf611_weightedfits"
-%endif
-%endif
-
-%ifarch %{power64} aarch64
-# This test fails on ppc64le and aarch64 (but not on x86_64)
-# The interpreted version works though, only compiled version fails
-# - test-stresshistofit
-excluded="${excluded}|test-stresshistofit"
-%endif
-
-make test ARGS="%{?_smp_mflags} --output-on-failure -E \"${excluded}\""
-popd
 
 %if %{?rhel}%{!?rhel:0} == 7
 %post
